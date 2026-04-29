@@ -1,3 +1,5 @@
+import bcrypt from 'bcrypt'
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { email, password, nickname } = body
@@ -10,11 +12,12 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // Note: We will add password hashing in the next step!
+    const hashedPassword = await bcrypt.hash(password, 10)
+    
     const user = await prisma.user.create({
       data: {
         email,
-        password,
+        password: hashedPassword, // 3. 암호화된 비밀번호 저장
         nickname,
       },
     })
