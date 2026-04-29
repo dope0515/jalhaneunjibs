@@ -1,0 +1,29 @@
+// 1. 설정: 어떤 도구를 쓸 건지 정합니다.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 2. 연결: 우리 DB 주소를 가져옵니다 (.env 파일에 적어둔 주소를 사용함)
+datasource db {
+  provider = "postgresql"
+}
+
+// 3. 설계도: 실제 '사용자(User)' 테이블의 모습입니다.
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  nickname  String?
+  createdAt DateTime @default(now())
+}
+
+// 4. 설계도: 실제 '맛집(Restaurant)' 테이블의 모습입니다.
+model Restaurant {
+  id        Int      @id @default(autoincrement())
+  name      String   // 맛집 이름
+  address   String   // 주소
+  rating    Int      // 별점
+  likes     Int      // 좋아요 수
+  
+  createdAt DateTime @default(now())
+}
