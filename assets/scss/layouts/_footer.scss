@@ -1,3 +1,41 @@
 // assets/scss/layouts/_header.scss
 @use "../abstracts/variables" as *;
 @use "../abstracts/mixins" as *;
+
+.footer {
+  background-color: $bg-footer;
+  padding-block: rem(64);
+  color: $white;
+  .content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .txt-bx {
+      display: flex;
+      flex-direction: column;
+      gap: rem(16);
+      .title {
+        font-family: $font-family-serif;
+        @include font(24, 32, 900, $white, -0.012);
+      }
+      .copyright {
+        @include font(16, 32, 400, $white, 0.05);
+      }
+    }
+    .service {
+      &-title {
+        @include font(16, 32, 400, $white, 0.05);
+      }
+      &-list {
+      }
+      &-link {
+        @include font(16, 32, 400, $white, 0.05);
+      }
+    }
+  }
+  .info {
+    border-top: 1px solid rgba($white, 0.2);
+    padding-block-start: rem(20);
+    margin-block-start: rem(20);
+  }
+}

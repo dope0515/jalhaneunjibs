@@ -1,8 +1,8 @@
 <template>
-  <section class="main">
+  <section class="login">
     <div class="inner">
       <div class="txt-bx">
-        <h1>잘하는 집을<br><span>안 가봐서 </span>그래</h1>
+        <h1>로그인 페이지임</h1>
       </div>
     </div>
   </section>

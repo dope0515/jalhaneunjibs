@@ -26,8 +26,17 @@ export default defineNuxtConfig({
   
   fonts: {
     families: [
-      { name: 'Noto Sans KR', provider: 'google' },
-      { name: 'Noto Serif KR', provider: 'google' }
+       { 
+        name: 'Noto Sans KR', 
+        provider: 'google',
+        // 사용할 굵기들을 배열로 적어줍니다.
+        weights: [100, 300, 400, 500, 700, 900] 
+      },
+      { 
+        name: 'Noto Serif KR', 
+        provider: 'google',
+        weights: [300, 400, 700, 900]
+      }
     ]
   },
 

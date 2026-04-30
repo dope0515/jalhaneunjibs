@@ -16,7 +16,7 @@
             <NuxtLink to="/" class="nav-link">맛집 등록</NuxtLink>
           </li>
           <li class="nav-item">
-            <AppButton v-if="!isLogin" @click="handleLogin"  variant="solid">
+            <AppButton v-if="!isLogin" to="/login"  variant="solid">
               LOGIN
             </AppButton>
             <AppButton v-else @click="handleLogout" variant="outline">
@@ -30,16 +30,12 @@
 </template>
 
 <script setup>
-  const isLogin = ref(false);
+  
+  const { isLogin, logout } = useAuth();
 
   const handleLogout = () => {
     // 로그아웃 로직...
-    isLogin.value = false
-  }
-
-  const handleLogin = () => {
-    // 로그인 로직...
-    isLogin.value = true
+    logout();
   }
   
 </script>
