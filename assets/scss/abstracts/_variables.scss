@@ -1,0 +1,24 @@
+// ─── Breakpoints ─────────────────────────────────────────────────────────────
+$bp-xs: 375;
+$bp-sm: 640;
+$bp-md: 769;
+$bp-lg: 1024;
+$bp-xl: 1280;
+$bp-2xl: 1440;
+
+/*Colors*/
+$primary-color: #155e4e;
+$secondary-color: #d97706;
+
+$gray-44: #444444;
+
+$whtie: #ffffff;
+$black: #000000;
+
+$bg-color: #fafaf9;
+
+/*Fonts*/
+$font-family-text:
+  "Noto Sans KR", "Segoe UI", "Microsoft Sans Serif", sans-serif;
+$font-family-serif:
+  "Noto Serif KR", "Segoe UI", "Microsoft Sans Serif", sans-serif;

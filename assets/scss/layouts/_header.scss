@@ -1,0 +1,30 @@
+@use "../abstracts/mixins" as *;
+@use "../abstracts/variables" as *;
+
+.header {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-block: rem(16);
+  .inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo {
+    font-family: $font-family-serif;
+    @include font(24, 32, 900, $black, -0.012);
+    transition: color 0.3s;
+  }
+  .nav {
+    &-list {
+      display: flex;
+      align-items: center;
+      gap: rem(32);
+    }
+    &-link {
+      @include font(16, 20, 600, $gray-44, 0.035);
+    }
+  }
+}

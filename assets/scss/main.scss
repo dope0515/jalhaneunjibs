@@ -1,0 +1,24 @@
+@use "abstracts/mixins";
+@use "abstracts/variables";
+
+@use "base/reset";
+@use "base/typography";
+
+// 레이아웃 & 페이지
+@use "layouts/header";
+@use "layouts/footer";
+
+* {
+  color: $black;
+}
+
+body {
+  background-color: $bg-color;
+}
+
+.inner {
+  max-width: 1320px;
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: rem(20);
+}

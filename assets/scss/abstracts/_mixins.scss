@@ -1,0 +1,147 @@
+@use "sass:math";
+@use "sass:list";
+@use "sass:string";
+@use "sass:map";
+@use "sass:meta";
+
+// ─── Unit Conversion ─────────────────────────────────────────────────────────
+@function rem($px) {
+  @return calc($px / 16 * 1rem);
+}
+
+// 1920px 기준 vw 변환
+@function vw($px, $base: 1920) {
+  @return calc(($px * 100) / check-val($base) * 1vw);
+}
+
+// ─── Media Queries ───────────────────────────────────────────────────────────
+@mixin tablet {
+  @media all and (min-width: #{rem($bp-md)}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media all and (min-width: #{rem($bp-2xl + $container-padding-desktop * 2)}) {
+    @content;
+  }
+}
+
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == "xs" {
+    @media (max-width: #{rem($bp-xs - 1px)}) {
+      @content;
+    }
+  } @else if $breakpoint == "sm" {
+    @media (min-width: #{rem($bp-sm)}) {
+      @content;
+    }
+  } @else if $breakpoint == "md" {
+    @media (min-width: #{rem($bp-md)}) {
+      @content;
+    }
+  } @else if $breakpoint == "lg" {
+    @media (min-width: #{rem($bp-lg)}) {
+      @content;
+    }
+  } @else if $breakpoint == "xl" {
+    @media (min-width: #{rem($bp-xl)}) {
+      @content;
+    }
+  } @else if $breakpoint == "2xl" {
+    @media (min-width: #{rem($bp-2xl)}) {
+      @content;
+    }
+  } @else if $breakpoint == "3xl" {
+    @media (min-width: #{rem($bp-3xl)}) {
+      @content;
+    }
+  }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+// 소수점 정리 (4자리)
+@function decimal-round($point) {
+  @return math.div(math.round($point * 10000), 10000);
+}
+
+// 값 판별 헬퍼 (변수면 var(), 아니면 그대로)
+@function check-val($val) {
+  @if meta.type-of($val) ==string and string.index($val, "--") ==1 {
+    @return var(#{$val});
+  }
+
+  @return $val;
+}
+
+// ─── Typography ──────────────────────────────────────────────────────────────
+@mixin font($fs, $lh: null, $fw: null, $cl: null, $ls: null) {
+  font-size: rem($fs);
+
+  @if $lh !=null {
+    $safe-lh: check-val($lh);
+    $safe-fs: check-val($fs); // fs도 미리 안전한 값으로 확보
+
+    // [1] 숫자인 경우: 10보다 크면 px값으로 간주 -> 비율 계산
+    @if meta.type-of($safe-lh) ==number {
+      @if math.is-unitless($safe-lh) and $safe-lh >10 {
+        @if meta.type-of($safe-fs) ==number {
+          // 둘 다 숫자: SCSS 미리 계산
+          line-height: decimal-round(calc($safe-lh / $safe-fs));
+        } @else {
+          // fs가 변수: CSS calc로 계산
+          line-height: calc($safe-lh / $safe-fs);
+        }
+      } @else {
+        // 10 이하거나 단위 있으면 그대로
+        line-height: $safe-lh;
+      }
+    }
+
+    // [2] 변수인 경우(var): 무조건 비율 계산 시도 (calc)
+    @else if
+      meta.type-of($safe-lh)
+      ==string and
+      string.index($safe-lh, "var(")
+      ==1
+    {
+      line-height: calc($safe-lh / $safe-fs);
+    }
+
+    // [3] 그 외 문자열(%, em): 그대로 적용
+    @else {
+      line-height: $safe-lh;
+    }
+  }
+
+  @if $fw !=null {
+    font-weight: check-val($fw);
+  }
+
+  @if $cl !=null {
+    color: check-val($cl);
+  }
+
+  @if $ls !=0 {
+    $safe-ls: check-val($ls);
+
+    @if meta.type-of($safe-ls) ==number and math.is-unitless($safe-ls) {
+      letter-spacing: calc($safe-ls * 1em);
+    } @else {
+      letter-spacing: $safe-ls;
+    }
+  }
+}
+
+@mixin text-ellipsis($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+  }
+}
