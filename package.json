@@ -8,7 +8,10 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "studio": "npx prisma studio"
+    "studio": "npx prisma studio",
+    "db:migrate": "npx prisma migrate dev",
+    "db:push": "npx prisma db push",
+    "db:generate": "npx prisma generate"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.10.1",
@@ -24,7 +27,9 @@
     "@nuxt/fonts": "^0.14.0",
     "@types/bcrypt": "^6.0.0",
     "@types/pg": "^8.20.0",
+    "dotenv": "^17.4.2",
     "prisma": "^7.8.0",
-    "sass": "^1.99.0"
+    "sass": "^1.99.0",
+    "tsx": "^4.21.0"
   }
 }

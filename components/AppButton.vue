@@ -4,9 +4,11 @@
     :is="componentType" 
     v-bind="dynamicProps" 
     class="app-button"
-    :class="[`btn-${variant}`, `btn-${size}`]"
+    :class="buttonClasses" 
+    :style="buttonStyles"
   >
     <slot />
+    <i v-if="arrow" class="icon-arrow"></i>
   </component>
 </template>
 
@@ -15,21 +17,42 @@ import { computed } from 'vue'
 import { NuxtLink } from '#components'
 
 const props = defineProps({
+  // Navigation
   to: { type: [String, Object], default: null },
   href: { type: String, default: null },
   type: { type: String, default: 'button' },
-  variant: { type: String, default: 'solid' },
-  size: { type: String, default: 'md' }
+  
+  // Style Props
+  color: { type: String, default: 'black' }, // black, green, white
+  variant: { type: String, default: 'fill' }, // fill, outline
+  shape: { type: String, default: 'default' }, // default, round
+  size: { type: String, default: 'md' },  // sm, md, lg
+  weight: { type: [String, Number], default: '' }, // font-weight
+  arrow: { type: Boolean, default: false } // 화살표 여부
 })
 
-// 어떤 태그로 변신할지 결정하는 핵심 로직!
+const buttonClasses = computed(() => {
+  return [
+    `btn-size-${props.size}`,
+    `btn-shape-${props.shape}`,
+    `btn-variant-${props.variant}`,
+    props.color ? `btn-color-${props.color}` : '',
+    props.arrow ? 'has-arrow' : ''
+  ].filter(Boolean)
+})
+
+const buttonStyles = computed(() => {
+  const styles = {}
+  if (props.weight) styles.fontWeight = props.weight
+  return styles
+})
+
 const componentType = computed(() => {
-  if (props.to) return NuxtLink // 문자열이 아닌 임포트한 컴포넌트 자체를 반환합니다.
+  if (props.to) return NuxtLink
   if (props.href) return 'a'
   return 'button'
 })
 
-// 일반 버튼일 때만 type 속성을 넣어줍니다.
 const dynamicProps = computed(() => {
   if (props.to) return { to: props.to }
   if (props.href) return { href: props.href, target: '_blank' }
@@ -38,20 +61,123 @@ const dynamicProps = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-// 버튼 공통 뼈대 스타일
+@use "../assets/scss/abstracts/variables" as *;
+@use "../assets/scss/abstracts/mixins" as *;
+
 .app-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: rem(8);
-  font-weight: 700;
+  border: none;
+  background: none;
+  padding: 0;
+  text-decoration: none;
   transition: all 0.2s ease;
   cursor: pointer;
   
-  // 크기 변형
-  &.btn-md {
-    padding: rem(10) rem(20);
-    @include font(15);
+  // 기본 폰트 설정
+  font-weight: 700;
+  
+  // Background Variants (자동 텍스트 색상 포함)
+  // Variants (Fill, Outline)
+  &.btn-variant-fill {
+    &.btn-color-black {
+      background-color: #000;
+      color: #fff;
+      &:hover { background-color: #333; }
+    }
+    &.btn-color-green {
+      background-color: $primary-color;
+      color: #fff;
+      &:hover { background-color: #0d4a3e; }
+    }
+    &.btn-color-white {
+      background-color: #fff;
+      color: #000;
+      border: 1px solid $gray-e4;
+      &:hover { background-color: #f5f5f4; }
+    }
   }
+
+  &.btn-variant-outline {
+    background-color: transparent;
+    border: 1px solid currentColor;
+    
+    &.btn-color-black {
+      border-color: #000;
+      color: #000;
+      &:hover { background-color: #f5f5f4; }
+    }
+    &.btn-color-green {
+      border-color: $primary-color;
+      color: $primary-color;
+      &:hover { background-color: rgba($primary-color, 0.05); }
+    }
+    &.btn-color-white {
+      border-color: #fff;
+      color: #fff;
+      &:hover { background-color: rgba(255, 255, 255, 0.1); }
+    }
+    
+    // Default outline if no bg matches
+    &:not([class*="btn-color-"]) {
+      border-color: $gray-e4;
+      color: inherit;
+      &:hover { background-color: #f5f5f4; }
+    }
+  }
+  
+  // Shape Variants
+  &.btn-shape-default {
+    border-radius: rem(8);
+  }
+  
+  &.btn-shape-round {
+    border-radius: rem(100);
+  }
+
+  // Size Variants
+  &.btn-size-md {
+    padding: rem(12) rem(24);
+    @include font(14);
+    
+    &.btn-shape-round {
+      padding: rem(16) rem(32);
+    }
+  }
+
+  &.btn-size-sm {
+    padding: rem(8) rem(16);
+    @include font(13);
+  }
+
+  &.btn-size-lg {
+    padding: rem(20) rem(40);
+    @include font(18);
+  }
+
+  // Arrow
+  &.has-arrow {
+    gap: rem(8);
+    
+    .icon-arrow {
+      display: inline-block;
+      width: rem(12);
+      height: rem(9);
+      background-color: currentColor;
+      mask-image: url("@/assets/images/icon/ic_arrow.svg");
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover {
+      .icon-arrow {
+        transform: translateX(rem(4));
+      }
+    }
+  }
+  
 }
 </style>

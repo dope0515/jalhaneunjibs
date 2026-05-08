@@ -1,0 +1,28 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.main-section {
+  .content-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: rem(50);
+    .title-bx {
+      .title {
+        font-family: $font-family-serif;
+        @include font(96, 1, 500);
+        span {
+          font-family: inherit;
+          color: $primary-color;
+        }
+      }
+    }
+    .desc-bx {
+      .btn-bx {
+        display: flex;
+        gap: rem(16);
+        margin-block-start: rem(56);
+      }
+    }
+  }
+}

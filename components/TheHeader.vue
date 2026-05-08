@@ -16,10 +16,16 @@
             <NuxtLink to="/" class="nav-link">맛집 등록</NuxtLink>
           </li>
           <li class="nav-item">
-            <AppButton v-if="!isLogin" to="/login"  variant="solid">
+            <AppButton 
+              v-if="!isLogin" 
+              to="/login" 
+              color="green">
               LOGIN
             </AppButton>
-            <AppButton v-else @click="handleLogout" variant="outline">
+            <AppButton 
+              v-else 
+              @click="handleLogout" 
+              variant="outline">
               LOGOUT
             </AppButton>
           </li>

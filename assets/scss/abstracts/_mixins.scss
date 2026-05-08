@@ -101,7 +101,8 @@
     // [2] 변수인 경우(var): 무조건 비율 계산 시도 (calc)
     @else if
       meta.type-of($safe-lh)
-      ==string and
+      ==string
+      and-
       string.index($safe-lh, "var(")
       ==1
     {

@@ -8,6 +8,8 @@
 @use "layouts/header";
 @use "layouts/footer";
 
+@use "pages/main";
+
 body {
   background-color: $bg-color;
 }
@@ -19,7 +21,7 @@ body {
   padding-inline: rem(20);
 }
 
-main {
+.main {
   min-height: 50dvh;
   padding-block: rem(100);
 }

@@ -3,6 +3,23 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+
+  app: {
+    head: {
+      title: '잘하는 집을 안 가봐서 그래',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'description', content: '잘하는 집을 안 가봐서 그래 - 맛집 가이드 및 정보 공유 서비스' },
+        { property: 'og:title', content: '잘하는 집을 안 가봐서 그래' },
+        { property: 'og:description', content: '잘하는집에서 다양한 맛집 정보를 확인하세요.' },
+        { property: 'og:type', content: 'website' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ]
+    }
+  },
   
   nitro: {
     publicAssets: [
@@ -40,7 +57,7 @@ export default defineNuxtConfig({
     ]
   },
 
-  css: ['./assets/scss/main.scss'],
+  css: ['./assets/scss/jalhaneunjib.scss'],
   
   vite: {
     css: {
