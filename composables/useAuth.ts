@@ -1,20 +1,40 @@
 export const useAuth = () => {
-  // 1. 전역 상태 정의 (여러 컴포넌트에서 공유할 로그인 여부)
-  const isLogin = useState('isLogin', () => false);
-  
-  // 2. 브라우저 쿠키와 연동 (새로고침 시 유지용 토큰 저장소)
-  const authToken = useCookie('auth_token');
-  
-  if (authToken.value) isLogin.value = true;
+  // 앱 전체에서 공유할 유저 상태 (기본값 null)
+  const user = useState<any | null>('user', () => null)
+  const accessToken = useState<string | null>('accessToken', () => null)
 
-  // 3. 로그아웃을 처리하는 함수
+  // 로그인 시도 함수
+  const login = async (credentials: { email: string; password: string }) => {
+    try {
+      const data = await $fetch<any>('/api/auth/login', {
+        method: 'POST',
+        body: credentials
+      })
+
+      // 성공 시 상태 업데이트
+      user.value = data.user
+      accessToken.value = data.accessToken
+
+      // 메인 페이지로 이동
+      navigateTo('/')
+    } catch (error: any) {
+      alert(error.data?.statusMessage || '로그인에 실패했습니다.')
+    }
+  }
+
+  // 로그아웃 함수
   const logout = () => {
-    authToken.value = null // 쿠키 삭제
-    isLogin.value = false
+    user.value = null
+    accessToken.value = null
+    // 쿠키는 서버사이드에서 지워주는 것이 좋지만, 
+    // 우선 프론트 상태를 비우고 이동합니다.
+    navigateTo('/login')
   }
 
   return {
-    isLogin,
+    user,
+    accessToken,
+    login,
     logout
   }
 }

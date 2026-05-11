@@ -14,9 +14,6 @@ model User {
   email        String   @unique
   password     String
   nickname     String?
-  profileImage String?
-  phoneNumber  String?
-  bio          String?  // 자기소개 (선택 사항)
   
   // 👈 이 줄을 추가해서 사용자가 쓴 리뷰들을 연결합니다.
   reviews      Review[] 
@@ -27,7 +24,17 @@ model User {
   followers    Follow[]     @relation("following")
   following    Follow[]     @relation("follower")
 
+  refreshTokens RefreshToken[]
+
   createdAt    DateTime @default(now())
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 // 4. 설계도: 실제 '맛집(Restaurant)' 테이블
