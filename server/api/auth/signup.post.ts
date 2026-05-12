@@ -2,12 +2,12 @@ import bcrypt from 'bcrypt'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { email, password, nickname } = body
+  const { username, email, password, nickname } = body
 
-  if (!email || !password) {
+  if (!username || !email || !password) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Email and password are required',
+      statusMessage: 'ID, Email and password are required',
     })
   }
 
@@ -16,9 +16,11 @@ export default defineEventHandler(async (event) => {
     
     const user = await prisma.user.create({
       data: {
+        username,
         email,
-        password: hashedPassword, // 3. 암호화된 비밀번호 저장
+        password: hashedPassword,
         nickname,
+        emailVerified: true,
       },
     })
 

@@ -3,11 +3,11 @@ import jwt from 'jsonwebtoken'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { email, password } = body
+  const { username, password } = body
 
-  // 1. 유저 존재 여부 확인
+  // 1. 유저 존재 여부 확인 (ID로 찾기)
   const user = await prisma.user.findUnique({
-    where: { email }
+    where: { username }
   })
 
   if (!user) {

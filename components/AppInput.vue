@@ -1,17 +1,34 @@
 <template>
   <div class="app-input">
     <input 
+      ref="inputRef"
+      v-bind="$attrs"
       :id="id"
       v-model="model" 
       :type="type" 
       :placeholder="placeholder"
       :required="required"
       :autocomplete="autocomplete"
+      :disabled="disabled"
     />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+
+// 속성 상속 비활성화 (root div에 속성이 붙지 않도록)
+defineOptions({
+  inheritAttrs: false
+})
+
+const inputRef = ref(null)
+
+// 내부 input 요소를 외부에서 접근할 수 있도록 노출합니다.
+defineExpose({
+  input: inputRef
+})
+
 // 부모 컴포넌트와 v-model을 연결합니다.
 const model = defineModel()
 
@@ -21,7 +38,8 @@ const props = defineProps({
   type: { type: String, default: 'text' },
   placeholder: String,
   required: Boolean,
-  autocomplete: String
+  autocomplete: String,
+  disabled: Boolean
 })
 </script>
 

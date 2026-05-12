@@ -19,13 +19,15 @@
             <AppButton 
               v-if="!isLogin" 
               to="/login" 
-              color="green">
+              color="green"
+              title="로그인 페이지로 이동하기">
               로그인
             </AppButton>
             <AppButton 
               v-else 
               @click="handleLogout" 
-              variant="outline">
+              variant="outline"
+              title="로그아웃 버튼">
               로그아웃
             </AppButton>
           </li>
