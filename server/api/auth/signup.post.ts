@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Email already exists',
       })
     }
-    
+
     throw createError({
       statusCode: 500,
       statusMessage: 'Something went wrong',

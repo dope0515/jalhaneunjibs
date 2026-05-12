@@ -20,13 +20,13 @@
               v-if="!isLogin" 
               to="/login" 
               color="green">
-              LOGIN
+              로그인
             </AppButton>
             <AppButton 
               v-else 
               @click="handleLogout" 
               variant="outline">
-              LOGOUT
+              로그아웃
             </AppButton>
           </li>
         </ul>

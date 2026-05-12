@@ -2,7 +2,7 @@
 <template>
   <component 
     :is="componentType" 
-    v-bind="dynamicProps" 
+    v-bind="dynamicProps, $attrs" 
     class="app-button"
     :class="buttonClasses" 
     :style="buttonStyles"

@@ -25,6 +25,31 @@ const props = defineProps({
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 /* 여기에 공통 입력창 스타일을 멋지게 입혀보세요! */
+.app-input {
+ input {
+  &[type="text"],
+  &[type="password"],
+  &[type="email"],
+  &[type="search"],
+  &[type="tel"],
+  &[type="url"],
+  &[type="number"] {
+    @include font(16, 20, 400);
+    border-radius: rem(8);
+    padding: rem(12) rem(16);
+    width: 100%;
+    outline: none;
+    border: rem(1) solid #E7E5E4;
+    background-color: #FAFAF9;
+    &::placeholder {
+      color: #929292;
+    }
+    &:focus {
+      border-color: $primary-color;
+    }
+  }
+ } 
+}
 </style>

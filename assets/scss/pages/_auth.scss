@@ -1,0 +1,122 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+.auth {
+  .content-wrap {
+    border-radius: rem(18);
+    min-height: rem(714);
+    box-shadow: rem(0) rem(12) rem(40) rem(-10) rgba($black, 0.25);
+    overflow: hidden;
+    @include tablet {
+      display: flex;
+      border-radius: rem(24);
+    }
+    .title-bx {
+      width: 100%;
+      padding: rem(24);
+      background: #000;
+      background: linear-gradient(
+        21deg,
+        rgba(0, 0, 0, 1) 0%,
+        rgba(71, 90, 78, 1) 61%,
+        rgba(159, 197, 174, 1) 100%
+      );
+      @include tablet {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        width: 50%;
+        padding: rem(48);
+      }
+      .title {
+        font-family: $font-family-serif;
+        @include font(24, 28, 700);
+        color: $white;
+        @include tablet {
+          @include font(36, 40, 700);
+        }
+        &::before {
+          content: "";
+          display: block;
+          width: rem(36);
+          height: rem(2);
+          background-color: $secondary-color;
+          margin-block-end: rem(12);
+          @include tablet {
+            width: rem(48);
+            height: rem(4);
+            margin-block-end: rem(24);
+          }
+        }
+      }
+      .desc {
+        @include font(12, 18, 300);
+        color: $white;
+        margin-block-start: rem(16);
+        text-wrap: balance;
+        @include tablet {
+          @include font(16, 24, 300);
+        }
+      }
+    }
+    .form-bx {
+      width: 100%;
+      padding: rem(24);
+      background-color: $white;
+      @include tablet {
+        width: 50%;
+        padding: rem(64) rem(16);
+      }
+      .form-inner {
+        width: 100%;
+        margin-inline: auto;
+        @include tablet {
+          max-width: rem(400);
+        }
+        .title {
+          font-family: $font-family-serif;
+          @include font(30, 36, 700);
+          margin-block-end: rem(8);
+        }
+        .desc {
+          @include font(14, 20, 300);
+          margin-block-end: rem(24);
+          @include tablet {
+            margin-block-end: rem(40);
+          }
+        }
+        .form-item {
+          &-label {
+            display: inline-block;
+            @include font(12, 16, 700);
+            color: $gray-78;
+            margin-block-end: rem(8);
+          }
+          & + .form-item {
+            margin-block-start: rem(16);
+          }
+        }
+        .btn-bx {
+          margin-block-start: rem(24);
+          .app-button {
+            width: 100%;
+          }
+        }
+        .footer-bx {
+          margin-block-start: rem(16);
+          .desc {
+            text-align: center;
+            .link {
+              font-weight: 700;
+              color: $primary-color;
+              text-underline-position: under;
+              &:hover {
+                text-decoration: underline;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

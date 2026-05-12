@@ -9,6 +9,7 @@
 @use "layouts/footer";
 
 @use "pages/main";
+@use "pages/auth";
 
 body {
   background-color: $bg-color;
