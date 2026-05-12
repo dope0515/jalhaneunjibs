@@ -52,22 +52,14 @@
 </template>
 
 <script setup>
+const { login } = useAuth()
 const id = ref('')
 const password = ref('')
 
 const handleLogin = async () => {
-  try {
-    await $fetch('/api/auth/login', {
-      method: 'POST',
-      body: {
-        username: id.value,
-        password: password.value
-      }
-    })
-    alert('로그인 되었습니다! 메인 페이지로 이동합니다.')
-    navigateTo('/') // 로그인 성공 후 메인 페이지로 이동
-  } catch (error) {
-    alert(error.data?.statusMessage || '로그인에 실패했습니다.')
-  }
+  await login({
+    username: id.value,
+    password: password.value
+  })
 }
 </script>

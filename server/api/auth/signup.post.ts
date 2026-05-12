@@ -2,7 +2,8 @@ import bcrypt from 'bcrypt'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { username, email, password, nickname } = body
+  const { username, email, password: rawPassword, nickname } = body
+  const password = rawPassword?.trim()
 
   if (!username || !email || !password) {
     throw createError({
@@ -33,17 +34,26 @@ export default defineEventHandler(async (event) => {
       }
     }
   } catch (error: any) {
-    // Handle duplicate email error
+    console.error('[Signup Error Details]:', {
+      code: error.code,
+      message: error.message,
+      meta: error.meta,
+      stack: error.stack
+    })
+    
+    // Handle duplicate email/username error
     if (error.code === 'P2002') {
+      const target = error.meta?.target || []
+      const field = target.includes('email') ? '이메일' : '아이디'
       throw createError({
         statusCode: 400,
-        statusMessage: 'Email already exists',
+        statusMessage: `이미 사용 중인 ${field}입니다.`,
       })
     }
 
     throw createError({
       statusCode: 500,
-      statusMessage: 'Something went wrong',
+      statusMessage: error.message || 'Something went wrong',
     })
   }
 })

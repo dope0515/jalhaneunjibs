@@ -3,7 +3,10 @@ import jwt from 'jsonwebtoken'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { username, password } = body
+  const { username, password: rawPassword } = body
+  const password = rawPassword?.trim()
+
+  console.log(`[Login Attempt]: username=${username}, passwordLength=${password?.length}`)
 
   // 1. 유저 존재 여부 확인 (ID로 찾기)
   const user = await prisma.user.findUnique({
@@ -11,20 +14,26 @@ export default defineEventHandler(async (event) => {
   })
 
   if (!user) {
+    console.log(`[Login Failed]: User not found - ${username}`)
     throw createError({
       statusCode: 401,
-      statusMessage: '이메일 또는 비밀번호가 일치하지 않습니다.'
+      statusMessage: '아이디 또는 비밀번호가 일치하지 않습니다.'
     })
   }
+
+  console.log(`[Login Info]: Found user, storedPasswordHashLength=${user.password?.length}`)
 
   // 2. 비밀번호 일치 여부 확인
   const isMatch = await bcrypt.compare(password, user.password)
   if (!isMatch) {
+    console.log(`[Login Failed]: Password mismatch for ${username}`)
     throw createError({
       statusCode: 401,
-      statusMessage: '이메일 또는 비밀번호가 일치하지 않습니다.'
+      statusMessage: '아이디 또는 비밀번호가 일치하지 않습니다.'
     })
   }
+
+  console.log(`[Login Success]: ${username}`)
 
   // 3. 토큰 생성 (아까 만든 .env의 키들을 여기서 꺼내 씁니다!)
   const accessToken = jwt.sign(
