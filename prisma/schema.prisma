@@ -50,6 +50,12 @@ model RefreshToken {
 }
 
 // 4. 설계도: 실제 '맛집(Restaurant)' 테이블
+enum RestaurantStatus {
+  ACTIVE    // 영업 중
+  CLOSED    // 폐업
+  HIDDEN    // 숨김 (관리자용)
+}
+
 model Restaurant {
   id               Int      @id @default(autoincrement())
   
@@ -57,8 +63,10 @@ model Restaurant {
   placeId          String?  @unique 
   
   name             String   
+  description      String?  // 식당 한줄 소개 또는 상세 설명
   thumbnail        String?  
   foodCategory     String? 
+  status           RestaurantStatus @default(ACTIVE)
   
   // 전체 주소와 분리된 행정구역 (지역 필터링 성능 최적화)
   address          String   // 전체 지번/도로명 주소
@@ -117,14 +125,15 @@ model Review {
 
 // 6. 설계도: 메뉴(Menu) 테이블 (AI 분석 결과 저장용)
 model Menu {
-  id           Int      @id @default(autoincrement())
-  name         String   // 메뉴 이름 (예: 김치찌개)
-  price        String?  // 가격 (예: 9,000원)
-  description  String?  // 메뉴 설명 (예: 직접 담근 김치로 끓여 깊은 맛!) 👈 추가
-  image        String?  // 메뉴 사진
+  id            Int      @id @default(autoincrement())
+  name          String   // 메뉴 이름 (예: 김치찌개)
+  price         Int?     // 가격 (숫자 타입으로 변경하여 정렬/필터링 최적화)
+  description   String?  // 메뉴 설명
+  image         String?  // 메뉴 사진
+  isRecommended Boolean  @default(false) // 추천 메뉴 여부
   
-  restaurantId Int
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId  Int
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
 }
 
 // 7. 설계도: 즐겨찾기(Favorite) 테이블

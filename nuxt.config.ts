@@ -34,6 +34,14 @@ export default defineNuxtConfig({
   
   modules: ['@pinia/nuxt', '@nuxt/fonts'],
 
+  runtimeConfig: {
+    openaiApiKey: process.env.OPENAI_API_KEY,
+    geminiApiKey: process.env.GEMINI_API_KEY,
+    public: {
+      kakaoMapKey: process.env.KAKAO_MAP_KEY,
+    }
+  },
+
   typescript: {
     typeCheck: false,
     strict: true

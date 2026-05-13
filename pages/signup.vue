@@ -27,10 +27,12 @@
                   v-model="password"
                   id="password"
                   type="password"
-                  placeholder="비밀번호를 입력해주세요"
+                  placeholder="영문, 숫자 포함 6자리 이상"
                   autocomplete="new-password"
                   required
+                  show-password-toggle
                 />
+                <p v-if="password && !isPasswordValid" class="form-msg error">비밀번호는 영문과 숫자를 포함하여 6자리 이상이어야 합니다.</p>
               </div>
               <div class="form-item">
                 <label for="passwordCheck" class="form-item-label">비밀번호 확인</label>
@@ -41,7 +43,9 @@
                   placeholder="비밀번호를 다시 입력해주세요"
                   autocomplete="new-password"
                   required
+                  show-password-toggle
                 />
+                <p v-if="passwordCheck && password !== passwordCheck" class="form-msg error">비밀번호가 일치하지 않습니다.</p>
               </div>
               <div class="form-item">
                 <label for="email" class="form-item-label">이메일</label>
@@ -152,6 +156,11 @@ const isCodeSent = ref(false)
 const isSendingCode = ref(false)
 const emailMessage = ref('')
 
+const isPasswordValid = computed(() => {
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/
+  return passwordRegex.test(password.value)
+})
+
 const checkEmail = async () => {
   if (!emailInput.value?.input.reportValidity()) return
   
@@ -210,6 +219,11 @@ const verifyCode = async () => {
 const handleSignup = async () => {
   if (!isEmailVerified.value) {
     alert('이메일 인증이 필요합니다.')
+    return
+  }
+
+  if (!isPasswordValid.value) {
+    alert('비밀번호 조건을 확인해주세요 (영문, 숫자 포함 6자리 이상).')
     return
   }
 

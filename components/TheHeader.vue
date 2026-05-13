@@ -11,10 +11,23 @@
       <nav class="nav">
         <ul class="nav-list">
           <li class="nav-item">
-            <NuxtLink to="/" class="nav-link" title="맛집 목록 페이지로 이동하기">맛집 목록</NuxtLink>
+            <NuxtLink 
+              to="/restaurants" 
+              class="nav-link" 
+              title="맛집 목록 페이지로 이동하기"
+            >
+              맛집 목록
+            </NuxtLink>
           </li>
           <li class="nav-item">
-            <NuxtLink to="/" class="nav-link" title="맛집 등록 페이지로 이동하기">맛집 등록</NuxtLink>
+            <button 
+              type="button"
+              class="nav-link" 
+              title="맛집 등록 페이지로 이동하기"
+              @click="goToRegister"
+            >
+              맛집 등록
+            </button>
           </li>
           <li class="nav-item">
             <!-- Pinia 스토어 상태 직접 참조 -->
@@ -47,7 +60,31 @@
   const authStore = useAuthStore()
   const { logout } = useAuth()
 
+  const goToRegister = () => {
+    console.log('[Header] goToRegister clicked. isLoggedIn:', authStore.isLoggedIn)
+    if (!authStore.isLoggedIn) {
+      alert('로그인 후 이용 가능합니다.')
+      navigateTo('/login')
+      return
+    }
+    navigateTo('/restaurants/register')
+  }
+
   const handleLogout = () => {
     logout()
   }
 </script>
+
+<style lang="scss" scoped>
+.nav-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  
+  &:hover {
+    color: $primary-color;
+  }
+}
+</style>
