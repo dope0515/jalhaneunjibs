@@ -7,7 +7,7 @@
           <AppTitle
             badge="New Place"
             title="당신의 잘하는 집을 알려주세요"
-            desc="나만 알고 있는 숨은 맛집, 이제 모두와 함께 나누세요. 상세한 정보는 미식가들에게 큰 도움이 됩니다."
+            desc="내가 아는 잘하는 집을 추천해 주세요"
           />
         </div>
 
@@ -151,7 +151,7 @@
                           @click="removeKeyword(index)" 
                           :aria-label="`${tag} 키워드 삭제`"
                         >
-                          ×
+                          <img src="/assets/images/icon/ic_close.svg" width="12" height="12" alt="삭제" />
                         </button>
                       </span>
                     </div>
@@ -207,7 +207,9 @@
                     <div v-if="restaurantPreviews.length > 0" class="preview-gallery">
                       <div v-for="(src, index) in restaurantPreviews" :key="index" class="preview-item">
                         <img :src="src" alt="매장 이미지 미리보기" />
-                        <span class="preview-remove" role="button" @click.stop="removeRestaurantImage(index)" aria-label="이미지 삭제">×</span>
+                        <span class="preview-remove" role="button" @click.stop="removeRestaurantImage(index)" aria-label="이미지 삭제">
+                          <img src="/assets/images/icon/ic_close.svg" width="14" height="14" alt="삭제" />
+                        </span>
                         <span v-if="index === 0" class="main-badge">대표</span>
                       </div>
                     </div>
@@ -240,7 +242,9 @@
                   >
                     <template v-if="menuBoardPreview">
                       <img :src="menuBoardPreview" alt="메뉴판 이미지 미리보기" class="drop-zone-preview" />
-                      <span class="drop-zone-remove" role="button" @click.stop="removeMenuBoard" aria-label="이미지 삭제">×</span>
+                      <span class="drop-zone-remove" role="button" @click.stop="removeMenuBoard" aria-label="이미지 삭제">
+                        <img src="/assets/images/icon/ic_close.svg" width="18" height="18" alt="삭제" />
+                      </span>
                     </template>
                     <template v-else>
                       <span class="drop-zone-content">
@@ -267,8 +271,14 @@
 
                   <div class="menu-items-result">
                     <div class="menu-items-header" v-if="analyzedMenuItems.length > 0">
-                      <p class="menu-items-count" aria-live="polite">{{ analyzedMenuItems.length }}개 메뉴가 분석 되었습니다</p>
-                      <p class="menu-recommend-hint">⭐ 눌러서 추천 메뉴 설정</p>
+                      <p class="menu-items-count" aria-live="polite">
+                        <img src="/assets/images/icon/ic_count.svg" width="16" height="16" alt="" aria-hidden="true" />
+                        {{ analyzedMenuItems.length }}개 메뉴가 분석 되었습니다
+                      </p>
+                      <p class="menu-recommend-hint">
+                        <img src="/assets/images/icon/ic_star.svg" width="14" height="14" alt="" aria-hidden="true" />
+                        눌러서 추천 메뉴 설정
+                      </p>
                     </div>
                     <div class="menu-item-list" role="list">
                       <div
@@ -296,7 +306,9 @@
                             class="menu-item-image-remove"
                             aria-label="메뉴 이미지 삭제"
                             @click.stop="removeMenuItemImage(index)"
-                          >×</span>
+                          >
+                            <img src="/assets/images/icon/ic_close.svg" width="12" height="12" alt="삭제" />
+                          </span>
                         </button>
                         <button
                           type="button"
@@ -305,7 +317,12 @@
                           :aria-pressed="item.isRecommended"
                           :title="item.isRecommended ? '추천 해제' : '추천 메뉴로 설정'"
                           @click="item.isRecommended = !item.isRecommended"
-                        >★</button>
+                        >
+                          <img 
+                            :src="item.isRecommended ? '/assets/images/icon/ic_star.svg' : '/assets/images/icon/ic_star_off.svg'" 
+                            width="16" height="16" alt="추천" 
+                          />
+                        </button>
                         <div class="menu-item-info">
                           <input 
                             v-model="item.name" 
@@ -336,7 +353,9 @@
                             autocomplete="off"
                           />
                         </div>
-                        <button type="button" class="menu-item-remove" :aria-label="`${index + 1}번째 메뉴 삭제`" @click="analyzedMenuItems.splice(index, 1)">×</button>
+                        <button type="button" class="menu-item-remove" :aria-label="`${index + 1}번째 메뉴 삭제`" @click="analyzedMenuItems.splice(index, 1)">
+                          <img src="/assets/images/icon/ic_close.svg" width="16" height="16" alt="삭제" />
+                        </button>
                       </div>
                     </div>
                     

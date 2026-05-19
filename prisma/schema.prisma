@@ -130,6 +130,8 @@ model Review {
   user         User       @relation(fields: [userId], references: [id])
 
   createdAt    DateTime @default(now())
+
+  @@unique([userId, restaurantId]) // 1인 1리뷰 제한
 }
 
 // 6. 설계도: 메뉴(Menu) 테이블 (AI 분석 결과 저장용)

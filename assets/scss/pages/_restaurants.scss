@@ -509,6 +509,31 @@
       }
     }
 
+    // 댓글 인라인 수정 폼
+    .comment-edit-wrap {
+      margin: rem(8) 0;
+
+      .comment-edit-textarea {
+        width: 100%;
+        padding: rem(10) rem(12);
+        border: 1px solid $secondary-color;
+        border-radius: rem(8);
+        @include font(14, 1.6, 400, $gray-44);
+        resize: vertical;
+        font-family: inherit;
+        background: #fff;
+        outline: none;
+        margin-bottom: rem(8);
+        transition: border-color 0.2s;
+      }
+
+      .comment-edit-btns {
+        display: flex;
+        justify-content: flex-end;
+        gap: rem(8);
+      }
+    }
+
     .reply-input-wrap {
       margin: rem(16) 0 rem(16) rem(40);
       padding: rem(20);
@@ -552,9 +577,16 @@
         }
         .content { @include font(14, 1.6, 400, $gray-44); margin-bottom: rem(8); }
         .reply-actions {
+          display: flex;
+          gap: rem(8);
           button {
-            background: none; border: none; cursor: pointer;
-            @include font(12, 1, 600, #ef4444);
+            background: none;
+            border: none;
+            cursor: pointer;
+            @include font(12, 1, 500, $gray-78);
+            padding: 0;
+            &:hover { color: $primary-color; }
+            &.delete-btn { @include font(12, 1, 500, $gray-78); &:hover { color: #ef4444; } }
           }
         }
       }
@@ -788,5 +820,327 @@
 
     .lightbox-prev { left: rem(8); }
     .lightbox-next { right: rem(8); }
+  }
+}
+
+// ─── 리뷰 섹션 ───────────────────────────────────────────────────
+
+.review-section {
+
+  // 평점 요약
+  .review-summary {
+    display: flex;
+    align-items: center;
+    gap: rem(32);
+    padding: rem(20) rem(24);
+    background: $bg-color;
+    border-radius: rem(12);
+    margin-bottom: rem(24);
+
+    @media (max-width: $bp-sm) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: rem(16);
+    }
+  }
+
+  .summary-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: rem(6);
+    min-width: rem(90);
+
+    .score-number {
+      @include font(40, 1, 700, $primary-color);
+    }
+
+    .score-total {
+      @include font(12, 1.4, 400, $secondary-color);
+      white-space: nowrap;
+    }
+  }
+
+  .summary-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: rem(6);
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+
+    .bar-label {
+      @include font(12, 1, 500, $secondary-color);
+      width: rem(24);
+      text-align: right;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: rem(6);
+      background: #e8e8e4;
+      border-radius: rem(3);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: $tertiary-color;
+      border-radius: rem(3);
+      transition: width 0.4s ease;
+    }
+
+    .bar-count {
+      @include font(12, 1, 400, $secondary-color);
+      width: rem(20);
+    }
+  }
+
+  // 내 리뷰 카드
+  .my-review-card {
+    border: 1px solid rgba($secondary-color, 0.3);
+    background: rgba($secondary-color, 0.04);
+    border-radius: rem(12);
+    padding: rem(16) rem(20);
+    margin-bottom: rem(20);
+    display: flex;
+    flex-direction: column;
+    gap: rem(10);
+  }
+
+  .my-review-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .my-review-label {
+      @include font(13, 1, 700, $secondary-color);
+    }
+
+    .my-review-actions {
+      display: flex;
+      gap: rem(8);
+    }
+  }
+
+  .my-review-content {
+    @include font(14, 1.6, 400, $black);
+    margin: 0;
+  }
+
+  // 작성/수정 폼
+  .review-form-wrap {
+    margin-bottom: rem(28);
+  }
+
+  .review-form {
+    display: flex;
+    flex-direction: column;
+    gap: rem(12);
+
+    .form-guide {
+      @include font(14, 1, 500, $secondary-color);
+      margin: 0;
+    }
+
+    .review-textarea {
+      width: 100%;
+      padding: rem(12) rem(14);
+      border: 1px solid #d1d5db;
+      border-radius: rem(8);
+      @include font(14, 1.6, 400, $black);
+      background: #fff;
+      resize: vertical;
+      transition: border-color 0.2s;
+      font-family: inherit;
+
+      &:focus {
+        outline: none;
+        border-color: $secondary-color;
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: rem(8);
+    }
+  }
+
+  // 로그인 유도
+  .review-login-guide {
+    text-align: center;
+    padding: rem(20) 0;
+    @include font(14, 1.6, 400, $secondary-color);
+    margin-bottom: rem(16);
+
+    a {
+      color: $secondary-color;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+  }
+
+  // 리뷰 목록
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: rem(16);
+    border-top: 1px solid #f0f0ec;
+    padding-top: rem(20);
+  }
+
+  .review-item {
+    display: flex;
+    flex-direction: column;
+    gap: rem(6);
+    padding-bottom: rem(16);
+    border-bottom: 1px solid #f5f5f2;
+
+    &:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+  }
+
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+    flex-wrap: wrap;
+
+    .reviewer-name {
+      @include font(13, 1, 700, $black);
+    }
+
+    .review-date {
+      @include font(12, 1, 400, $secondary-color);
+    }
+  }
+
+  .review-content {
+    @include font(14, 1.6, 400, $black);
+    margin: 0;
+  }
+
+  // 리뷰 이미지 썸네일 (목록 + 내 리뷰)
+  .review-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+    margin-top: rem(8);
+  }
+
+  .review-img-thumb {
+    width: rem(80);
+    height: rem(80);
+    object-fit: cover;
+    border-radius: rem(8);
+    border: 1px solid #e8e8e4;
+    cursor: pointer;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 0.85; }
+  }
+
+  // 이미지 업로더 (폼 내)
+  .review-img-uploader {
+    display: flex;
+    flex-direction: column;
+    gap: rem(10);
+  }
+
+  .img-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(6);
+    padding: rem(8) rem(14);
+    border: 1px dashed #c8c8c0;
+    border-radius: rem(8);
+    background: #fafaf8;
+    @include font(13, 1, 500, $gray-78);
+    cursor: pointer;
+    transition: all 0.15s;
+    width: fit-content;
+
+    &:hover {
+      border-color: $secondary-color;
+      color: $secondary-color;
+      background: rgba($secondary-color, 0.04);
+    }
+  }
+
+  .img-preview-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+  }
+
+  .img-preview-item {
+    position: relative;
+    width: rem(80);
+    height: rem(80);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: rem(8);
+      border: 1px solid #e0e0dc;
+    }
+  }
+
+  .img-remove-btn {
+    position: absolute;
+    top: rem(-6);
+    right: rem(-6);
+    width: rem(20);
+    height: rem(20);
+    border-radius: 50%;
+    background: #333;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    @include font(13, 1, 700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    &:hover { background: #ef4444; }
+  }
+
+  // 숨김 파일 인풋
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // 수정/삭제 액션 버튼 공통
+  .action-btn {
+    @include font(12, 1, 500, $secondary-color);
+    padding: rem(3) rem(8);
+    border: 1px solid #d1d5db;
+    border-radius: rem(4);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover { border-color: $secondary-color; color: $secondary-color; }
+
+    &--delete {
+      &:hover { border-color: #ef4444; color: #ef4444; }
+    }
   }
 }
