@@ -26,6 +26,7 @@
                     ref="nameInputRef"
                     v-model="form.name"
                     id="name"
+                    name="name"
                     placeholder="식당 이름을 입력하면 추천 목록이 나옵니다"
                     required
                     autocomplete="off"
@@ -75,6 +76,7 @@
                   <AppInput 
                     v-model="form.address"
                     id="address"
+                    name="address"
                     placeholder="식당 주소를 입력하면 자동으로 입력됩니다."
                     required
                     readonly
@@ -88,6 +90,7 @@
                   <AppInput 
                     v-model="form.phoneNumber"
                     id="phoneNumber"
+                    name="phoneNumber"
                     placeholder="자동으로 입력되거나 직접 수정 가능합니다"
                     autocomplete="tel"
                   />
@@ -115,6 +118,7 @@
                   <textarea 
                     v-model="form.description"
                     id="description"
+                    name="description"
                     class="form-textarea"
                     placeholder="식당의 특징이나 분위기 등을 자유롭게 적어주세요"
                     rows="3"
@@ -122,14 +126,14 @@
                 </div>
 
                 <div class="form-item">
-                  <label for="keywords" class="form-item-label">키워드 (최대 3개)</label>
+                  <label for="keywords" class="form-item-label">키워드</label>
                   <div class="keyword-input-wrap">
                     <div class="keyword-input-row">
                       <AppInput
                         v-model="keywordInput"
                         id="keywords"
+                        name="keywords"
                         placeholder="예: 가성비, 데이트, 주차가능"
-                        :disabled="form.keywords.length >= 3"
                         @keydown="handleKeywordKeydown"
                       />
                       <button
@@ -170,37 +174,44 @@
                 </div>
 
                 <div class="form-item">
-                  <label for="thumbnail" class="form-item-label">매장 이미지</label>
+                  <label for="restaurant-images" class="form-item-label">매장 이미지 (최대 5장)</label>
                   <input
                     ref="fileInputRef"
                     type="file"
-                    id="thumbnail"
+                    id="restaurant-images"
+                    name="restaurant-images"
                     accept="image/*"
+                    multiple
                     class="sr-only"
                     @change="handleFileUpload"
                   />
-                  <button
-                    type="button"
-                    class="drop-zone"
-                    :aria-label="thumbnailPreview ? '매장 이미지 수정' : '매장 이미지 업로드'"
-                    :class="{ 'is-dragover': isDragOver, 'has-image': thumbnailPreview }"
-                    @dragover.prevent="isDragOver = true"
-                    @dragleave.prevent="isDragOver = false"
-                    @drop.prevent="handleDrop"
-                    @click="triggerFileInput"
-                  >
-                    <template v-if="thumbnailPreview">
-                      <img :src="thumbnailPreview" alt="매장 이미지 미리보기" class="drop-zone-preview" />
-                      <span class="drop-zone-remove" role="button" @click.stop="removeThumbnail" aria-label="이미지 삭제">×</span>
-                    </template>
-                    <template v-else>
+                  <div class="image-upload-wrap">
+                    <button
+                      type="button"
+                      class="drop-zone"
+                      :aria-label="'매장 이미지 업로드'"
+                      :class="{ 'is-dragover': isDragOver }"
+                      @dragover.prevent="isDragOver = true"
+                      @dragleave.prevent="isDragOver = false"
+                      @drop.prevent="handleDrop"
+                      @click="triggerFileInput"
+                      v-if="restaurantPreviews.length < 5"
+                    >
                       <span class="drop-zone-content">
                         <img src="/assets/images/icon/ic_upload.svg" width="36" height="36" alt="" class="drop-zone-icon" aria-hidden="true" />
-                        <span class="drop-zone-text">클릭하거나 이미지를 드래그하세요</span>
-                        <span class="drop-zone-sub">PNG, JPG, WEBP · 최대 5MB</span>
+                        <span class="drop-zone-text">이미지 추가 ({{ restaurantPreviews.length }}/5)</span>
+                        <span class="drop-zone-sub">여러 장 선택 가능</span>
                       </span>
-                    </template>
-                  </button>
+                    </button>
+                    
+                    <div v-if="restaurantPreviews.length > 0" class="preview-gallery">
+                      <div v-for="(src, index) in restaurantPreviews" :key="index" class="preview-item">
+                        <img :src="src" alt="매장 이미지 미리보기" />
+                        <span class="preview-remove" role="button" @click.stop="removeRestaurantImage(index)" aria-label="이미지 삭제">×</span>
+                        <span v-if="index === 0" class="main-badge">대표</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-item">
@@ -212,6 +223,7 @@
                     ref="menuBoardInputRef"
                     type="file"
                     id="menu-board-upload"
+                    name="menu-board-upload"
                     accept="image/*"
                     class="sr-only"
                     @change="handleMenuBoardUpload"
@@ -297,6 +309,8 @@
                         <div class="menu-item-info">
                           <input 
                             v-model="item.name" 
+                            :id="`menu-name-${index}`"
+                            :name="`menu-name-${index}`"
                             class="menu-item-input menu-item-name" 
                             :aria-label="`${index + 1}번째 메뉴 이름`"
                             placeholder="메뉴명" 
@@ -304,6 +318,8 @@
                           />
                           <input 
                             :value="item.price" 
+                            :id="`menu-price-${index}`"
+                            :name="`menu-price-${index}`"
                             class="menu-item-input menu-item-price" 
                             :aria-label="`${index + 1}번째 메뉴 가격`"
                             placeholder="가격 (예: 12,000)" 
@@ -312,6 +328,8 @@
                           />
                           <input 
                             v-model="item.description" 
+                            :id="`menu-desc-${index}`"
+                            :name="`menu-desc-${index}`"
                             class="menu-item-input menu-item-desc" 
                             :aria-label="`${index + 1}번째 메뉴 설명`"
                             placeholder="설명 (선택)" 
@@ -325,6 +343,8 @@
                     <input
                       ref="menuItemImageInputRef"
                       type="file"
+                      id="menu-item-image-upload"
+                      name="menu-item-image-upload"
                       accept="image/*"
                       class="sr-only"
                       @change="handleMenuItemImageUpload"
@@ -386,8 +406,8 @@ const keywordInput = ref('')
 
 const analyzedMenuItems = ref([])
 const isDirty = ref(false)
-const thumbnailFile = ref(null)
-const thumbnailPreview = ref(null)
+const restaurantImages = ref([])
+const restaurantPreviews = ref([])
 const fileInputRef = ref(null)
 const isDragOver = ref(false)
 
@@ -618,25 +638,31 @@ const removeKeyword = (index) => {
 
 const triggerFileInput = () => fileInputRef.value?.click()
 
-const processImageFile = (file) => {
-  if (!file || !file.type.startsWith('image/')) return
-  thumbnailFile.value = file
-  const reader = new FileReader()
-  reader.onload = (e) => { thumbnailPreview.value = e.target.result }
-  reader.readAsDataURL(file)
+const processImageFiles = (files) => {
+  if (!files || files.length === 0) return
+  
+  const newFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
+  
+  newFiles.forEach(file => {
+    restaurantImages.value.push(file)
+    const reader = new FileReader()
+    reader.onload = (e) => { 
+      restaurantPreviews.value.push(e.target.result) 
+    }
+    reader.readAsDataURL(file)
+  })
 }
 
-const handleFileUpload = (e) => processImageFile(e.target.files[0])
+const handleFileUpload = (e) => processImageFiles(e.target.files)
 
 const handleDrop = (e) => {
   isDragOver.value = false
-  processImageFile(e.dataTransfer.files[0])
+  processImageFiles(e.dataTransfer.files)
 }
 
-const removeThumbnail = () => {
-  thumbnailFile.value = null
-  thumbnailPreview.value = null
-  if (fileInputRef.value) fileInputRef.value.value = ''
+const removeRestaurantImage = (index) => {
+  restaurantImages.value.splice(index, 1)
+  restaurantPreviews.value.splice(index, 1)
 }
 
 const triggerMenuBoardInput = () => menuBoardInputRef.value?.click()
@@ -736,8 +762,8 @@ const resetForm = () => {
     keywords: []
   }
   analyzedMenuItems.value = []
-  thumbnailFile.value = null
-  thumbnailPreview.value = null
+  restaurantImages.value = []
+  restaurantPreviews.value = []
   menuBoardFile.value = null
   menuBoardPreview.value = null
   keywordInput.value = ''
@@ -768,8 +794,10 @@ const handleSubmit = async () => {
     }
   })
 
-  if (thumbnailFile.value) {
-    formData.append('thumbnail', thumbnailFile.value)
+  if (restaurantImages.value.length > 0) {
+    restaurantImages.value.forEach(file => {
+      formData.append('restaurantImages', file)
+    })
   }
 
   if (analyzedMenuItems.value.length > 0) {

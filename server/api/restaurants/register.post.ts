@@ -50,25 +50,37 @@ export default defineEventHandler(async (event) => {
     const placeId = formData.get('placeId')?.toString()
     const keywordsString = formData.get('keywords')?.toString()
     const menuItemsString = formData.get('menuItems')?.toString()
-    const thumbnailFile = formData.get('thumbnail')
+    const thumbnailFile = formData.get('thumbnail') // 레거시 지원용
+    const restaurantImages = formData.getAll('restaurantImages') // 새 이미지 배열
+    
+    // ... (중략) ...
 
-    // 필수 정보 유효성 검사
-    if (!name || !address || !category || !lat || !lng || !placeId) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: '필수 정보가 누락되었습니다. (이름, 주소, 카테고리, 위치 정보)',
-      })
-    }
-
-    // 1. 썸네일 업로드 (Cloudinary)
-    let thumbnailPath: string | null = null
-    if (thumbnailFile && thumbnailFile instanceof File && thumbnailFile.size > 0) {
+    // 1. 식당 이미지 업로드 (Cloudinary)
+    let uploadedImages: string[] = []
+    
+    // 여러 이미지 처리
+    if (restaurantImages.length > 0) {
+      for (const file of restaurantImages) {
+        if (file instanceof File && file.size > 0) {
+          try {
+            const url = await uploadToCloudinary(file, 'restaurants')
+            uploadedImages.push(url)
+          } catch (e) {
+            console.error('[Cloudinary] Image upload failed:', e)
+          }
+        }
+      }
+    } else if (thumbnailFile && thumbnailFile instanceof File && thumbnailFile.size > 0) {
+      // 레거시 대응: 하나만 보낸 경우
       try {
-        thumbnailPath = await uploadToCloudinary(thumbnailFile, 'restaurants')
+        const url = await uploadToCloudinary(thumbnailFile, 'restaurants')
+        uploadedImages.push(url)
       } catch (e) {
         console.error('[Cloudinary] Thumbnail upload failed:', e)
       }
     }
+
+    let thumbnailPath = uploadedImages.length > 0 ? uploadedImages[0] : null
 
     // 2. 키워드 파싱
     let keywords: string[] = []
@@ -131,6 +143,7 @@ export default defineEventHandler(async (event) => {
         name,
         description,
         thumbnail: thumbnailPath,
+        images: uploadedImages,
         foodCategory: category,
         address,
         region1,

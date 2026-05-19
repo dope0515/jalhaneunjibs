@@ -168,6 +168,73 @@
     }
   }
 
+  // 식당 이미지 업로드 갤러리
+  .image-upload-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: rem(16);
+  }
+
+  .preview-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(12);
+
+    .preview-item {
+      position: relative;
+      width: calc(33.333% - rem(8));
+      aspect-ratio: 1 / 1;
+      border-radius: rem(12);
+      overflow: hidden;
+      border: 1px solid $gray-e4;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .preview-remove {
+        position: absolute;
+        top: rem(4);
+        right: rem(4);
+        width: rem(22);
+        height: rem(22);
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5);
+        color: $white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        @include font(14, 1, 700);
+        cursor: pointer;
+        z-index: 2;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.8);
+        }
+      }
+
+      .main-badge {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba($primary-color, 0.9);
+        color: $white;
+        text-align: center;
+        padding: rem(4) 0;
+        @include font(10, 1, 700);
+      }
+    }
+
+    @media (max-width: $bp-sm) {
+      .preview-item {
+        width: calc(50% - rem(6));
+      }
+    }
+  }
+
   // 드래그앤드롭 업로드 존
   .drop-zone {
     position: relative;
@@ -352,11 +419,7 @@
     gap: rem(16);
 
     .menu-item-card {
-      width: calc(50% - rem(8)); // 기본 2컬럼
-
-      @media (max-width: rem(1000)) {
-        width: 100%; // 중간 사이즈에서 1컬럼
-      }
+      width: 100%;
     }
 
     @media (max-width: $bp-sm) {
@@ -556,7 +619,6 @@
   }
 
   .menu-item-add {
-    grid-column: 1 / -1;
     display: flex;
     align-items: center;
     justify-content: center;

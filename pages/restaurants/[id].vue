@@ -25,10 +25,25 @@
       <div class="detail-grid">
         <!-- 메인 콘텐츠 영역 -->
         <div class="main-content">
-          <!-- 썸네일 & 설명 -->
+          <!-- 이미지 갤러리 (Swiper) -->
           <div class="info-section card-box">
             <div class="image-wrap">
+              <Swiper
+                v-if="restaurant.images?.length"
+                :modules="swiperModules"
+                :slides-per-view="1"
+                :loop="true"
+                :pagination="{ clickable: true }"
+                :navigation="true"
+                :autoplay="{ delay: 5000 }"
+                class="detail-swiper"
+              >
+                <SwiperSlide v-for="(img, idx) in restaurant.images" :key="idx">
+                  <img :src="img" :alt="`${restaurant.name} 이미지 ${idx + 1}`" class="main-thumbnail" />
+                </SwiperSlide>
+              </Swiper>
               <img 
+                v-else
                 :src="restaurant.thumbnail || '/assets/images/common/default.jpg'" 
                 :alt="restaurant.name" 
                 class="main-thumbnail" 
@@ -57,16 +72,10 @@
               >
                 <div class="menu-img-wrap">
                   <img
-                    v-if="menu.image"
-                    :src="menu.image"
+                    :src="menu.image || '/assets/images/common/default.jpg'"
                     :alt="menu.name"
                     class="menu-img"
                   />
-                  <div v-else class="menu-img-placeholder">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-                    </svg>
-                  </div>
                   <!-- 이미지 위에 힌트 오버레이 -->
                   <span v-if="menu.image" class="menu-img-hint">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
@@ -237,8 +246,10 @@
 
 <script setup>
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Navigation, Keyboard } from 'swiper/modules'
+import { Navigation, Pagination, Autoplay, Keyboard } from 'swiper/modules'
 import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
 
 const route = useRoute()
 const { user } = useAuth()
@@ -257,8 +268,8 @@ if (!restaurant.value) {
   throw createError({ statusCode: 404, message: '식당 정보를 찾을 수 없습니다.' })
 }
 
-// 라이트박스
-const swiperModules = [Navigation, Keyboard]
+// 라이트박스 및 메인 갤러리
+const swiperModules = [Navigation, Pagination, Autoplay, Keyboard]
 const imageMenus = computed(() => restaurant.value?.menus.filter((m) => !!m.image) ?? [])
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)

@@ -72,6 +72,7 @@ model Restaurant {
   name             String   
   description      String?  // 식당 한줄 소개 또는 상세 설명
   thumbnail        String?  
+  images           String[] @default([])
   foodCategory     String? 
   status           RestaurantStatus @default(ACTIVE)
   
