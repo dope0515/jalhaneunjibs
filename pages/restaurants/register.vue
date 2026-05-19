@@ -1,5 +1,6 @@
 <template>
   <section class="register">
+    <AppLoading :loading="isSubmitting" message="맛집을 등록하고 있습니다..." />
     <div class="inner">
       <div class="content-wrap">
         <div class="title-bx">
@@ -15,7 +16,11 @@
             <div class="form-container">
               <!-- 정보 입력 영역 -->
               <div class="form-fields">
-                <div class="form-item">
+                <div 
+                  class="form-item search-container"
+                  @focusin="isSearchFocused = true"
+                  @focusout="handleSearchBlur"
+                >
                   <label for="name" class="form-item-label">식당 이름</label>
                   <AppInput 
                     ref="nameInputRef"
@@ -26,7 +31,7 @@
                     autocomplete="off"
                     role="combobox"
                     aria-autocomplete="list"
-                    :aria-expanded="searchResults.length > 0"
+                    :aria-expanded="isSearchFocused && searchResults.length > 0"
                     aria-haspopup="listbox"
                     aria-controls="search-results-list"
                     @input="handleNameInput"
@@ -35,7 +40,7 @@
                   
                   <!-- 검색 추천 결과 목록 (웹 접근성 강화) -->
                   <ul 
-                    v-if="searchResults.length > 0" 
+                    v-if="isSearchFocused && searchResults.length > 0" 
                     id="search-results-list"
                     class="search-results"
                     role="listbox"
@@ -54,6 +59,8 @@
                         :aria-selected="focusedIndex === index"
                         @click="selectPlace(place)"
                         @mouseenter="focusedIndex = index"
+                        @focus="focusedIndex = index"
+                        @keydown.enter.stop="selectPlace(place)"
                       >
                         <span class="place-name">{{ place.place_name }}</span>
                         <span class="place-address">{{ place.road_address_name || place.address_name }}</span>
@@ -72,6 +79,7 @@
                     required
                     readonly
                     autocomplete="street-address"
+                    tabindex="-1"
                   />
                 </div>
 
@@ -156,11 +164,7 @@
                     class="kakao-place-link"
                   >
                     카카오맵에서 영업시간 확인하기
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                      <polyline points="15 3 21 3 21 9"/>
-                      <line x1="10" y1="14" x2="21" y2="3"/>
-                    </svg>
+                    <img src="/assets/images/icon/ic_external.svg" width="14" height="14" alt="" aria-hidden="true" />
                   </a>
                   <p v-else class="kakao-place-empty">식당을 검색해서 선택하면 카카오맵 링크가 연결됩니다</p>
                 </div>
@@ -191,11 +195,7 @@
                     </template>
                     <template v-else>
                       <span class="drop-zone-content">
-                        <svg class="drop-zone-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                          <polyline points="17 8 12 3 7 8"/>
-                          <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
+                        <img src="/assets/images/icon/ic_upload.svg" width="36" height="36" alt="" class="drop-zone-icon" aria-hidden="true" />
                         <span class="drop-zone-text">클릭하거나 이미지를 드래그하세요</span>
                         <span class="drop-zone-sub">PNG, JPG, WEBP · 최대 5MB</span>
                       </span>
@@ -232,10 +232,7 @@
                     </template>
                     <template v-else>
                       <span class="drop-zone-content">
-                        <svg class="drop-zone-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                          <rect x="3" y="3" width="18" height="18" rx="2"/>
-                          <path d="M3 9h18M9 21V9"/>
-                        </svg>
+                        <img src="/assets/images/icon/ic_menu_board.svg" width="36" height="36" alt="" class="drop-zone-icon" aria-hidden="true" />
                         <span class="drop-zone-text">메뉴판 이미지를 올려주세요</span>
                         <span class="drop-zone-sub">AI가 메뉴명·가격·설명을 자동으로 추출합니다</span>
                       </span>
@@ -258,7 +255,7 @@
 
                   <div class="menu-items-result">
                     <div class="menu-items-header" v-if="analyzedMenuItems.length > 0">
-                      <p class="menu-items-count" aria-live="polite">{{ analyzedMenuItems.length }}개 메뉴가 분석되었습니다</p>
+                      <p class="menu-items-count" aria-live="polite">{{ analyzedMenuItems.length }}개 메뉴가 분석 되었습니다</p>
                       <p class="menu-recommend-hint">⭐ 눌러서 추천 메뉴 설정</p>
                     </div>
                     <div class="menu-item-list" role="list">
@@ -276,14 +273,11 @@
                           :class="{ 'has-image': item.imagePreview }"
                           @click="triggerMenuItemImageInput(index)"
                         >
-                          <img v-if="item.imagePreview" :src="item.imagePreview" :alt="`${item.name || (index + 1) + '번째 메뉴'} 이미지`" />
-                          <div v-else class="menu-item-image-placeholder">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                              <circle cx="8.5" cy="8.5" r="1.5"/>
-                              <polyline points="21 15 16 10 5 21"/>
-                            </svg>
-                          </div>
+                          <img 
+                            :src="item.imagePreview || '/assets/images/common/default.jpg'" 
+                            :alt="`${item.name || (index + 1) + '번째 메뉴'} 이미지`"
+                            @error="(e) => e.target.src = '/assets/images/common/default.jpg'"
+                          />
                           <span 
                             v-if="item.imagePreview" 
                             role="button"
@@ -328,7 +322,6 @@
                       </div>
                     </div>
                     
-                    <!-- 메뉴 개별 이미지 업로드용 숨겨진 input -->
                     <input
                       ref="menuItemImageInputRef"
                       type="file"
@@ -351,7 +344,7 @@
               <!-- 지도 영역 -->
               <div class="form-map">
                 <p class="form-item-label">지도 미리보기</p>
-                <div id="map" class="map"></div>
+                <AppMap ref="mapRef" :lat="37.566826" :lng="126.9786567" :draggable="true" />
               </div>
             </div>
 
@@ -387,76 +380,138 @@ const form = ref({
 
 const searchResults = ref([])
 const focusedIndex = ref(-1)
-let map = null
-let marker = null
-let overlay = null
+const isSearchFocused = ref(false)
+const mapRef = ref(null)
+const keywordInput = ref('')
 
-const userLocation = ref(null)
+const analyzedMenuItems = ref([])
+const isDirty = ref(false)
+const thumbnailFile = ref(null)
+const thumbnailPreview = ref(null)
+const fileInputRef = ref(null)
+const isDragOver = ref(false)
 
-// 지도 초기화
-const initMap = () => {
-  const container = document.getElementById('map')
-  if (!container) return
+const menuBoardFile = ref(null)
+const menuBoardPreview = ref(null)
+const menuBoardInputRef = ref(null)
+const isDragOverMenu = ref(false)
+const isAnalyzing = ref(false)
 
-  // 기본 위치 (서울시청)
-  const defaultLat = 37.566826
-  const defaultLng = 126.9786567
+const menuItemImageInputRef = ref(null)
+const currentEditingMenuIndex = ref(-1)
+const isSubmitting = ref(false)
 
-  const options = {
-    center: new window.kakao.maps.LatLng(defaultLat, defaultLng),
-    level: 3
+const STORAGE_KEY = 'restaurant_registration_draft'
+
+// 데이터 변경 감지 및 자동 저장
+watch([form, analyzedMenuItems], () => {
+  isDirty.value = true
+  saveDraft()
+}, { deep: true })
+
+const saveDraft = () => {
+  const draft = {
+    form: form.value,
+    menuItems: analyzedMenuItems.value.map(item => ({
+      name: item.name,
+      price: item.price,
+      description: item.description,
+      isRecommended: item.isRecommended
+    }))
   }
-  map = new window.kakao.maps.Map(container, options)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
+}
+// 초안 불러오기
+const loadDraft = () => {
+  const saved = localStorage.getItem(STORAGE_KEY)
+  if (!saved) return
 
-  // 커스텀 마커 이미지 설정
-  const markerImageSrc = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20 35C20 35 32 24.3857 32 16C32 9.37258 26.6274 4 20 4C13.3726 4 8 9.37258 8 16C8 24.3857 20 35 20 35Z" fill="#155E4E"/>
-      <circle cx="20" cy="16" r="6" fill="white"/>
-    </svg>
-  `);
-  const markerImage = new window.kakao.maps.MarkerImage(
-    markerImageSrc,
-    new window.kakao.maps.Size(40, 40),
-    { offset: new window.kakao.maps.Point(20, 35) }
-  );
+  try {
+    const draft = JSON.parse(saved)
+    // 의미 있는 데이터가 있는지 확인 (기본값만 있는 경우는 제외)
+    const hasContent = 
+      draft.form?.name?.trim() || 
+      draft.form?.address?.trim() || 
+      draft.form?.phoneNumber?.trim() || 
+      draft.form?.description?.trim() || 
+      (draft.form?.keywords && draft.form?.keywords.length > 0) ||
+      (draft.menuItems && draft.menuItems.length > 0)
 
-  marker = new window.kakao.maps.Marker({
-    position: map.getCenter(),
-    image: markerImage
-  })
-  marker.setMap(map)
+    if (!hasContent) {
+      localStorage.removeItem(STORAGE_KEY)
+      return
+    }
 
-  // 커스텀 오버레이 초기화 (인포윈도우 대신 사용)
-  overlay = new window.kakao.maps.CustomOverlay({
-    map: null,
-    clickable: true,
-    xAnchor: 0.5,
-    yAnchor: 1.2
-  })
-
-  // GPS를 이용한 현재 위치 설정
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition((position) => {
-      const lat = position.coords.latitude
-      const lng = position.coords.longitude
-      const locPosition = new window.kakao.maps.LatLng(lat, lng)
-      
-      userLocation.value = locPosition // 위치 저장
-      map.setCenter(locPosition)
-      marker.setPosition(locPosition)
-      console.log('[Kakao Map]: GPS Position set')
-    }, (err) => {
-      console.warn('[Kakao Map]: Geolocation failed or denied', err)
-    })
+    if (confirm('작성 중이던 내용이 있습니다. 불러올까요?')) {
+      form.value = { ...form.value, ...draft.form }
+      analyzedMenuItems.value = (draft.menuItems || []).map(item => ({
+        ...item,
+        imageFile: null,
+        imagePreview: null
+      }))
+      isDirty.value = true
+    } else {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  } catch (e) {
+    console.error('Draft load error:', e)
+    localStorage.removeItem(STORAGE_KEY)
   }
 }
 
-// 식당 이름 입력 시 검색 (디바운싱 및 한글 조합 대응)
+const handleBeforeUnload = (e) => {
+  if (isDirty.value) {
+    e.preventDefault()
+    e.returnValue = ''
+  }
+}
+// 앱 내부 경로 이동 이탈 방지
+onBeforeRouteLeave((to, from, next) => {
+  // 실제 데이터가 있는지 확인
+  const hasContent = 
+    form.value.name?.trim() || 
+    form.value.address?.trim() || 
+    form.value.phoneNumber?.trim() || 
+    form.value.description?.trim() || 
+    (form.value.keywords && form.value.keywords.length > 0) ||
+    (analyzedMenuItems.value && analyzedMenuItems.value.length > 0)
+
+  if (isDirty.value && hasContent) {
+    if (confirm('작성 중인 내용이 사라집니다. 정말 나가시겠습니까?')) {
+      next()
+    } else {
+      next(false)
+    }
+  } else {
+    next()
+  }
+})
+
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBeforeUnload)
+  setTimeout(() => {
+    loadDraft()
+    isDirty.value = false
+  }, 100)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+const handleSearchBlur = (e) => {
+  if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) {
+    isSearchFocused.value = false
+  }
+}
+
+const userLocation = ref(null)
+
 let searchTimeout = null
 const handleNameInput = (e) => {
-  const value = e.target.value // v-model 대신 event target value 직접 사용 (IME 이슈 방지)
+  const value = e.target.value
   form.value.name = value
+  isSearchFocused.value = true
 
   if (searchTimeout) clearTimeout(searchTimeout)
   
@@ -470,8 +525,6 @@ const handleNameInput = (e) => {
     if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) return
 
     const ps = new window.kakao.maps.services.Places()
-    
-    // 키워드 검색 수행 (현재 위치 기준)
     const options = userLocation.value ? { location: userLocation.value } : {}
     
     ps.keywordSearch(value, (data, status) => {
@@ -482,13 +535,12 @@ const handleNameInput = (e) => {
         searchResults.value = []
       }
     }, options)
-  }, 400) // 디바운싱 시간 약간 증가 (0.4초)
+  }, 400)
 }
 
-// 키보드 네비게이션 처리
 const handleKeydown = (e) => {
   if (searchResults.value.length === 0) return
-  if (e.isComposing) return // 한글 조합 중 엔터 이벤트 중복 처리 방지
+  if (e.isComposing) return
 
   switch (e.key) {
     case 'ArrowDown':
@@ -501,7 +553,6 @@ const handleKeydown = (e) => {
       break
     case 'Enter':
       e.preventDefault()
-      e.stopPropagation() // 이벤트 전파 차단
       if (searchResults.value.length > 0) {
         const targetIndex = focusedIndex.value >= 0 ? focusedIndex.value : 0
         selectPlace(searchResults.value[targetIndex])
@@ -510,11 +561,11 @@ const handleKeydown = (e) => {
     case 'Escape':
       searchResults.value = []
       focusedIndex.value = -1
+      isSearchFocused.value = false
       break
   }
 }
 
-// 검색 결과 선택 시 폼 채우기
 const selectPlace = (place) => {
   if (searchTimeout) clearTimeout(searchTimeout)
 
@@ -526,77 +577,17 @@ const selectPlace = (place) => {
   form.value.lng = place.x
   form.value.placeId = place.id
   
-  // 영업시간: 카카오 API 검색 결과에는 기본적으로 포함되지 않음.
   form.value.openingHours = '' 
 
-  if (map && marker) {
-    const coords = new window.kakao.maps.LatLng(place.y, place.x)
-    map.setCenter(coords)
-    marker.setPosition(coords)
-
-    // 커스텀 오버레이 컨텐츠 설정
-    const content = `
-      <div style="
-        padding: 12px;
-        min-width: 180px;
-        background: #fff;
-        border: 1px solid #155e4e;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        position: relative;
-        cursor: default;
-      ">
-        <div style="
-          font-weight: 800;
-          font-size: 14px;
-          margin-bottom: 4px;
-          color: #155e4e;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        ">${place.place_name}</div>
-        <div style="
-          font-size: 11px;
-          color: #78716c;
-          line-height: 1.4;
-          word-break: keep-all;
-        ">${place.road_address_name || place.address_name}</div>
-        <!-- 화살표 꼬리 -->
-        <div style="
-          position: absolute;
-          bottom: -8px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 0;
-          height: 0;
-          border-left: 8px solid transparent;
-          border-right: 8px solid transparent;
-          border-top: 8px solid #155e4e;
-        "></div>
-        <div style="
-          position: absolute;
-          bottom: -7px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 0;
-          height: 0;
-          border-left: 7px solid transparent;
-          border-right: 7px solid transparent;
-          border-top: 7px solid #fff;
-        "></div>
-      </div>
-    `;
-    
-    overlay.setContent(content)
-    overlay.setPosition(coords)
-    overlay.setMap(map)
+  if (mapRef.value) {
+    mapRef.value.setCenter(place.y, place.x)
   }
   
-  searchResults.value = [] // 목록 닫기
-  focusedIndex.value = -1  // 포커스 초기화
+  searchResults.value = [] 
+  focusedIndex.value = -1
+  isSearchFocused.value = false
 }
 
-const keywordInput = ref('')
 const toggleKeyword = (keyword) => {
   const index = form.value.keywords.indexOf(keyword)
   if (index > -1) {
@@ -614,26 +605,16 @@ const addCustomKeyword = () => {
   }
 }
 
-// IME 조합 중 Enter 이중 등록 방지 (한/중/일 입력기 대응)
 const handleKeywordKeydown = (e) => {
   if (e.key !== 'Enter') return
   e.preventDefault()
-  if (e.isComposing) return  // IME 조합 확정 이벤트는 무시
+  if (e.isComposing) return
   addCustomKeyword()
 }
 
 const removeKeyword = (index) => {
   form.value.keywords.splice(index, 1)
 }
-
-onMounted(() => {
-  loadSDK(initMap)
-})
-
-const thumbnailFile = ref(null)
-const thumbnailPreview = ref(null)
-const fileInputRef = ref(null)
-const isDragOver = ref(false)
 
 const triggerFileInput = () => fileInputRef.value?.click()
 
@@ -657,14 +638,6 @@ const removeThumbnail = () => {
   thumbnailPreview.value = null
   if (fileInputRef.value) fileInputRef.value.value = ''
 }
-
-// 메뉴판 AI 분석
-const menuBoardFile = ref(null)
-const menuBoardPreview = ref(null)
-const menuBoardInputRef = ref(null)
-const isDragOverMenu = ref(false)
-const isAnalyzing = ref(false)
-const analyzedMenuItems = ref([])
 
 const triggerMenuBoardInput = () => menuBoardInputRef.value?.click()
 
@@ -698,7 +671,6 @@ const analyzeMenuBoard = async () => {
     const data = new FormData()
     data.append('menuBoard', menuBoardFile.value)
     const result = await $fetch('/api/menu/analyze', { method: 'POST', body: data })
-    // 분석 결과에 기본 필드 추가
     analyzedMenuItems.value = (result.menuItems || []).map(item => ({
       ...item,
       price: item.price ? Number(item.price.replace(/[^0-9]/g, '')).toLocaleString() : '',
@@ -712,10 +684,6 @@ const analyzeMenuBoard = async () => {
     isAnalyzing.value = false
   }
 }
-
-// 메뉴 개별 이미지 업로드 관련
-const menuItemImageInputRef = ref(null)
-const currentEditingMenuIndex = ref(-1)
 
 const triggerMenuItemImageInput = (index) => {
   currentEditingMenuIndex.value = index
@@ -735,7 +703,6 @@ const handleMenuItemImageUpload = (e) => {
   }
   reader.readAsDataURL(file)
   
-  // input 초기화 (같은 파일 다시 올릴 수 있게)
   e.target.value = ''
   currentEditingMenuIndex.value = -1
 }
@@ -745,89 +712,8 @@ const removeMenuItemImage = (index) => {
   analyzedMenuItems.value[index].imagePreview = null
 }
 
-// --- 데이터 유실 방지 로직 시작 ---
-const STORAGE_KEY = 'restaurant_registration_draft'
-const isDirty = ref(false)
-
-// 데이터 변경 감지 및 자동 저장
-watch([form, analyzedMenuItems], () => {
-  isDirty.value = true
-  saveDraft()
-}, { deep: true })
-
-// 로컬 스토리지에 초안 저장
-const saveDraft = () => {
-  const draft = {
-    form: form.value,
-    menuItems: analyzedMenuItems.value.map(item => ({
-      name: item.name,
-      price: item.price,
-      description: item.description,
-      isRecommended: item.isRecommended
-    }))
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
-}
-
-// 초안 불러오기
-const loadDraft = () => {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (!saved) return
-
-  if (confirm('작성 중이던 내용이 있습니다. 불러올까요?')) {
-    const draft = JSON.parse(saved)
-    form.value = { ...form.value, ...draft.form }
-    analyzedMenuItems.value = (draft.menuItems || []).map(item => ({
-      ...item,
-      imageFile: null,
-      imagePreview: null
-    }))
-    isDirty.value = true
-  } else {
-    localStorage.removeItem(STORAGE_KEY)
-  }
-}
-
-// 브라우저 레벨 이탈 방지 (새로고침, 탭 닫기)
-const handleBeforeUnload = (e) => {
-  if (isDirty.value) {
-    e.preventDefault()
-    e.returnValue = ''
-  }
-}
-
-// 앱 내부 경로 이동 이탈 방지
-onBeforeRouteLeave((to, from, next) => {
-  if (isDirty.value) {
-    if (confirm('작성 중인 내용이 사라집니다. 정말 나가시겠습니까?')) {
-      next()
-    } else {
-      next(false)
-    }
-  } else {
-    next()
-  }
-})
-
-onMounted(() => {
-  loadSDK(initMap)
-  window.addEventListener('beforeunload', handleBeforeUnload)
-  
-  // 초기값 세팅 후의 자동 저장을 방지하기 위해 약간의 지연 후 로드
-  setTimeout(() => {
-    loadDraft()
-    isDirty.value = false
-  }, 100)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('beforeunload', handleBeforeUnload)
-})
-// --- 데이터 유실 방지 로직 끝 ---
-
-// 가격 포맷팅 (천 단위 콤마)
 const handlePriceInput = (e, item) => {
-  let value = e.target.value.replace(/[^0-9]/g, '') // 숫자만 남기기
+  let value = e.target.value.replace(/[^0-9]/g, '')
   if (value) {
     item.price = Number(value).toLocaleString()
   } else {
@@ -835,8 +721,33 @@ const handlePriceInput = (e, item) => {
   }
 }
 
+// 폼 초기화 함수
+const resetForm = () => {
+  form.value = {
+    name: '',
+    description: '',
+    category: '',
+    address: '',
+    phoneNumber: '',
+    lat: null,
+    lng: null,
+    placeId: '',
+    openingHours: '',
+    keywords: []
+  }
+  analyzedMenuItems.value = []
+  thumbnailFile.value = null
+  thumbnailPreview.value = null
+  menuBoardFile.value = null
+  menuBoardPreview.value = null
+  keywordInput.value = ''
+  searchResults.value = []
+  isDirty.value = false
+  if (fileInputRef.value) fileInputRef.value.value = ''
+  if (menuBoardInputRef.value) menuBoardInputRef.value.value = ''
+}
+
 const handleSubmit = async () => {
-  // 필수 필드 체크
   if (!form.value.name.trim()) {
     alert('식당 이름을 입력하고 검색 결과에서 선택해주세요.')
     return
@@ -849,7 +760,6 @@ const handleSubmit = async () => {
 
   const formData = new FormData()
   
-  // 기본 폼 데이터
   Object.keys(form.value).forEach((key) => {
     if (key === 'keywords') {
       formData.append(key, JSON.stringify(form.value[key]))
@@ -858,32 +768,28 @@ const handleSubmit = async () => {
     }
   })
 
-  // 매장 썸네일
   if (thumbnailFile.value) {
     formData.append('thumbnail', thumbnailFile.value)
   }
 
-  // 메뉴 아이템 및 이미지 처리
   if (analyzedMenuItems.value.length > 0) {
     const itemsToSubmit = analyzedMenuItems.value.map((item, index) => {
-      // 이미지가 있으면 FormData에 추가하고 인덱스 기록
       if (item.imageFile) {
         formData.append(`menuImage_${index}`, item.imageFile)
       }
-      
-      // 서버 전송용 객체 (파일 객체와 프리뷰는 제외, 가격 콤마 제거)
       return {
         name: item.name,
         price: item.price ? item.price.replace(/,/g, '') : '', 
         description: item.description,
         isRecommended: item.isRecommended,
-        hasImage: !!item.imageFile // 서버에서 해당 인덱스의 이미지를 찾을 수 있도록 힌트 제공
+        hasImage: !!item.imageFile 
       }
     })
     
     formData.append('menuItems', JSON.stringify(itemsToSubmit))
   }
 
+  isSubmitting.value = true
   try {
     const data = await $fetch('/api/restaurants/register', {
       method: 'POST',
@@ -892,13 +798,14 @@ const handleSubmit = async () => {
     
     if (data.success) {
       alert(data.message)
-      // 등록 성공 시 이탈 방지 해제 및 임시 저장 데이터 삭제
-      isDirty.value = false
       localStorage.removeItem(STORAGE_KEY)
-      navigateTo('/')
+      resetForm() // 👈 등록 성공 시 폼 초기화 실행
+      // navigateTo('/') // 메인페이지 이동 막음
     }
   } catch (error) {
     alert(error.data?.statusMessage || '등록 중 오류가 발생했습니다.')
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>
