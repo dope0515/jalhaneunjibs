@@ -7,7 +7,7 @@
           <div class="category-tag">{{ restaurant.foodCategory }}</div>
           <h1 class="restaurant-name">{{ restaurant.name }}</h1>
           <div class="stats">
-            <span class="rating">⭐ {{ restaurant.averageRating.toFixed(1) }}</span>
+            <AppStarRating :modelValue="restaurant.averageRating" readonly size="sm" show-label />
             <span class="reviews">리뷰 {{ restaurant.reviewCount }}</span>
             <span class="likes">찜 {{ restaurant.likes }}</span>
           </div>
@@ -18,7 +18,10 @@
             <AppButton size="sm" variant="outline" @click="handleEdit">정보 수정</AppButton>
             <AppButton size="sm" color="red" variant="outline" @click="handleDelete">삭제</AppButton>
           </div>
-          <AppButton size="md" color="green" class="like-btn">❤️ 맛집 저장</AppButton>
+          <AppButton size="md" color="green" class="like-btn">
+            <img src="/assets/images/icon/ic_heart.svg" width="18" height="18" alt="" aria-hidden="true" />
+            맛집 저장
+          </AppButton>
         </div>
       </div>
 
@@ -78,7 +81,7 @@
                   />
                   <!-- 이미지 위에 힌트 오버레이 -->
                   <span v-if="menu.image" class="menu-img-hint">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    <img src="/assets/images/icon/ic_photo.svg" width="13" height="13" alt="" aria-hidden="true" />
                     사진 보기
                   </span>
                 </div>
@@ -90,6 +93,134 @@
                   <p class="menu-desc">{{ menu.description }}</p>
                 </div>
               </button>
+            </div>
+          </div>
+
+          <!-- 리뷰 섹션 -->
+          <div class="review-section card-box">
+            <h2 class="section-title">리뷰 ({{ restaurant.reviewCount }})</h2>
+
+            <!-- 평점 요약 -->
+            <div class="review-summary" v-if="restaurant.reviewCount > 0">
+              <div class="summary-score">
+                <span class="score-number">{{ restaurant.averageRating.toFixed(1) }}</span>
+                <AppStarRating :modelValue="restaurant.averageRating" readonly size="lg" />
+                <span class="score-total">{{ restaurant.reviewCount }}개의 리뷰</span>
+              </div>
+              <div class="summary-bars">
+                <div v-for="item in ratingDistribution" :key="item.star" class="bar-row">
+                  <span class="bar-label">{{ item.star }}점</span>
+                  <div class="bar-track">
+                    <div class="bar-fill" :style="{ width: item.percent + '%' }"></div>
+                  </div>
+                  <span class="bar-count">{{ item.count }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 내 리뷰 작성 폼 (로그인 시) -->
+            <div v-if="user" class="review-form-wrap">
+              <!-- 수정 전: 내 리뷰 표시 -->
+              <div v-if="myReview && !editingReview" class="my-review-card">
+                <div class="my-review-header">
+                  <span class="my-review-label">내가 쓴 리뷰</span>
+                  <div class="my-review-actions">
+                    <button class="action-btn" @click="startEditReview">수정</button>
+                    <button class="action-btn action-btn--delete" @click="deleteMyReview">삭제</button>
+                  </div>
+                </div>
+                <AppStarRating :modelValue="myReview.rating" readonly size="md" />
+                <p v-if="myReview.content" class="my-review-content">{{ myReview.content }}</p>
+                <!-- 내 리뷰 이미지 -->
+                <div v-if="myReview.images?.length" class="review-images">
+                  <img
+                    v-for="(img, i) in myReview.images"
+                    :key="i"
+                    :src="img"
+                    :alt="`리뷰 이미지 ${i + 1}`"
+                    class="review-img-thumb"
+                  />
+                </div>
+              </div>
+
+              <!-- 작성/수정 폼 -->
+              <div v-if="!myReview || editingReview" class="review-form">
+                <p class="form-guide">{{ editingReview ? '리뷰 수정' : '별점을 선택해 리뷰를 남겨보세요' }}</p>
+                <AppStarRating v-model="reviewForm.rating" size="lg" />
+                <textarea
+                  v-model="reviewForm.content"
+                  placeholder="이 식당에서의 경험을 공유해주세요. (선택)"
+                  rows="3"
+                  class="review-textarea"
+                ></textarea>
+
+                <!-- 이미지 업로드 -->
+                <div class="review-img-uploader">
+                  <input
+                    ref="reviewImgInputRef"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    class="sr-only"
+                    @change="handleReviewImages"
+                  />
+                  <button
+                    v-if="reviewForm.imagePreviews.length < 3"
+                    type="button"
+                    class="img-upload-btn"
+                    @click="reviewImgInputRef?.click()"
+                  >
+                    <img src="/assets/images/icon/ic_upload.svg" width="16" height="16" alt="" aria-hidden="true" />
+                    사진 추가 ({{ reviewForm.imagePreviews.length }}/3)
+                  </button>
+                  <div v-if="reviewForm.imagePreviews.length" class="img-preview-list">
+                    <div
+                      v-for="(prev, i) in reviewForm.imagePreviews"
+                      :key="i"
+                      class="img-preview-item"
+                    >
+                      <img :src="prev" alt="미리보기" />
+                      <button type="button" class="img-remove-btn" @click="removeReviewImage(i)" aria-label="이미지 삭제">
+                        <img src="/assets/images/icon/ic_close.svg" width="12" height="12" alt="삭제" />
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="form-actions">
+                  <AppButton v-if="editingReview" size="sm" variant="outline" @click="cancelEditReview">취소</AppButton>
+                  <AppButton size="sm" color="green" :disabled="!reviewForm.rating" @click="submitReview">
+                    {{ editingReview ? '수정 완료' : '리뷰 등록' }}
+                  </AppButton>
+                </div>
+              </div>
+            </div>
+            <div v-else class="review-login-guide">
+              <p>리뷰를 작성하려면 <NuxtLink to="/login">로그인</NuxtLink>이 필요합니다.</p>
+            </div>
+
+            <!-- 리뷰 목록 (내 리뷰 제외) -->
+            <div v-if="otherReviews.length > 0" class="review-list">
+              <div v-for="review in otherReviews" :key="review.id" class="review-item">
+                <div class="review-header">
+                  <span class="reviewer-name">{{ review.user.nickname || review.user.username }}</span>
+                  <span class="review-date">{{ formatDate(review.createdAt) }}</span>
+                  <button v-if="user?.role === 'ADMIN'" class="action-btn action-btn--delete" @click="deleteReviewById(review.id)">삭제</button>
+                </div>
+                <AppStarRating :modelValue="review.rating" readonly size="sm" />
+                <p v-if="review.content" class="review-content">{{ review.content }}</p>
+                <!-- 리뷰 이미지 -->
+                <div v-if="review.images?.length" class="review-images">
+                  <img
+                    v-for="(img, i) in review.images"
+                    :key="i"
+                    :src="img"
+                    :alt="`리뷰 이미지 ${i + 1}`"
+                    class="review-img-thumb"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -120,10 +251,23 @@
                     <span class="nickname">{{ comment.user.nickname || comment.user.username }}</span>
                     <span class="date">{{ formatDate(comment.createdAt) }}</span>
                   </div>
-                  <p class="content">{{ comment.content }}</p>
+
+                  <!-- 인라인 수정 폼 -->
+                  <div v-if="editingCommentId === comment.id" class="comment-edit-wrap">
+                    <textarea v-model="editingContent" rows="3" class="comment-edit-textarea"></textarea>
+                    <div class="comment-edit-btns">
+                      <AppButton size="xs" variant="outline" @click="cancelEdit">취소</AppButton>
+                      <AppButton size="xs" color="green" :disabled="!editingContent.trim()" @click="submitEdit(comment.id)">수정 완료</AppButton>
+                    </div>
+                  </div>
+                  <p v-else class="content">{{ comment.content }}</p>
+
                   <div class="comment-actions">
                     <button @click="activeReplyId = activeReplyId === comment.id ? null : comment.id">답글 쓰기</button>
-                    <button v-if="user?.id === comment.userId || user?.role === 'ADMIN'" class="delete-btn" @click="deleteComment(comment.id)">삭제</button>
+                    <template v-if="user?.id === comment.userId || user?.role === 'ADMIN'">
+                      <button @click="startEdit(comment.id, comment.content)">수정</button>
+                      <button class="delete-btn" @click="deleteComment(comment.id)">삭제</button>
+                    </template>
                   </div>
                 </div>
 
@@ -143,8 +287,19 @@
                       <span class="nickname">{{ reply.user.nickname || reply.user.username }}</span>
                       <span class="date">{{ formatDate(reply.createdAt) }}</span>
                     </div>
-                    <p class="content">{{ reply.content }}</p>
+
+                    <!-- 대댓글 인라인 수정 폼 -->
+                    <div v-if="editingCommentId === reply.id" class="comment-edit-wrap">
+                      <textarea v-model="editingContent" rows="2" class="comment-edit-textarea"></textarea>
+                      <div class="comment-edit-btns">
+                        <AppButton size="xs" variant="outline" @click="cancelEdit">취소</AppButton>
+                        <AppButton size="xs" color="green" :disabled="!editingContent.trim()" @click="submitEdit(reply.id)">수정 완료</AppButton>
+                      </div>
+                    </div>
+                    <p v-else class="content">{{ reply.content }}</p>
+
                     <div class="reply-actions" v-if="user?.id === reply.userId || user?.role === 'ADMIN'">
+                      <button @click="startEdit(reply.id, reply.content)">수정</button>
                       <button class="delete-btn" @click="deleteComment(reply.id)">삭제</button>
                     </div>
                   </div>
@@ -195,9 +350,7 @@
 
         <!-- 닫기 버튼 -->
         <button class="lightbox-close" @click="closeLightbox" aria-label="닫기">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
+          <img src="/assets/images/icon/ic_close.svg" width="20" height="20" alt="닫기" />
         </button>
 
         <!-- Swiper 슬라이더 -->
@@ -229,14 +382,10 @@
 
         <!-- 이전/다음 버튼 -->
         <button v-if="imageMenus.length > 1" class="lightbox-nav lightbox-prev" aria-label="이전">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
+          <img src="/assets/images/icon/ic_nav_prev.svg" width="22" height="22" alt="이전" />
         </button>
         <button v-if="imageMenus.length > 1" class="lightbox-nav lightbox-next" aria-label="다음">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
+          <img src="/assets/images/icon/ic_nav_next.svg" width="22" height="22" alt="다음" />
         </button>
 
       </div>
@@ -304,10 +453,125 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 
-// 댓글 관련 상태
+// ── 리뷰 관련 상태 ───────────────────────────────────────────────
+const myReview = computed(() =>
+  restaurant.value?.reviews?.find((r) => r.userId === user.value?.id) ?? null
+)
+
+const otherReviews = computed(() =>
+  restaurant.value?.reviews?.filter((r) => r.userId !== user.value?.id) ?? []
+)
+
+const ratingDistribution = computed(() => {
+  const reviews = restaurant.value?.reviews ?? []
+  const total = reviews.length
+  return [5, 4, 3, 2, 1].map((star) => {
+    const count = reviews.filter((r) => r.rating === star).length
+    return { star, count, percent: total ? Math.round((count / total) * 100) : 0 }
+  })
+})
+
+const reviewImgInputRef = ref(null)
+const reviewForm = ref({ rating: 0, content: '', imageFiles: [], imagePreviews: [] })
+const editingReview = ref(false)
+
+const handleReviewImages = (e) => {
+  const files = Array.from(e.target.files)
+  const remaining = 3 - reviewForm.value.imagePreviews.length
+  files.slice(0, remaining).forEach((file) => {
+    reviewForm.value.imageFiles.push(file)
+    const reader = new FileReader()
+    reader.onload = (ev) => reviewForm.value.imagePreviews.push(ev.target.result)
+    reader.readAsDataURL(file)
+  })
+  e.target.value = ''
+}
+
+const removeReviewImage = (index) => {
+  reviewForm.value.imageFiles.splice(index, 1)
+  reviewForm.value.imagePreviews.splice(index, 1)
+}
+
+const startEditReview = () => {
+  if (!myReview.value) return
+  reviewForm.value = {
+    rating: myReview.value.rating,
+    content: myReview.value.content ?? '',
+    imageFiles: [],
+    imagePreviews: [],
+  }
+  editingReview.value = true
+}
+
+const cancelEditReview = () => {
+  editingReview.value = false
+  reviewForm.value = { rating: 0, content: '', imageFiles: [], imagePreviews: [] }
+}
+
+const submitReview = async () => {
+  if (!reviewForm.value.rating) return
+  try {
+    const fd = new FormData()
+    fd.append('restaurantId', restaurant.value.id)
+    fd.append('userId', user.value.id)
+    fd.append('rating', reviewForm.value.rating)
+    fd.append('content', reviewForm.value.content)
+    reviewForm.value.imageFiles.forEach((file) => fd.append('reviewImages', file))
+
+    await $fetch('/api/reviews', { method: 'POST', body: fd })
+    editingReview.value = false
+    reviewForm.value = { rating: 0, content: '', imageFiles: [], imagePreviews: [] }
+    await refresh()
+  } catch {
+    alert('리뷰 등록에 실패했습니다.')
+  }
+}
+
+const deleteMyReview = async () => {
+  if (!myReview.value || !confirm('리뷰를 삭제하시겠습니까?')) return
+  await deleteReviewById(myReview.value.id)
+}
+
+const deleteReviewById = async (id) => {
+  try {
+    await $fetch(`/api/reviews/${id}`, { method: 'DELETE' })
+    await refresh()
+  } catch {
+    alert('리뷰 삭제에 실패했습니다.')
+  }
+}
+
+// ── 댓글 관련 상태 ───────────────────────────────────────────────
 const newComment = ref('')
 const newReply = ref('')
 const activeReplyId = ref(null)
+const editingCommentId = ref(null)
+const editingContent = ref('')
+
+const startEdit = (id, content) => {
+  editingCommentId.value = id
+  editingContent.value = content
+  activeReplyId.value = null // 답글 입력창 닫기
+}
+
+const cancelEdit = () => {
+  editingCommentId.value = null
+  editingContent.value = ''
+}
+
+const submitEdit = async (id) => {
+  if (!editingContent.value.trim()) return
+  try {
+    await $fetch(`/api/comments/${id}`, {
+      method: 'PUT',
+      body: { content: editingContent.value },
+    })
+    cancelEdit()
+    await refresh()
+  } catch {
+    alert('댓글 수정에 실패했습니다.')
+  }
+}
 
 const totalCommentsCount = computed(() => {
   if (!restaurant.value?.comments) return 0

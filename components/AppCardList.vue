@@ -26,7 +26,8 @@
             :key="menu.name"
             class="app-card-list-menu-tag"
           >
-            ★ {{ menu.name }}
+            <img src="/assets/images/icon/ic_star.svg" width="12" height="12" alt="" class="icon-star" />
+            {{ menu.name }}
             <em v-if="menu.price">{{ formatPrice(menu.price) }}</em>
           </span>
         </div>
@@ -40,12 +41,12 @@
             >#{{ kw }}</span>
           </div>
           <div class="app-card-list-stats">
-            <span class="app-card-list-rating">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              {{ restaurant.averageRating > 0 ? restaurant.averageRating.toFixed(1) : '-' }}
-            </span>
+            <AppStarRating
+              :modelValue="restaurant.averageRating"
+              readonly
+              size="sm"
+              show-label
+            />
             <span class="app-card-list-review-count">리뷰 {{ restaurant.reviewCount }}</span>
           </div>
         </div>

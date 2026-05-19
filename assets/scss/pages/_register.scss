@@ -403,8 +403,7 @@
       @include font(15, 1, 700, $black);
       
       &::before {
-        content: '📋';
-        margin-right: rem(6);
+        display: none;
       }
     }
 
@@ -746,5 +745,453 @@
     margin-top: rem(40);
     display: flex;
     justify-content: center;
+  }
+}
+
+// ─── 식당 정보 수정 페이지 ────────────────────────────────────────
+
+.restaurant-edit {
+  .edit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: rem(16);
+    margin-bottom: rem(32);
+    flex-wrap: wrap;
+  }
+
+  .edit-header-left {
+    display: flex;
+    align-items: center;
+    gap: rem(16);
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: rem(40);
+    height: rem(40);
+    border-radius: 50%;
+    border: 1px solid $gray-e4;
+    color: $gray-44;
+    flex-shrink: 0;
+    transition: all 0.15s;
+
+    &:hover { border-color: $primary-color; color: $primary-color; }
+  }
+
+  .edit-sub {
+    @include font(12, 1, 500, $gray-78);
+    margin-bottom: rem(4);
+  }
+
+  .edit-title {
+    @include font(22, 1.3, 700, $primary-color);
+  }
+
+  .edit-header-actions {
+    display: flex;
+    gap: rem(8);
+  }
+
+  .edit-body {
+    display: flex;
+    flex-direction: column;
+    gap: rem(20);
+  }
+
+  .edit-card {
+    background: $white;
+    border: 1px solid #ebebea;
+    border-radius: rem(16);
+    padding: rem(28) rem(32);
+
+    @media (max-width: $bp-sm) {
+      padding: rem(20);
+    }
+  }
+
+  .edit-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: rem(20);
+  }
+
+  .edit-section-title {
+    @include font(16, 1, 700, $primary-color);
+    margin-bottom: rem(16);
+
+    .edit-hint {
+      @include font(12, 1, 400, $gray-78);
+      font-weight: 400;
+      margin-left: rem(6);
+    }
+  }
+
+  .edit-section-header .edit-section-title {
+    margin-bottom: 0;
+  }
+
+  .edit-textarea {
+    width: 100%;
+    padding: rem(14) rem(16);
+    border: 1px solid #d1d5db;
+    border-radius: rem(10);
+    @include font(14, 1.7, 400, $gray-44);
+    font-family: inherit;
+    resize: vertical;
+    background: $bg-color;
+    transition: border-color 0.2s;
+
+    &:focus { outline: none; border-color: $secondary-color; background: $white; }
+  }
+
+  .edit-input {
+    width: 100%;
+    padding: rem(10) rem(12);
+    border: 1px solid #d1d5db;
+    border-radius: rem(8);
+    @include font(14, 1, 400, $gray-44);
+    font-family: inherit;
+    background: $bg-color;
+    transition: border-color 0.2s;
+
+    &:focus { outline: none; border-color: $secondary-color; background: $white; }
+    &::placeholder { color: $gray-e4; }
+  }
+
+  .edit-field-row {
+    display: flex;
+    flex-direction: column;
+    gap: rem(6);
+    margin-bottom: rem(16);
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  .edit-field-label {
+    @include font(13, 1, 600, $gray-78);
+  }
+
+  // 매장 이미지 그리드
+  .restaurant-img-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(10);
+  }
+
+  .r-img-item {
+    position: relative;
+    width: rem(100);
+    height: rem(100);
+    border-radius: rem(10);
+    overflow: hidden;
+    border: 1px solid $gray-e4;
+    flex-shrink: 0;
+
+    &.is-new { border-color: rgba($secondary-color, 0.4); }
+  }
+
+  .r-img-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .r-img-badge {
+    position: absolute;
+    bottom: rem(4);
+    left: rem(4);
+    background: rgba($primary-color, 0.85);
+    color: $white;
+    border-radius: rem(4);
+    padding: rem(2) rem(6);
+    @include font(10, 1, 700);
+  }
+
+  .r-img-remove {
+    position: absolute;
+    top: rem(4);
+    right: rem(4);
+    width: rem(22);
+    height: rem(22);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: $white;
+    border: none;
+    cursor: pointer;
+    @include font(14, 1, 700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    &:hover { background: #ef4444; }
+  }
+
+  .r-img-add {
+    width: rem(100);
+    height: rem(100);
+    border-radius: rem(10);
+    border: 1.5px dashed #c0c0b8;
+    background: $bg-color;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: rem(6);
+    cursor: pointer;
+    color: $gray-78;
+    @include font(11, 1.4, 500);
+    text-align: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+
+    &:hover { border-color: $secondary-color; color: $secondary-color; }
+  }
+
+  // 키워드
+  .keyword-input-row {
+    display: flex;
+    gap: rem(8);
+    margin-bottom: rem(12);
+
+    // AppInput 컴포넌트 래퍼가 flex: 1 되도록
+    .keyword-app-input,
+    .keyword-app-input .app-input {
+      flex: 1;
+      width: 100%;
+    }
+  }
+
+  .keyword-add-btn {
+    flex-shrink: 0;
+    padding: rem(10) rem(18);
+    background: $primary-color;
+    color: $white;
+    border: none;
+    border-radius: rem(8);
+    @include font(13, 1, 600);
+    cursor: pointer;
+    transition: opacity 0.15s;
+
+    &:disabled { opacity: 0.4; cursor: default; }
+    &:not(:disabled):hover { opacity: 0.85; }
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(6);
+    padding: rem(6) rem(12);
+    background: rgba($secondary-color, 0.1);
+    color: $secondary-color;
+    border-radius: rem(20);
+    @include font(13, 1, 600);
+
+    button {
+      display: flex;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      color: $secondary-color;
+      opacity: 0.6;
+      &:hover { opacity: 1; }
+    }
+  }
+
+  .edit-empty-hint {
+    @include font(13, 1, 400, $gray-78);
+    padding: rem(8) 0;
+  }
+
+  // 메뉴 수정 목록
+  .menu-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(6);
+    padding: rem(8) rem(16);
+    border: 1px solid $secondary-color;
+    color: $secondary-color;
+    border-radius: rem(8);
+    background: none;
+    @include font(13, 1, 600);
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover { background: rgba($secondary-color, 0.06); }
+  }
+
+  .menu-edit-list {
+    display: flex;
+    flex-direction: column;
+    gap: rem(12);
+  }
+
+  .menu-edit-item {
+    border: 1px solid #ebebea;
+    border-radius: rem(12);
+    padding: rem(16);
+    background: $bg-color;
+    transition: border-color 0.15s;
+
+    &:hover { border-color: #d1d5db; }
+  }
+
+  .menu-edit-row {
+    display: flex;
+    align-items: flex-start;
+    gap: rem(12);
+  }
+
+  // 메뉴 이미지 편집
+  .menu-img-edit {
+    flex-shrink: 0;
+    position: relative;
+    width: rem(72);
+    height: rem(72);
+    border-radius: rem(8);
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px dashed #c8c8c0;
+    background: $bg-color;
+
+    &:hover .menu-img-overlay { opacity: 1; }
+  }
+
+  .menu-img-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .menu-img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: rem(4);
+    color: $gray-78;
+    transition: color 0.15s;
+
+    span { @include font(10, 1, 500); }
+
+    .menu-img-edit:hover & { color: $secondary-color; border-color: $secondary-color; }
+  }
+
+  .menu-img-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+    @include font(11, 1, 600, $white);
+  }
+
+  .menu-img-remove {
+    position: absolute;
+    top: rem(2);
+    right: rem(2);
+    width: rem(18);
+    height: rem(18);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: $white;
+    border: none;
+    cursor: pointer;
+    @include font(12, 1, 700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    z-index: 1;
+
+    &:hover { background: #ef4444; }
+  }
+
+  .recommend-toggle {
+    flex-shrink: 0;
+    width: rem(34);
+    height: rem(34);
+    border-radius: rem(8);
+    border: 1px solid $gray-e4;
+    background: $white;
+    color: $gray-e4;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+
+    &.is-active {
+      border-color: $tertiary-color;
+      background: rgba($tertiary-color, 0.08);
+      color: $tertiary-color;
+    }
+
+    &:not(.is-active):hover { border-color: $gray-78; color: $gray-78; }
+  }
+
+  .menu-edit-fields {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: rem(8);
+  }
+
+  .menu-edit-top {
+    display: flex;
+    gap: rem(8);
+
+    @media (max-width: $bp-sm) {
+      flex-direction: column;
+    }
+  }
+
+  .menu-name-input { flex: 1; }
+  .menu-price-input { width: rem(140); flex-shrink: 0; }
+  .menu-desc-input { width: 100%; }
+
+  .menu-delete-btn {
+    flex-shrink: 0;
+    width: rem(34);
+    height: rem(34);
+    border-radius: rem(8);
+    border: 1px solid $gray-e4;
+    background: $white;
+    color: $gray-78;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+
+    &:hover { border-color: #ef4444; color: #ef4444; background: #fff5f5; }
+  }
+
+  // 하단 저장 버튼
+  .edit-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: rem(10);
+    margin-top: rem(32);
+    padding-top: rem(24);
+    border-top: 1px solid $gray-e4;
   }
 }

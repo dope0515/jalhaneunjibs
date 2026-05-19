@@ -24,12 +24,8 @@ const initMap = () => {
   }
   map = new window.kakao.maps.Map(mapContainer.value, options)
 
-  const markerImageSrc = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20 35C20 35 32 24.3857 32 16C32 9.37258 26.6274 4 20 4C13.3726 4 8 9.37258 8 16C8 24.3857 20 35 20 35Z" fill="#155E4E"/>
-      <circle cx="20" cy="16" r="6" fill="white"/>
-    </svg>
-  `)
+  const markerImageSrc = '/assets/images/icon/ic_marker.svg'
+
   const markerImage = new window.kakao.maps.MarkerImage(
     markerImageSrc,
     new window.kakao.maps.Size(40, 40),
