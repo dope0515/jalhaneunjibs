@@ -8,16 +8,10 @@
     >
       <div class="app-card-list-thumbnail">
         <img
-          v-if="restaurant.thumbnail"
-          :src="restaurant.thumbnail"
+          :src="restaurant.thumbnail || '/assets/images/common/default.jpg'"
           :alt="restaurant.name"
           class="app-card-list-img"
         />
-        <div v-else class="app-card-list-img-placeholder">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-            <path d="M3 11l19-9-9 19-2-8-8-2z"/>
-          </svg>
-        </div>
         <span v-if="restaurant.foodCategory" class="app-card-list-category">{{ restaurant.foodCategory }}</span>
       </div>
 
