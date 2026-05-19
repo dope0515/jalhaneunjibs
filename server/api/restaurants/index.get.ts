@@ -2,7 +2,7 @@ import { defineEventHandler, getQuery } from 'h3'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
-  const { category, keyword, page = '1' } = getQuery(event)
+  const { category, region1, region2, keyword, page = '1' } = getQuery(event)
 
   const pageNum = Math.max(1, parseInt(page as string))
   const pageSize = 12
@@ -10,6 +10,8 @@ export default defineEventHandler(async (event) => {
 
   const where: Record<string, unknown> = {}
   if (category) where.foodCategory = category
+  if (region1) where.region1 = region1
+  if (region2) where.region2 = region2
   if (keyword) {
     where.OR = [
       { name: { contains: keyword as string, mode: 'insensitive' } },

@@ -11,6 +11,10 @@
 @use "pages/main";
 @use "pages/auth";
 @use "pages/register";
+@use "pages/restaurants";
+
+// 컴포넌트
+@use "components/card-list";
 
 body {
   background-color: $bg-color;

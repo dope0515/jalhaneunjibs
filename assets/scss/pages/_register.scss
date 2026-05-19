@@ -14,11 +14,8 @@
 
   .form-container {
     display: flex;
+    align-items: flex-start;
     gap: rem(40);
-
-    @media (max-width: $bp-md) {
-      flex-direction: column;
-    }
   }
 
   .form-fields {
@@ -33,6 +30,8 @@
     display: flex;
     flex-direction: column;
     gap: rem(12);
+    position: sticky;
+    top: calc(rem(100) + 5%);
   }
 
   .map {
@@ -348,12 +347,22 @@
   }
 
   .menu-item-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(rem(320), 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: rem(16);
 
+    .menu-item-card {
+      width: calc(50% - rem(8)); // 기본 2컬럼
+
+      @media (max-width: rem(1000)) {
+        width: 100%; // 중간 사이즈에서 1컬럼
+      }
+    }
+
     @media (max-width: $bp-sm) {
-      grid-template-columns: 1fr;
+      .menu-item-card {
+        width: 100%;
+      }
     }
   }
 

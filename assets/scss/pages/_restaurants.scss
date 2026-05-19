@@ -1,3 +1,766 @@
 @use "../abstracts/variables" as *;
 @use "../abstracts/mixins" as *;
 
+.restaurants-list {
+  padding: rem(60) 0 rem(100);
+
+  .inner {
+    max-width: rem(1200);
+    margin: 0 auto;
+    padding: 0 rem(20);
+  }
+
+  .page-header {
+    margin-bottom: rem(40);
+  }
+
+  // 필터 영역
+  .filter-wrap {
+    background: $white;
+    padding: rem(32);
+    border-radius: rem(24);
+    box-shadow: 0 rem(10) rem(40) rgba(0, 0, 0, 0.03);
+    margin-bottom: rem(48);
+    display: flex;
+    flex-direction: column;
+    gap: rem(24);
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: flex-start;
+    gap: rem(20);
+
+    &--sub {
+      padding-top: rem(20);
+      border-top: 1px solid #f1f5f9;
+    }
+  }
+
+  .filter-label {
+    @include font(15, 1, 700, $black);
+    padding-top: rem(10);
+    flex-shrink: 0;
+    width: rem(80);
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+    flex: 1;
+  }
+
+  .filter-btn {
+    padding: rem(8) rem(18);
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: rem(100);
+    @include font(14, 1, 500, $gray-78);
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #f1f5f9;
+      color: $black;
+    }
+
+    &.is-active {
+      background: $primary-color;
+      border-color: $primary-color;
+      color: $white;
+      font-weight: 700;
+      box-shadow: 0 rem(4) rem(12) rgba(74, 185, 126, 0.2);
+    }
+
+    &--sm {
+      padding: rem(6) rem(14);
+      font-size: rem(13);
+    }
+  }
+
+  // 필터 슬라이드 트랜지션
+  .filter-slide-enter-active,
+  .filter-slide-leave-active {
+    transition: all 0.3s ease;
+    max-height: rem(200);
+    overflow: hidden;
+  }
+  .filter-slide-enter-from,
+  .filter-slide-leave-to {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0 !important;
+    border-top-color: transparent !important;
+  }
+
+  .pagination-wrap {
+    margin-top: rem(60);
+    display: flex;
+    justify-content: center;
+  }
+
+  .list-empty {
+    padding: rem(100) 0;
+    text-align: center;
+    @include font(18, 1, 500, $gray-78);
+
+    .empty-register-link {
+      display: inline-block;
+      margin-top: rem(16);
+      color: $primary-color;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+  }
+
+  .list-container {
+    position: relative;
+    min-height: rem(400); // 컨텐츠 높이 급변 방지
+    transition: opacity 0.2s ease;
+
+    &.is-loading {
+      .app-card-list {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+    }
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: rem(100);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    
+    .spinner {
+      width: rem(40);
+      height: rem(40);
+      border: 3px solid rgba($primary-color, 0.1);
+      border-top-color: $primary-color;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.restaurant-detail {
+  background-color: $bg-color;
+  min-height: 100vh;
+  .inner {
+    max-width: rem(1200);
+    margin: 0 auto;
+    padding: 0 rem(20);
+  }
+
+  // 헤더 영역
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: rem(40);
+
+    .category-tag {
+      display: inline-block;
+      padding: rem(4) rem(12);
+      background: $primary-color;
+      color: $white;
+      border-radius: rem(4);
+      @include font(13, 1, 700);
+      margin-bottom: rem(12);
+    }
+
+    .restaurant-name {
+      @include font(42, 1.2, 800, $black);
+      margin-bottom: rem(12);
+    }
+
+    .stats {
+      display: flex;
+      gap: rem(16);
+      margin-bottom: rem(12);
+      @include font(16, 1, 500, $gray-78);
+
+      .rating { color: $tertiary-color; font-weight: 700; }
+    }
+
+    .address {
+      @include font(16, 1.5, 400, $gray-44);
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: rem(16);
+
+      .admin-actions {
+        display: flex;
+        gap: rem(8);
+      }
+
+      .like-btn {
+        padding: rem(12) rem(32);
+        border-radius: rem(12);
+        font-weight: 700;
+      }
+    }
+  }
+
+  // 그리드 레이아웃 -> 플렉스 레이아웃으로 변경
+  .detail-grid {
+    display: flex;
+    gap: rem(40);
+    align-items: start;
+
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: rem(24);
+      width: 100%;
+    }
+
+    .info-section {
+      flex: 1;
+      min-width: 0; // flex item overflow 방지
+    }
+
+    .side-content {
+      width: rem(360);
+      flex-shrink: 0;
+      position: sticky;
+      top: rem(124);
+    }
+  }
+
+  // 공통 카드 박스 스타일
+  .card-box {
+    background: $white;
+    border-radius: rem(24);
+    padding: rem(40);
+    box-shadow: 0 rem(10) rem(40) rgba(0, 0, 0, 0.03);
+  }
+
+  .section-title {
+    @include font(24, 1, 800, $black);
+    margin-bottom: rem(24);
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+
+    &::before {
+      content: '';
+      width: rem(4);
+      height: rem(20);
+      background: $primary-color;
+      border-radius: rem(2);
+    }
+  }
+
+  // 정보 섹션
+  .info-section {
+    .image-wrap {
+      width: 100%;
+      height: rem(400);
+      border-radius: rem(16);
+      overflow: hidden;
+      margin-bottom: rem(32);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .description {
+      @include font(17, 1.8, 400, $gray-44);
+      margin-bottom: rem(24);
+      white-space: pre-wrap;
+    }
+
+    .keyword-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: rem(8);
+
+      .tag {
+        padding: rem(6) rem(16);
+        background: #f1f5f9;
+        color: #475569;
+        border-radius: rem(100);
+        @include font(14, 1, 500);
+      }
+    }
+  }
+
+  // 메뉴 섹션
+  .menu-section {
+    .menu-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: rem(20);
+    }
+
+    .menu-card {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: rem(16);
+      padding: rem(16);
+      border: 1px solid $gray-e4;
+      border-radius: rem(16);
+      background: $white;
+      text-align: left;
+      cursor: default;
+      transition: all 0.2s;
+      width: 100%;
+
+      &:hover {
+        border-color: $primary-color;
+        transform: translateY(rem(-2));
+      }
+
+      &.has-image {
+        cursor: pointer;
+
+        .menu-img {
+          transition: transform 0.3s;
+        }
+
+        &:hover .menu-img {
+          transform: scale(1.06);
+        }
+      }
+
+      .menu-img-wrap {
+        position: relative;
+        flex-shrink: 0;
+        width: rem(80);
+        height: rem(80);
+        border-radius: rem(12);
+        overflow: hidden;
+        background: #f0f0ee;
+      }
+
+      .menu-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .menu-img-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #c4c4c0;
+      }
+
+      .menu-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+
+        .recommend-badge {
+          align-self: flex-start;
+          margin-bottom: rem(6);
+          background: #fef3c7;
+          color: #92400e;
+          padding: rem(2) rem(8);
+          border-radius: rem(4);
+          @include font(11, 1, 700);
+        }
+
+        .menu-name { @include font(16, 1.4, 700, $black); }
+        .menu-price { @include font(15, 1.4, 600, $primary-color); margin-top: rem(4); }
+        .menu-desc { @include font(13, 1.4, 400, $gray-78); margin-top: rem(4); }
+      }
+
+      // 이미지 위에 오버레이되는 힌트 (텍스트 영역과 분리)
+      .menu-img-hint {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: rem(4);
+        padding: rem(6) 0;
+        background: rgba(0, 0, 0, 0.45);
+        border-radius: 0 0 rem(12) rem(12);
+        @include font(11, 1, 600, $white);
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+
+      &.has-image:hover .menu-img-hint {
+        opacity: 1;
+      }
+    }
+  }
+
+  // 댓글 섹션
+  .comment-section {
+    .comment-input-wrap {
+      textarea {
+        width: 100%;
+        padding: rem(20);
+        border: 1px solid $gray-e4;
+        border-radius: rem(16);
+        resize: none;
+        @include font(15, 1.6, 400, $black);
+        background: #f8fafc;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          background: $white;
+        }
+      }
+
+      .input-footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: rem(12);
+      }
+    }
+
+    .comment-login-guide {
+      padding: rem(30);
+      text-align: center;
+      background: #f8fafc;
+      border-radius: rem(16);
+      @include font(15, 1, 500, $gray-78);
+
+      a { color: $primary-color; font-weight: 700; text-decoration: underline; }
+    }
+
+    .comment-item {
+      padding: rem(24) 0;
+      border-bottom: 1px solid #f1f5f9;
+
+      &:last-child { border-bottom: none; }
+
+      .comment-header {
+        display: flex;
+        align-items: center;
+        gap: rem(12);
+        margin-bottom: rem(8);
+
+        .nickname { @include font(16, 1, 700, $black); }
+        .date { @include font(13, 1, 400, $gray-78); }
+      }
+
+      .content {
+        @include font(15, 1.6, 400, $gray-44);
+        margin-bottom: rem(12);
+      }
+
+      .comment-actions {
+        display: flex;
+        gap: rem(16);
+
+        button {
+          @include font(13, 1, 600, $gray-78);
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+
+          &:hover { color: $primary-color; }
+          &.delete-btn:hover { color: #ef4444; }
+        }
+      }
+    }
+
+    .reply-input-wrap {
+      margin: rem(16) 0 rem(16) rem(40);
+      padding: rem(20);
+      background: #f1f5f9;
+      border-radius: rem(12);
+
+      textarea {
+        width: 100%;
+        padding: rem(12);
+        border: 1px solid $gray-e4;
+        border-radius: rem(8);
+        resize: none;
+        margin-bottom: rem(8);
+      }
+
+      .reply-btns {
+        display: flex;
+        justify-content: flex-end;
+        gap: rem(8);
+      }
+    }
+
+    .replies-list {
+      margin-left: rem(40);
+      margin-top: rem(16);
+      padding-left: rem(20);
+      border-left: 2px solid #f1f5f9;
+
+      .reply-item {
+        padding: rem(16) 0;
+        
+        &:first-child { padding-top: 0; }
+        
+        .reply-header {
+          display: flex;
+          align-items: center;
+          gap: rem(12);
+          margin-bottom: rem(4);
+          .nickname { @include font(14, 1, 700, $black); }
+          .date { @include font(12, 1, 400, $gray-78); }
+        }
+        .content { @include font(14, 1.6, 400, $gray-44); margin-bottom: rem(8); }
+        .reply-actions {
+          button {
+            background: none; border: none; cursor: pointer;
+            @include font(12, 1, 600, #ef4444);
+          }
+        }
+      }
+    }
+  }
+
+  // 사이드바 영역
+  .side-content {
+    .side-card {
+      background: $white;
+      border-radius: rem(24);
+      padding: rem(30);
+      box-shadow: 0 rem(10) rem(40) rgba(0, 0, 0, 0.03);
+      margin-bottom: rem(24);
+    }
+
+    .side-title {
+      @include font(18, 1, 800, $black);
+      margin-bottom: rem(20);
+    }
+
+    .map-wrap {
+      width: 100%;
+      height: rem(240);
+      border-radius: rem(16);
+      overflow: hidden;
+      margin-bottom: rem(20);
+      .map {
+        height: 100%;
+      }
+    }
+
+    .location-details {
+      .address-text {
+        @include font(14, 1.5, 500, $gray-44);
+        margin-bottom: rem(16);
+      }
+      .btn-group {
+        display: flex;
+        gap: rem(8);
+        
+        .map-link {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #fee500;
+          color: #3c1e1e;
+          text-decoration: none;
+          border-radius: rem(8);
+          @include font(14, 1, 700);
+        }
+      }
+    }
+
+    .contact-list {
+      li {
+        display: flex;
+        justify-content: space-between;
+        padding: rem(12) 0;
+        border-bottom: 1px solid #f8fafc;
+
+        &:last-child { border-bottom: none; }
+
+        .label { @include font(14, 1, 600, $gray-78); }
+        .value { 
+          @include font(14, 1.4, 500, $black); 
+          text-align: right;
+          &.pre-wrap { white-space: pre-wrap; }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: $bp-lg ) {
+  .restaurants-list {
+    .filter-group {
+      flex-direction: column;
+      gap: rem(12);
+      
+      .filter-label {
+        padding-top: 0;
+      }
+    }
+  }
+
+  .restaurant-detail {
+    .detail-grid {
+      flex-direction: column;
+
+      .side-content {
+        width: 100%;
+        order: -1; // 모바일에서는 지도가 먼저 보임
+      }
+    }
+  }
+}
+
+@media (max-width: $bp-md) {
+  .restaurant-detail {
+    .menu-section {
+      .menu-card {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// ─── 메뉴 이미지 라이트박스 (Swiper) ─────────────────────────────────────────
+.menu-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: rem(64) rem(80) rem(24);
+
+  // 닫기 버튼
+  .lightbox-close {
+    position: absolute;
+    top: rem(20);
+    right: rem(20);
+    width: rem(44);
+    height: rem(44);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: $white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 10;
+
+    &:hover { background: rgba(255, 255, 255, 0.28); }
+  }
+
+  // Swiper 컨테이너
+  .lightbox-swiper {
+    width: 100%;
+    max-width: rem(860);
+
+    .slide-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: rem(20);
+    }
+
+    .lightbox-img {
+      max-height: 65vh;
+      max-width: 100%;
+      object-fit: contain;
+      border-radius: rem(12);
+      display: block;
+      box-shadow: 0 rem(20) rem(60) rgba(0, 0, 0, 0.5);
+    }
+
+    .lightbox-info {
+      display: flex;
+      align-items: center;
+      gap: rem(12);
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .lightbox-name  { @include font(18, 1, 700, $white); }
+      .lightbox-price { @include font(16, 1, 600, $secondary-color); }
+      .lightbox-badge {
+        padding: rem(3) rem(10);
+        background: #f59e0b;
+        border-radius: rem(4);
+        @include font(11, 1, 700, $white);
+      }
+    }
+  }
+
+  // 카운터
+  .lightbox-counter {
+    margin-top: rem(16);
+    @include font(13, 1, 400, rgba(255, 255, 255, 0.5));
+  }
+
+  // 이전/다음 커스텀 버튼
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: rem(52);
+    height: rem(52);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: $white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 10;
+
+    &:hover { background: rgba(255, 255, 255, 0.28); }
+  }
+
+  .lightbox-prev { left: rem(20); }
+  .lightbox-next { right: rem(20); }
+}
+
+// 라이트박스 오버레이 페이드
+.lightbox-fade-enter-active,
+.lightbox-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+.lightbox-fade-enter-from,
+.lightbox-fade-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: $bp-sm) {
+  .menu-lightbox {
+    padding: rem(64) rem(16) rem(24);
+
+    .lightbox-nav {
+      width: rem(40);
+      height: rem(40);
+    }
+
+    .lightbox-prev { left: rem(8); }
+    .lightbox-next { right: rem(8); }
+  }
+}
