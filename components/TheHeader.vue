@@ -14,19 +14,19 @@
             <NuxtLink 
               to="/restaurants" 
               class="nav-link" 
-              title="맛집 목록 페이지로 이동하기"
+              title="잘하는 집 보러가기 페이지로 이동하기"
             >
-              맛집 목록
+              잘하는 집 보러가기
             </NuxtLink>
           </li>
           <li class="nav-item">
             <button 
               type="button"
               class="nav-link" 
-              title="맛집 등록 페이지로 이동하기"
+              title="잘하는 집 알려주기 페이지로 이동하기"
               @click="goToRegister"
             >
-              맛집 등록
+              잘하는 집 알려주기
             </button>
           </li>
           <li v-if="authStore.isLoggedIn" class="nav-item">

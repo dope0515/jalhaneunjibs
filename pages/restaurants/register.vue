@@ -6,7 +6,7 @@
         <div class="title-bx">
           <AppTitle
             badge="New Place"
-            title="당신의 잘하는 집을 알려주세요"
+            title="잘하는 집을 알려주세요"
             desc="내가 아는 잘하는 집을 추천해 주세요"
           />
         </div>
