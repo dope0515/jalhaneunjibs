@@ -139,7 +139,7 @@
                       <button
                         type="button"
                         class="keyword-add-btn"
-                        :disabled="form.keywords.length >= 3 || !keywordInput.trim()"
+                        :disabled="!keywordInput.trim()"
                         @click="addCustomKeyword()"
                       >등록</button>
                     </div>
@@ -634,14 +634,14 @@ const toggleKeyword = (keyword) => {
   const index = form.value.keywords.indexOf(keyword)
   if (index > -1) {
     form.value.keywords.splice(index, 1)
-  } else if (form.value.keywords.length < 3) {
+  } else {
     form.value.keywords.push(keyword)
   }
 }
 
 const addCustomKeyword = () => {
   const tag = keywordInput.value.trim().replace(/^#/, '')
-  if (tag && form.value.keywords.length < 3 && !form.value.keywords.includes(tag)) {
+  if (tag && !form.value.keywords.includes(tag)) {
     form.value.keywords.push(tag)
     keywordInput.value = ''
   }

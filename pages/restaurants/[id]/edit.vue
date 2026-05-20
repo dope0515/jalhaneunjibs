@@ -103,7 +103,7 @@
 
         <!-- ④ 키워드 -->
         <div class="edit-card">
-          <h2 class="edit-section-title">키워드 <span class="edit-hint">(최대 3개)</span></h2>
+          <h2 class="edit-section-title">키워드</h2>
           <div class="keyword-input-row">
             <AppInput
               v-model="keywordInput"
@@ -116,7 +116,7 @@
             <button
               type="button"
               class="keyword-add-btn"
-              :disabled="form.keywords.length >= 3 || !keywordInput.trim()"
+              :disabled="!keywordInput.trim()"
               @click="addKeyword"
             >등록</button>
           </div>
@@ -309,7 +309,7 @@ const removeNewImage = (i) => {
 // ── 키워드 ────────────────────────────────────────────────────────
 const addKeyword = () => {
   const tag = keywordInput.value.trim().replace(/^#/, '')
-  if (!tag || form.value.keywords.length >= 3 || form.value.keywords.includes(tag)) return
+  if (!tag || form.value.keywords.includes(tag)) return
   form.value.keywords.push(tag)
   keywordInput.value = ''
 }

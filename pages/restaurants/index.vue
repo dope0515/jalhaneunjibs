@@ -122,6 +122,7 @@ const { $api } = useApi()
 const categories = ['한식', '중식', '일식', '양식', '카페', '주점', '분식', '아시아음식']
 
 const sortOptions = [
+  { label: '등록순', value: 'latest' },
   { label: '추천순', value: 'likes' },
   { label: '조회순', value: 'views' },
   { label: '리뷰순', value: 'reviews' },
@@ -130,7 +131,7 @@ const sortOptions = [
 const selectedCategory = ref(null)
 const selectedRegion1 = ref(null)
 const selectedRegion2 = ref(null)
-const selectedSort = ref('likes')
+const selectedSort = ref('latest')
 const currentPage = ref(1)
 
 const { data: regionsData } = await useAsyncData(
