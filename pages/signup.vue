@@ -28,6 +28,7 @@
                   id="password"
                   type="password"
                   placeholder="영문, 숫자 포함 6자리 이상"
+                  minlength = "6"
                   autocomplete="new-password"
                   required
                   show-password-toggle
@@ -41,6 +42,7 @@
                   id="passwordCheck"
                   type="password"
                   placeholder="비밀번호를 다시 입력해주세요"
+                  minlength = "6"
                   autocomplete="new-password"
                   required
                   show-password-toggle
@@ -158,7 +160,7 @@ const isSendingCode = ref(false)
 const emailMessage = ref('')
 
 const isPasswordValid = computed(() => {
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/
   return passwordRegex.test(password.value)
 })
 
