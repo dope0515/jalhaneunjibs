@@ -109,7 +109,9 @@
               v-model="keywordInput"
               placeholder="예: 가성비, 데이트, 주차가능"
               class="keyword-app-input"
-              @keydown.enter.prevent="addKeyword"
+              @keydown.enter.prevent="handleKeywordEnter"
+              @compositionstart="keywordComposing = true"
+              @compositionend="keywordComposing = false"
             />
             <button
               type="button"
@@ -278,6 +280,7 @@ const totalImageCount = computed(
 )
 
 const keywordInput = ref('')
+const keywordComposing = ref(false)
 const isSubmitting = ref(false)
 const restaurantImgInputRef = ref(null)
 const menuImgInputRef = ref(null)
@@ -309,6 +312,12 @@ const addKeyword = () => {
   if (!tag || form.value.keywords.length >= 3 || form.value.keywords.includes(tag)) return
   form.value.keywords.push(tag)
   keywordInput.value = ''
+}
+
+const handleKeywordEnter = () => {
+  // 한글 IME 조합 중 Enter는 무시 (조합 완료 후 실행)
+  if (keywordComposing.value) return
+  addKeyword()
 }
 const removeKeyword = (i) => form.value.keywords.splice(i, 1)
 
