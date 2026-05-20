@@ -7,7 +7,7 @@
     "dev": "nuxt dev --open",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
+    "postinstall": "prisma generate && nuxt prepare",
     "studio": "npx prisma studio",
     "db:migrate": "npx prisma migrate dev",
     "db:push": "npx prisma db push",
