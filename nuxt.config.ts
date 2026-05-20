@@ -55,7 +55,6 @@ export default defineNuxtConfig({
     geminiApiKey: process.env.GEMINI_API_KEY,
     public: {
       kakaoMapKey: process.env.KAKAO_MAP_KEY,
-      apiBase: process.env.API_BASE_URL || 'http://localhost:4000',
     }
   },
 
