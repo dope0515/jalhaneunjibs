@@ -1,62 +1,70 @@
 <template>
-  <div v-if="loading" class="app-loading-overlay">
-    <div class="spinner-container">
-      <div class="spinner"></div>
-      <p v-if="message" class="loading-text">{{ message }}</p>
+  <Transition name="loading-fade">
+    <div v-if="loading" class="app-loading-overlay">
+      <div class="app-loading-spinner">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <script setup>
 defineProps({
-  loading: {
-    type: Boolean,
-    default: false
-  },
-  message: {
-    type: String,
-    default: '처리 중입니다...'
-  }
+  loading: { type: Boolean, default: false },
 })
 </script>
 
 <style lang="scss" scoped>
 .app-loading-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(4px);
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
 }
 
-.spinner-container {
+.app-loading-spinner {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: rem(16);
+  gap: rem(8);
+
+  span {
+    display: block;
+    width: rem(10);
+    height: rem(10);
+    border-radius: 50%;
+    background-color: $primary-color;
+    animation: loading-bounce 0.8s ease-in-out infinite;
+
+    &:nth-child(1) { animation-delay: 0s; }
+    &:nth-child(2) { animation-delay: 0.15s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+  }
 }
 
-.spinner {
-  width: rem(48);
-  height: rem(48);
-  border: rem(4) solid $gray-e4;
-  border-top: rem(4) solid $primary-color;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+@keyframes loading-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
-.loading-text {
-  @include font(16, 1.5, 600, $primary-color);
+.loading-fade-enter-active,
+.loading-fade-leave-active {
+  transition: opacity 0.2s ease;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.loading-fade-enter-from,
+.loading-fade-leave-to {
+  opacity: 0;
 }
 </style>
