@@ -161,7 +161,7 @@ const categories = ['한식', '중식', '일식', '양식', '카페', '주점', 
 
 const sortOptions = [
   { label: '등록순', value: 'latest' },
-  { label: '추천순', value: 'likes' },
+  { label: '별점순', value: 'rating' },
   { label: '조회순', value: 'views' },
   { label: '리뷰순', value: 'reviews' },
 ]

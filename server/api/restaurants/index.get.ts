@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
         },
       },
       orderBy:
-        sort === 'likes'   ? { likes: 'desc' } :
+        sort === 'rating'  ? { averageRating: 'desc' } :
         sort === 'views'   ? { viewCount: 'desc' } :
         sort === 'reviews' ? { reviewCount: 'desc' } :
         { createdAt: 'desc' },
