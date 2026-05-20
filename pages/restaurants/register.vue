@@ -1,6 +1,41 @@
 <template>
   <section class="register">
     <AppLoading :loading="isSubmitting" message="맛집을 등록하고 있습니다..." />
+
+    <!-- 등록 성공 모달 -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="showSuccessModal" class="register-success-overlay" @click.self="null">
+          <div class="register-success-modal">
+            <div class="register-success-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 12l3 3 5-5"/>
+              </svg>
+            </div>
+            <h2 class="register-success-title">등록 완료!</h2>
+            <p class="register-success-desc">
+              <strong>{{ registeredRestaurantName }}</strong>이(가)<br>성공적으로 등록되었습니다.
+            </p>
+            <div class="register-success-actions">
+              <button class="register-success-btn register-success-btn--outline" @click="handleRegisterMore">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                잘하는 집을 더 입력하기
+              </button>
+              <button class="register-success-btn register-success-btn--primary" @click="handleGoToRestaurant">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                보러가기
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <div class="inner">
       <div class="content-wrap">
         <div class="title-bx">
@@ -442,6 +477,9 @@ const isAnalyzing = ref(false)
 const menuItemImageInputRef = ref(null)
 const currentEditingMenuIndex = ref(-1)
 const isSubmitting = ref(false)
+const showSuccessModal = ref(false)
+const registeredRestaurantId = ref(null)
+const registeredRestaurantName = ref('')
 
 const STORAGE_KEY = 'restaurant_registration_draft'
 
@@ -847,16 +885,26 @@ const handleSubmit = async () => {
     })
     
     if (data.success) {
-      alert(data.message)
       localStorage.removeItem(STORAGE_KEY)
-      resetForm() // 👈 등록 성공 시 폼 초기화 실행
-      // navigateTo('/') // 메인페이지 이동 막음
+      registeredRestaurantId.value = data.restaurantId
+      registeredRestaurantName.value = form.value.name
+      resetForm()
+      showSuccessModal.value = true
     }
   } catch (error) {
     alert(error.data?.statusMessage || '등록 중 오류가 발생했습니다.')
   } finally {
     isSubmitting.value = false
   }
+}
+
+const handleRegisterMore = () => {
+  showSuccessModal.value = false
+}
+
+const handleGoToRestaurant = () => {
+  showSuccessModal.value = false
+  navigateTo(`/restaurants/${registeredRestaurantId.value}`)
 }
 </script>
 

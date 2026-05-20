@@ -48,12 +48,19 @@
               show-label
             />
             <span class="app-card-list-stat-item">
+              <!-- 조회수: 눈 아이콘 -->
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               {{ (restaurant.viewCount ?? 0).toLocaleString() }}
             </span>
-            <span class="app-card-list-stat-item">
+            <span class="app-card-list-stat-item" title="리뷰">
+              <!-- 리뷰: 클립보드 아이콘 -->
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+              {{ restaurant.reviewCount ?? 0 }}
+            </span>
+            <span class="app-card-list-stat-item" title="댓글">
+              <!-- 댓글: 말풍선 아이콘 -->
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              {{ restaurant.reviewCount }}
+              {{ restaurant._count?.comments ?? 0 }}
             </span>
           </div>
         </div>

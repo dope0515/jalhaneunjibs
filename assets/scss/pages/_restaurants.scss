@@ -15,6 +15,119 @@
     margin-bottom: rem(40);
   }
 
+  // 검색 영역
+  .search-wrap {
+    display: flex;
+    margin-bottom: rem(20);
+    gap: rem(10);
+  }
+
+  .search-box {
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .search-icon {
+      position: absolute;
+      left: rem(16);
+      color: $gray-78;
+      pointer-events: none;
+      flex-shrink: 0;
+    }
+
+    .search-input {
+      width: 100%;
+      height: rem(52);
+      padding: 0 rem(44) 0 rem(48);
+      background: $white;
+      border: 1.5px solid $gray-e4;
+      border-radius: rem(14);
+      @include font(15, 1, 400, $black);
+      transition: border-color 0.15s, box-shadow 0.15s;
+
+      &::placeholder {
+        color: $gray-78;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 rem(3) rgba($primary-color, 0.1);
+      }
+    }
+
+    .search-clear {
+      position: absolute;
+      right: rem(14);
+      width: rem(24);
+      height: rem(24);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: $gray-e4;
+      border: none;
+      border-radius: 50%;
+      color: $gray-78;
+      cursor: pointer;
+      transition: background 0.15s;
+
+      &:hover {
+        background: darken($gray-e4, 8%);
+      }
+    }
+  }
+
+  .search-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .search-submit-btn {
+    padding: rem(10) rem(28);
+    background: $primary-color;
+    border: none;
+    border-radius: rem(10);
+    @include font(14, 1, 600, $white);
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: darken($primary-color, 6%);
+    }
+  }
+
+  .search-active-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(6);
+    padding: rem(6) rem(10) rem(6) rem(14);
+    background: rgba($primary-color, 0.08);
+    border: 1px solid rgba($primary-color, 0.2);
+    border-radius: rem(100);
+    @include font(13, 1, 500, $primary-color);
+
+    button {
+      width: rem(18);
+      height: rem(18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba($primary-color, 0.15);
+      border: none;
+      border-radius: 50%;
+      color: $primary-color;
+      cursor: pointer;
+      font-size: rem(14);
+      line-height: 1;
+      transition: background 0.15s;
+
+      &:hover {
+        background: rgba($primary-color, 0.3);
+      }
+    }
+  }
+
   // 필터 영역
   .filter-wrap {
     display: flex;
@@ -77,6 +190,16 @@
       padding: rem(6) rem(14);
       font-size: rem(13);
     }
+  }
+
+  // fade 트랜지션 (검색 태그 등)
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.2s ease;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
   }
 
   // 필터 슬라이드 트랜지션

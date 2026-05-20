@@ -88,7 +88,8 @@
   cursor: pointer;
   font-family: inherit;
   
-  &:hover {
+  &:hover,
+  &.router-link-active {
     color: $primary-color;
   }
 }
