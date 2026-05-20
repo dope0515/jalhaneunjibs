@@ -293,20 +293,10 @@ const tabs = [
 ]
 const activeTab = ref('profile')
 
-// ── 프로필 ─────────────────────────────────────────────
+// ── 프로필 상태 ──────────────────────────────────────────
 const profile = ref(null)
 const profileSaving = ref(false)
 const profileForm = ref({ nickname: '' })
-
-const loadProfile = async () => {
-  try {
-    profile.value = await $api('/mypage/profile')
-    profileForm.value.nickname = profile.value?.nickname ?? ''
-  } catch { /* noop */ }
-}
-await loadProfile()
-// 모든 탭 데이터를 병렬로 미리 로드 — 탭 카운트 즉시 표시
-Promise.all([loadMyRestaurants(), loadReviews(), loadCollections()])
 
 const userInitial = computed(() => {
   const name = profile.value?.nickname || profile.value?.username || '?'
@@ -317,6 +307,13 @@ const joinDate = computed(() => {
   if (!profile.value?.createdAt) return ''
   return new Date(profile.value.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
 })
+
+const loadProfile = async () => {
+  try {
+    profile.value = await $api('/mypage/profile')
+    profileForm.value.nickname = profile.value?.nickname ?? ''
+  } catch { /* noop */ }
+}
 
 const saveProfile = async () => {
   profileSaving.value = true
@@ -334,7 +331,7 @@ const saveProfile = async () => {
   }
 }
 
-// ── 비밀번호 ───────────────────────────────────────────
+// ── 비밀번호 상태 ────────────────────────────────────────
 const passwordForm = ref({ current: '', next: '', confirm: '' })
 const pwSaving = ref(false)
 
@@ -357,7 +354,7 @@ const savePassword = async () => {
   }
 }
 
-// ── 내 등록 맛집 ────────────────────────────────────────
+// ── 내 등록 맛집 상태 ──────────────────────────────────────
 const myRestaurants = ref([])
 const myRestaurantsLoading = ref(false)
 const myRestaurantsError = ref('')
@@ -376,10 +373,7 @@ const loadMyRestaurants = async () => {
   }
 }
 
-const statusLabel = (status) => ({ ACTIVE: '영업 중', CLOSED: '폐업', HIDDEN: '숨김' }[status] ?? status)
-const statusColor = (status) => ({ ACTIVE: 'green', CLOSED: 'red', HIDDEN: 'gray' }[status] ?? 'gray')
-
-// ── 리뷰 ───────────────────────────────────────────────
+// ── 리뷰 상태 ────────────────────────────────────────────
 const reviews = ref([])
 const reviewsLoading = ref(false)
 const reviewsError = ref('')
@@ -398,7 +392,6 @@ const loadReviews = async () => {
   }
 }
 
-// 리뷰에서 식당 데이터만 추출 (중복 제거)
 const reviewedRestaurants = computed(() => {
   const seen = new Set()
   return reviews.value
@@ -406,20 +399,16 @@ const reviewedRestaurants = computed(() => {
     .map((r) => r.restaurant)
 })
 
-watch(activeTab, (tab) => {
-  // 초기 병렬 로드에서 실패한 경우 재시도
-  if (tab === 'myRestaurants' && !myRestaurants.value.length && !myRestaurantsLoading.value) loadMyRestaurants()
-  if (tab === 'reviews' && !reviews.value.length && !reviewsLoading.value) loadReviews()
-  if (tab === 'collections' && !collections.value.length && !collectionsLoading.value) loadCollections()
-})
-
-const formatDate = (iso) => {
-  return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
-// ── 컬렉션 ─────────────────────────────────────────────
+// ── 컬렉션 상태 ──────────────────────────────────────────
 const collections = ref([])
 const collectionsLoading = ref(false)
+const showCreateModal = ref(false)
+const newColName = ref('')
+const newColPrivate = ref(true)
+const renameTarget = ref(null)
+const renameValue = ref('')
+const activeCollection = ref(null)
+const drawerLoading = ref(false)
 
 const loadCollections = async () => {
   collectionsLoading.value = true
@@ -431,11 +420,6 @@ const loadCollections = async () => {
     collectionsLoading.value = false
   }
 }
-
-// 새 컬렉션 만들기
-const showCreateModal = ref(false)
-const newColName = ref('')
-const newColPrivate = ref(true)
 
 const createCollection = async () => {
   if (!newColName.value.trim()) return
@@ -452,10 +436,6 @@ const createCollection = async () => {
     alert(e.data?.message || '목록 생성에 실패했습니다.')
   }
 }
-
-// 이름 변경
-const renameTarget = ref(null)
-const renameValue = ref('')
 
 const startRenameCollection = (col) => {
   renameTarget.value = col
@@ -491,10 +471,6 @@ const deleteCollection = async (col) => {
   }
 }
 
-// 컬렉션 상세 드로어
-const activeCollection = ref(null)
-const drawerLoading = ref(false)
-
 const openCollection = async (col) => {
   activeCollection.value = { ...col }
   drawerLoading.value = true
@@ -522,4 +498,19 @@ const removeFavorite = async (fav, col) => {
     alert('제거에 실패했습니다.')
   }
 }
+
+// ── 공통 유틸리티 ────────────────────────────────────────
+const formatDate = (iso) => {
+  return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+// ── 감시자 및 실행 ───────────────────────────────────────
+watch(activeTab, (tab) => {
+  if (tab === 'myRestaurants' && !myRestaurants.value.length && !myRestaurantsLoading.value) loadMyRestaurants()
+  if (tab === 'reviews' && !reviews.value.length && !reviewsLoading.value) loadReviews()
+  if (tab === 'collections' && !collections.value.length && !collectionsLoading.value) loadCollections()
+})
+
+await loadProfile()
+Promise.all([loadMyRestaurants(), loadReviews(), loadCollections()])
 </script>
