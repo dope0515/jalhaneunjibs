@@ -2,10 +2,10 @@ import { defineEventHandler, getQuery } from 'h3'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
-  const { category, region1, region2, keyword, page = '1' } = getQuery(event)
+  const { category, region1, region2, keyword, page = '1', sort = 'latest' } = getQuery(event)
 
   const pageNum = Math.max(1, parseInt(page as string))
-  const pageSize = 12
+  const pageSize = 6
   const skip = (pageNum - 1) * pageSize
 
   const where: Record<string, unknown> = {}
@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
         averageRating: true,
         reviewCount: true,
         likes: true,
+        viewCount: true,
         placeId: true,
         menus: {
           where: { isRecommended: true },
@@ -41,7 +42,11 @@ export default defineEventHandler(async (event) => {
           take: 3,
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy:
+        sort === 'likes'   ? { likes: 'desc' } :
+        sort === 'views'   ? { viewCount: 'desc' } :
+        sort === 'reviews' ? { reviewCount: 'desc' } :
+        { createdAt: 'desc' },
       skip,
       take: pageSize,
     }),

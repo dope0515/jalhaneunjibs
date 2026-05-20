@@ -2,7 +2,7 @@
 <template>
   <component 
     :is="componentType" 
-    v-bind="dynamicProps, $attrs" 
+    v-bind="mergedProps"
     class="app-button"
     :class="buttonClasses" 
     :style="buttonStyles"
@@ -15,6 +15,8 @@
 <script setup>
 import { computed } from 'vue'
 import { NuxtLink } from '#components'
+
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps({
   // Navigation
@@ -53,11 +55,15 @@ const componentType = computed(() => {
   return 'button'
 })
 
+const attrs = useAttrs()
+
 const dynamicProps = computed(() => {
   if (props.to) return { to: props.to }
   if (props.href) return { href: props.href, target: '_blank' }
   return { type: props.type }
 })
+
+const mergedProps = computed(() => ({ ...dynamicProps.value, ...attrs }))
 </script>
 
 <style lang="scss" scoped>
@@ -106,6 +112,7 @@ const dynamicProps = computed(() => {
     &.btn-color-black {
       border-color: #000;
       color: #000;
+      background-color: $white;
       &:hover { background-color: #f5f5f4; }
     }
     &.btn-color-green {
@@ -149,6 +156,11 @@ const dynamicProps = computed(() => {
   &.btn-size-sm {
     padding: rem(8) rem(16);
     @include font(13);
+  }
+
+  &.btn-size-xs {
+    padding: rem(4) rem(8);
+    @include font(12);
   }
 
   &.btn-size-lg {

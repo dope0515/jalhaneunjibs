@@ -11,7 +11,9 @@
     "studio": "npx prisma studio",
     "db:migrate": "npx prisma migrate dev",
     "db:push": "npx prisma db push",
-    "db:generate": "npx prisma generate"
+    "db:generate": "npx prisma generate",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:build": "cd backend && npm run build"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

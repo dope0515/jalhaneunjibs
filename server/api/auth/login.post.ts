@@ -3,21 +3,27 @@ import jwt from 'jsonwebtoken'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { username, password: rawPassword } = body
+  const { login: loginId, password: rawPassword } = body
   const password = rawPassword?.trim()
+  const identifier = loginId?.trim()
 
-  console.log(`[Login Attempt]: username=${username}, passwordLength=${password?.length}`)
+  console.log(`[Login Attempt]: identifier=${identifier}, passwordLength=${password?.length}`)
 
-  // 1. 유저 존재 여부 확인 (ID로 찾기)
-  const user = await prisma.user.findUnique({
-    where: { username }
+  // 1. username 또는 email 둘 다 허용
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: identifier },
+        { email: identifier },
+      ],
+    },
   })
 
   if (!user) {
-    console.log(`[Login Failed]: User not found - ${username}`)
+    console.log(`[Login Failed]: User not found - ${identifier}`)
     throw createError({
       statusCode: 401,
-      statusMessage: '아이디 또는 비밀번호가 일치하지 않습니다.'
+      statusMessage: '이메일(아이디) 또는 비밀번호가 일치하지 않습니다.'
     })
   }
 
@@ -26,20 +32,20 @@ export default defineEventHandler(async (event) => {
   // 2. 비밀번호 일치 여부 확인
   const isMatch = await bcrypt.compare(password, user.password)
   if (!isMatch) {
-    console.log(`[Login Failed]: Password mismatch for ${username}`)
+    console.log(`[Login Failed]: Password mismatch for ${identifier}`)
     throw createError({
       statusCode: 401,
-      statusMessage: '아이디 또는 비밀번호가 일치하지 않습니다.'
+      statusMessage: '이메일(아이디) 또는 비밀번호가 일치하지 않습니다.'
     })
   }
 
-  console.log(`[Login Success]: ${username}`)
+  console.log(`[Login Success]: ${identifier}`)
 
   // 3. 토큰 생성 (아까 만든 .env의 키들을 여기서 꺼내 씁니다!)
   const accessToken = jwt.sign(
     { userId: user.id },
     process.env.ACCESS_TOKEN_SECRET!,
-    { expiresIn: '15m' } // 액세스 토큰은 짧게!
+    { expiresIn: '7d' }
   )
 
   const refreshToken = jwt.sign(
@@ -52,8 +58,9 @@ export default defineEventHandler(async (event) => {
   await prisma.refreshToken.create({
     data: {
       token: refreshToken,
-      userId: user.id
-    }
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7일 후
+    },
   })
 
   // 5. 리프레시 토큰을 보안 쿠키(HttpOnly)에 저장

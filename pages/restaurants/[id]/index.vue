@@ -18,9 +18,13 @@
             <AppButton size="sm" variant="outline" @click="handleEdit">정보 수정</AppButton>
             <AppButton size="sm" color="red" variant="outline" @click="handleDelete">삭제</AppButton>
           </div>
-          <AppButton size="md" color="green" class="like-btn">
-            <img src="/assets/images/icon/ic_heart.svg" width="18" height="18" alt="" aria-hidden="true" />
-            맛집 저장
+          <AppButton
+            size="md"
+            :color="isSaved ? 'green' : 'black'"
+            class="like-btn"
+            @click="openFavoriteModal"
+          >
+            {{ isSaved ? '저장됨' : '맛집 저장' }}
           </AppButton>
         </div>
       </div>
@@ -35,10 +39,9 @@
                 v-if="restaurant.images?.length"
                 :modules="swiperModules"
                 :slides-per-view="1"
-                :loop="true"
+                :loop="restaurant.images.length > 1"
                 :pagination="{ clickable: true }"
-                :navigation="true"
-                :autoplay="{ delay: 5000 }"
+                :navigation="restaurant.images.length > 1"
                 class="detail-swiper"
               >
                 <SwiperSlide v-for="(img, idx) in restaurant.images" :key="idx">
@@ -66,7 +69,7 @@
             <h2 class="section-title">메뉴 안내</h2>
             <div class="menu-list">
               <button
-                v-for="menu in restaurant.menus"
+                v-for="menu in sortedMenus"
                 :key="menu.id"
                 type="button"
                 class="menu-card"
@@ -165,33 +168,32 @@
                     @change="handleReviewImages"
                   />
                   <button
-                    v-if="reviewForm.imagePreviews.length < 3"
+                    v-if="totalImageCount < 3"
                     type="button"
                     class="img-upload-btn"
                     @click="reviewImgInputRef?.click()"
                   >
                     <img src="/assets/images/icon/ic_upload.svg" width="16" height="16" alt="" aria-hidden="true" />
-                    사진 추가 ({{ reviewForm.imagePreviews.length }}/3)
+                    사진 추가 ({{ totalImageCount }}/3)
                   </button>
-                  <div v-if="reviewForm.imagePreviews.length" class="img-preview-list">
+                  <div v-if="reviewForm.allImages.length" class="img-preview-list">
                     <div
-                      v-for="(prev, i) in reviewForm.imagePreviews"
+                      v-for="(item, i) in reviewForm.allImages"
                       :key="i"
                       class="img-preview-item"
                     >
-                      <img :src="prev" alt="미리보기" />
-                      <button type="button" class="img-remove-btn" @click="removeReviewImage(i)" aria-label="이미지 삭제">
-                        <img src="/assets/images/icon/ic_close.svg" width="12" height="12" alt="삭제" />
-                      </button>
+                      <img :src="item.type === 'existing' ? item.url : item.preview" alt="미리보기" />
+                      <button type="button" class="img-remove-btn" @click="removeReviewImage(i)" aria-label="이미지 삭제">×</button>
                     </div>
                   </div>
 
                 </div>
 
                 <div class="form-actions">
-                  <AppButton v-if="editingReview" size="sm" variant="outline" @click="cancelEditReview">취소</AppButton>
-                  <AppButton size="sm" color="green" :disabled="!reviewForm.rating" @click="submitReview">
-                    {{ editingReview ? '수정 완료' : '리뷰 등록' }}
+                  <AppButton v-if="editingReview" size="sm" variant="outline" :disabled="reviewSubmitting" @click="cancelEditReview">취소</AppButton>
+                  <AppButton size="sm" color="green" :disabled="!reviewForm.rating || reviewSubmitting" @click="submitReview">
+                    <span v-if="reviewSubmitting">저장 중…</span>
+                    <span v-else>{{ editingReview ? '수정 완료' : '리뷰 등록' }}</span>
                   </AppButton>
                 </div>
               </div>
@@ -343,6 +345,87 @@
     </div>
   </section>
 
+  <!-- ─── 찜 저장 모달 ─────────────────────────── -->
+  <Teleport to="body">
+    <Transition name="lightbox-fade">
+      <div v-if="favoriteModalOpen" class="modal-overlay" @click.self="favoriteModalOpen = false">
+        <div class="favorite-modal">
+          <div class="fav-modal-header">
+            <h3>내 맛집에 저장하기</h3>
+            <button class="fav-modal-close" @click="favoriteModalOpen = false">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <div v-if="favCollectionsLoading" class="fav-loading">불러오는 중…</div>
+          <div v-else class="fav-collections-list">
+            <label
+              v-for="col in favCollections"
+              :key="col.id"
+              class="fav-col-row"
+            >
+              <div class="fav-col-thumb">
+                <img
+                  v-if="col.favorites?.[0]?.restaurant?.thumbnail"
+                  :src="col.favorites[0].restaurant.thumbnail"
+                  alt=""
+                />
+                <div v-else class="fav-col-thumb-empty">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                </div>
+              </div>
+              <span class="fav-col-name">{{ col.name }}</span>
+              <span class="fav-col-count">{{ col._count?.favorites ?? 0 }}개</span>
+              <input
+                type="checkbox"
+                class="fav-col-check"
+                :checked="savedCollectionIds.includes(col.id)"
+                @change="toggleFavorite(col.id)"
+              />
+            </label>
+
+            <div v-if="favCollections.length === 0" class="fav-empty">
+              <p>저장 목록이 없어요</p>
+            </div>
+          </div>
+
+          <div class="fav-modal-footer">
+            <button class="fav-new-btn" @click="openCreateFromModal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              새 목록 만들기
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- ─── 새 목록 만들기 (찜 모달 내) ─────────── -->
+  <Teleport to="body">
+    <div v-if="favCreateModalOpen" class="modal-overlay" @click.self="favCreateModalOpen = false">
+      <div class="modal-box">
+        <h3 class="modal-title">새 목록 만들기</h3>
+        <input
+          v-model="favNewColName"
+          class="modal-input"
+          placeholder="예: 데이트 코스"
+          maxlength="30"
+          @keydown.enter="createAndFavorite"
+        />
+        <div class="modal-actions">
+          <button class="btn-ghost" @click="favCreateModalOpen = false">취소</button>
+          <button class="btn-primary" :disabled="!favNewColName.trim()" @click="createAndFavorite">만들기</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
   <!-- 메뉴 이미지 라이트박스 -->
   <Teleport to="body">
     <Transition name="lightbox-fade">
@@ -395,16 +478,20 @@
 
 <script setup>
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Navigation, Pagination, Autoplay, Keyboard } from 'swiper/modules'
+import { Navigation, Pagination, Keyboard } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 
+const { $api } = useApi()
 const route = useRoute()
 const { user } = useAuth()
 const mapRef = ref(null)
 
-const { data: restaurant, refresh, error } = await useFetch(`/api/restaurants/${route.params.id}`)
+const { data: restaurant, refresh, error } = await useAsyncData(
+  `restaurant-${route.params.id}`,
+  () => $api(`/restaurants/${route.params.id}`)
+)
 
 if (error.value) {
   throw createError({ 
@@ -418,8 +505,20 @@ if (!restaurant.value) {
 }
 
 // 라이트박스 및 메인 갤러리
-const swiperModules = [Navigation, Pagination, Autoplay, Keyboard]
+const swiperModules = [Navigation, Pagination, Keyboard]
 const imageMenus = computed(() => restaurant.value?.menus.filter((m) => !!m.image) ?? [])
+
+const sortedMenus = computed(() => {
+  const menus = restaurant.value?.menus ?? []
+  return [...menus].sort((a, b) => {
+    const rank = (m) => {
+      if (m.isRecommended) return 0
+      if (m.image) return 1
+      return 2
+    }
+    return rank(a) - rank(b)
+  })
+})
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
 const currentSlideIndex = ref(0)
@@ -453,6 +552,69 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 
+// ── 찜하기 ───────────────────────────────────────────────────────
+const favoriteModalOpen = ref(false)
+const favCollections = ref([])
+const favCollectionsLoading = ref(false)
+const savedCollectionIds = ref([])
+const isSaved = computed(() => savedCollectionIds.value.length > 0)
+const favCreateModalOpen = ref(false)
+const favNewColName = ref('')
+
+const openFavoriteModal = async () => {
+  if (!user.value) return navigateTo('/login')
+  favoriteModalOpen.value = true
+  favCollectionsLoading.value = true
+  try {
+    const [cols, status] = await Promise.all([
+      $api('/mypage/collections'),
+      $api(`/mypage/favorites/status?restaurantId=${route.params.id}`),
+    ])
+    favCollections.value = cols
+    savedCollectionIds.value = status.savedCollectionIds
+  } finally {
+    favCollectionsLoading.value = false
+  }
+}
+
+const toggleFavorite = async (collectionId) => {
+  try {
+    const result = await $api('/mypage/favorites/toggle', {
+      method: 'POST',
+      body: { restaurantId: parseInt(route.params.id), collectionId },
+    })
+    if (result.action === 'added') {
+      savedCollectionIds.value.push(collectionId)
+      restaurant.value.likes += 1
+    } else {
+      savedCollectionIds.value = savedCollectionIds.value.filter((id) => id !== collectionId)
+      if (savedCollectionIds.value.length === 0) restaurant.value.likes = Math.max(0, restaurant.value.likes - 1)
+    }
+  } catch (e) {
+    alert('저장에 실패했습니다.')
+  }
+}
+
+const openCreateFromModal = () => {
+  favCreateModalOpen.value = true
+}
+
+const createAndFavorite = async () => {
+  if (!favNewColName.value.trim()) return
+  try {
+    const col = await $api('/mypage/collections', {
+      method: 'POST',
+      body: { name: favNewColName.value.trim(), isPrivate: true },
+    })
+    favCollections.value.unshift(col)
+    favNewColName.value = ''
+    favCreateModalOpen.value = false
+    await toggleFavorite(col.id)
+  } catch (e) {
+    alert('목록 생성에 실패했습니다.')
+  }
+}
+
 // ── 리뷰 관련 상태 ───────────────────────────────────────────────
 const myReview = computed(() =>
   restaurant.value?.reviews?.find((r) => r.userId === user.value?.id) ?? null
@@ -472,24 +634,27 @@ const ratingDistribution = computed(() => {
 })
 
 const reviewImgInputRef = ref(null)
-const reviewForm = ref({ rating: 0, content: '', imageFiles: [], imagePreviews: [] })
+// allImages: { type: 'existing', url } | { type: 'new', file, preview }
+const reviewForm = ref({ rating: 0, content: '', allImages: [] })
 const editingReview = ref(false)
+const reviewSubmitting = ref(false)
+
+const totalImageCount = computed(() => reviewForm.value.allImages.length)
 
 const handleReviewImages = (e) => {
   const files = Array.from(e.target.files)
-  const remaining = 3 - reviewForm.value.imagePreviews.length
+  const remaining = 3 - totalImageCount.value
   files.slice(0, remaining).forEach((file) => {
-    reviewForm.value.imageFiles.push(file)
     const reader = new FileReader()
-    reader.onload = (ev) => reviewForm.value.imagePreviews.push(ev.target.result)
+    reader.onload = (ev) =>
+      reviewForm.value.allImages.push({ type: 'new', file, preview: ev.target.result })
     reader.readAsDataURL(file)
   })
   e.target.value = ''
 }
 
 const removeReviewImage = (index) => {
-  reviewForm.value.imageFiles.splice(index, 1)
-  reviewForm.value.imagePreviews.splice(index, 1)
+  reviewForm.value.allImages.splice(index, 1)
 }
 
 const startEditReview = () => {
@@ -497,33 +662,46 @@ const startEditReview = () => {
   reviewForm.value = {
     rating: myReview.value.rating,
     content: myReview.value.content ?? '',
-    imageFiles: [],
-    imagePreviews: [],
+    // 기존 이미지를 existing 타입으로 미리 채움
+    allImages: (myReview.value.images ?? []).map((url) => ({ type: 'existing', url })),
   }
   editingReview.value = true
 }
 
 const cancelEditReview = () => {
   editingReview.value = false
-  reviewForm.value = { rating: 0, content: '', imageFiles: [], imagePreviews: [] }
+  reviewForm.value = { rating: 0, content: '', allImages: [] }
 }
 
 const submitReview = async () => {
-  if (!reviewForm.value.rating) return
+  if (!reviewForm.value.rating || reviewSubmitting.value) return
+  reviewSubmitting.value = true
   try {
     const fd = new FormData()
     fd.append('restaurantId', restaurant.value.id)
     fd.append('userId', user.value.id)
     fd.append('rating', reviewForm.value.rating)
     fd.append('content', reviewForm.value.content)
-    reviewForm.value.imageFiles.forEach((file) => fd.append('reviewImages', file))
 
-    await $fetch('/api/reviews', { method: 'POST', body: fd })
+    // 기존 이미지 URL 목록 (유지)
+    const existingUrls = reviewForm.value.allImages
+      .filter((i) => i.type === 'existing')
+      .map((i) => i.url)
+    fd.append('existingImages', JSON.stringify(existingUrls))
+
+    // 새로 추가한 파일들
+    reviewForm.value.allImages
+      .filter((i) => i.type === 'new')
+      .forEach((i) => fd.append('reviewImages', i.file))
+
+    await $api('/reviews', { method: 'POST', body: fd })
     editingReview.value = false
-    reviewForm.value = { rating: 0, content: '', imageFiles: [], imagePreviews: [] }
+    reviewForm.value = { rating: 0, content: '', allImages: [] }
     await refresh()
   } catch {
     alert('리뷰 등록에 실패했습니다.')
+  } finally {
+    reviewSubmitting.value = false
   }
 }
 
@@ -534,7 +712,7 @@ const deleteMyReview = async () => {
 
 const deleteReviewById = async (id) => {
   try {
-    await $fetch(`/api/reviews/${id}`, { method: 'DELETE' })
+    await $api(`/reviews/${id}`, { method: 'DELETE' })
     await refresh()
   } catch {
     alert('리뷰 삭제에 실패했습니다.')
@@ -562,7 +740,7 @@ const cancelEdit = () => {
 const submitEdit = async (id) => {
   if (!editingContent.value.trim()) return
   try {
-    await $fetch(`/api/comments/${id}`, {
+    await $api(`/comments/${id}`, {
       method: 'PUT',
       body: { content: editingContent.value },
     })
@@ -583,7 +761,7 @@ const submitComment = async (parentId = null) => {
   if (!content.trim()) return
 
   try {
-    await $fetch('/api/comments/register', {
+    await $api('/comments/register', {
       method: 'POST',
       body: {
         content,
@@ -610,7 +788,7 @@ const submitComment = async (parentId = null) => {
 const deleteComment = async (id) => {
   if (!confirm('댓글을 삭제하시겠습니까?')) return
   try {
-    await $fetch(`/api/comments/${id}`, { method: 'DELETE' })
+    await $api(`/comments/${id}`, { method: 'DELETE' })
     await refresh()
   } catch (e) {
     alert('삭제 실패')
@@ -627,7 +805,7 @@ const handleEdit = () => navigateTo(`/restaurants/${route.params.id}/edit`)
 const handleDelete = async () => {
   if (!confirm('정말 삭제하시겠습니까?')) return
   try {
-    await $fetch(`/api/restaurants/${route.params.id}`, { method: 'DELETE' })
+    await $api(`/restaurants/${route.params.id}`, { method: 'DELETE' })
     navigateTo('/restaurants')
   } catch (e) {
     alert('오류 발생')

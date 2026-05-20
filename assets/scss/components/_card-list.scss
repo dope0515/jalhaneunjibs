@@ -137,7 +137,7 @@
   &-stats {
     display: flex;
     align-items: center;
-    gap: rem(6);
+    gap: rem(8);
     flex-shrink: 0;
   }
 
@@ -148,7 +148,12 @@
     @include font(12, 1, 700, $tertiary-color);
   }
 
-  &-review-count {
+  &-stat-item {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(3);
     @include font(11, 1, 400, $gray-78);
+
+    svg { flex-shrink: 0; }
   }
 }

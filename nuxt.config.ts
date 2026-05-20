@@ -26,10 +26,23 @@ export default defineNuxtConfig({
       {
         dir: '../public',
         baseURL: '/',
-        maxAge: 60 * 60 * 24 * 365, // 1년 캐시
+        maxAge: 60 * 60 * 24 * 365,
       },
     ],
-    compressPublicAssets: true, // 정적 파일 압축
+    compressPublicAssets: true,
+    // Express 백엔드로 /api/* 요청을 프록시합니다.
+    // Express 서버(포트 4000)가 실행 중일 때 Nuxt 서버가 대신 전달해줍니다.
+    devProxy: {
+      '/api': {
+        target: process.env.API_BASE_URL || 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
+    routeRules: {
+      '/api/**': {
+        proxy: (process.env.API_BASE_URL || 'http://localhost:4000') + '/api/**',
+      },
+    },
   },
   
   modules: ['@pinia/nuxt', '@nuxt/fonts'],
@@ -39,6 +52,7 @@ export default defineNuxtConfig({
     geminiApiKey: process.env.GEMINI_API_KEY,
     public: {
       kakaoMapKey: process.env.KAKAO_MAP_KEY,
+      apiBase: process.env.API_BASE_URL || 'http://localhost:4000',
     }
   },
 
