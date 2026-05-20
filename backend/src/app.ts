@@ -12,8 +12,21 @@ import mypageRouter from './routes/mypage'
 const app = express()
 
 // ─── 미들웨어 ──────────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://jalhaneunjibs.vercel.app',
+  'https://jalhaneunjibs-o2ms.vercel.app'
+]
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // 로컬 개발 환경이나 허용된 도메인에서 오는 요청을 허용
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
 }))
 app.use(express.json())
