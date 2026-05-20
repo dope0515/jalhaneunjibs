@@ -30,19 +30,22 @@ export default defineNuxtConfig({
       },
     ],
     compressPublicAssets: true,
-    // Express 백엔드로 /api/* 요청을 프록시합니다.
-    // Express 서버(포트 4000)가 실행 중일 때 Nuxt 서버가 대신 전달해줍니다.
-    devProxy: {
-      '/api': {
-        target: process.env.API_BASE_URL || 'http://localhost:4000',
-        changeOrigin: true,
+    // Express 백엔드 프록시: API_BASE_URL 환경변수가 설정된 경우에만 활성화됩니다.
+    // 로컬 개발: http://localhost:4000
+    // 운영 (Oracle Cloud): http://VM_IP:4000
+    ...(process.env.API_BASE_URL ? {
+      devProxy: {
+        '/api': {
+          target: process.env.API_BASE_URL,
+          changeOrigin: true,
+        },
       },
-    },
-    routeRules: {
-      '/api/**': {
-        proxy: (process.env.API_BASE_URL || 'http://localhost:4000') + '/api/**',
+      routeRules: {
+        '/api/**': {
+          proxy: process.env.API_BASE_URL + '/api/**',
+        },
       },
-    },
+    } : {}),
   },
   
   modules: ['@pinia/nuxt', '@nuxt/fonts'],
