@@ -30,22 +30,6 @@ export default defineNuxtConfig({
       },
     ],
     compressPublicAssets: true,
-    // Express 백엔드 프록시: API_BASE_URL 환경변수가 설정된 경우에만 활성화됩니다.
-    // 로컬 개발: http://localhost:4000
-    // 운영 (Oracle Cloud): http://VM_IP:4000
-    ...(process.env.API_BASE_URL ? {
-      devProxy: {
-        '/api': {
-          target: process.env.API_BASE_URL,
-          changeOrigin: true,
-        },
-      },
-      routeRules: {
-        '/api/**': {
-          proxy: process.env.API_BASE_URL + '/api/**',
-        },
-      },
-    } : {}),
   },
   
   modules: ['@pinia/nuxt', '@nuxt/fonts'],
