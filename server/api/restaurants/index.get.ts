@@ -41,6 +41,9 @@ export default defineEventHandler(async (event) => {
           select: { name: true, price: true },
           take: 3,
         },
+        _count: {
+          select: { comments: true },
+        },
       },
       orderBy:
         sort === 'likes'   ? { likes: 'desc' } :

@@ -9,6 +9,38 @@
         />
       </div>
 
+      <!-- 검색 영역 -->
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input
+            v-model="searchInput"
+            type="text"
+            class="search-input"
+            placeholder="식당 이름 또는 키워드로 검색"
+            @keydown="handleSearchKeydown"
+            @compositionstart="searchComposing = true"
+            @compositionend="searchComposing = false"
+          />
+          <button v-if="searchInput" class="search-clear" @click="clearSearch" aria-label="검색어 지우기">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="search-actions">
+          <button class="search-submit-btn" @click="submitSearch">검색</button>
+        </div>
+        <Transition name="fade">
+          <div v-if="searchKeyword" class="search-active-tag">
+            <span>"{{ searchKeyword }}" 검색 결과</span>
+            <button @click="clearSearch" aria-label="검색 해제">×</button>
+          </div>
+        </Transition>
+      </div>
+
       <!-- 필터 영역 -->
       <div class="filter-wrap">
         <!-- 카테고리 필터 -->
@@ -91,10 +123,16 @@
 
         <!-- 결과 없음 (로딩 중이 아닐 때만 노출) -->
         <div v-else-if="!isRefreshing && !restaurants.length" class="list-empty">
-          <p>아직 등록된 식당이 없습니다.</p>
-          <NuxtLink to="/restaurants/register" class="empty-register-link">
-            첫 번째 맛집을 등록해보세요 →
-          </NuxtLink>
+          <template v-if="searchKeyword">
+            <p>"{{ searchKeyword }}"에 대한 검색 결과가 없습니다.</p>
+            <button class="empty-register-link" @click="clearSearch">검색어 지우기</button>
+          </template>
+          <template v-else>
+            <p>아직 등록된 식당이 없습니다.</p>
+            <NuxtLink to="/restaurants/register" class="empty-register-link">
+              첫 번째 맛집을 등록해보세요 →
+            </NuxtLink>
+          </template>
         </div>
 
         <!-- 카드 목록 (데이터가 있으면 항상 유지) -->
@@ -133,6 +171,16 @@ const selectedRegion1 = ref(null)
 const selectedRegion2 = ref(null)
 const selectedSort = ref('latest')
 const currentPage = ref(1)
+const searchInput = ref('')
+const searchKeyword = ref('')
+const searchComposing = ref(false)
+
+const handleSearchKeydown = (e) => {
+  if (e.key !== 'Enter') return
+  if (searchComposing.value) return
+  e.preventDefault()
+  submitSearch()
+}
 
 const { data: regionsData } = await useAsyncData(
   'regions',
@@ -153,12 +201,13 @@ const { data, status } = await useAsyncData(
       ...(selectedCategory.value ? { category: selectedCategory.value } : {}),
       ...(selectedRegion1.value ? { region1: selectedRegion1.value } : {}),
       ...(selectedRegion2.value ? { region2: selectedRegion2.value } : {}),
+      ...(searchKeyword.value ? { keyword: searchKeyword.value } : {}),
       sort: selectedSort.value,
       page: currentPage.value,
     },
   }),
   {
-    watch: [selectedCategory, selectedRegion1, selectedRegion2, selectedSort, currentPage],
+    watch: [selectedCategory, selectedRegion1, selectedRegion2, selectedSort, currentPage, searchKeyword],
   }
 )
 
@@ -197,5 +246,16 @@ const setSort = (sort) => {
 const goPage = (page) => {
   currentPage.value = page
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const submitSearch = () => {
+  searchKeyword.value = searchInput.value.trim()
+  currentPage.value = 1
+}
+
+const clearSearch = () => {
+  searchInput.value = ''
+  searchKeyword.value = ''
+  currentPage.value = 1
 }
 </script>
