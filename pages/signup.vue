@@ -140,6 +140,7 @@
 </template>
 
 <script setup>
+const { $api } = useApi()
 const id = ref('')
 const email = ref('')
 const password = ref('')
@@ -165,7 +166,7 @@ const checkEmail = async () => {
   if (!emailInput.value?.input.reportValidity()) return
   
   try {
-    const { isAvailable } = await $fetch('/api/auth/check-email', {
+    const { isAvailable } = await $api('/auth/check-email', {
       params: { email: email.value }
     })
     
@@ -185,7 +186,7 @@ const sendVerificationCode = async () => {
 
   isSendingCode.value = true
   try {
-    await $fetch('/api/auth/verify-send', {
+    await $api('/auth/verify-send', {
       method: 'POST',
       body: { email: email.value }
     })
@@ -202,7 +203,7 @@ const verifyCode = async () => {
   if (!codeInput.value?.input.reportValidity()) return
 
   try {
-    await $fetch('/api/auth/verify-code', {
+    await $api('/auth/verify-code', {
       method: 'POST',
       body: { 
         email: email.value,
@@ -233,7 +234,7 @@ const handleSignup = async () => {
   }
 
   try {
-    await $fetch('/api/auth/signup', {
+    await $api('/auth/signup', {
       method: 'POST',
       body: {
         username: id.value,

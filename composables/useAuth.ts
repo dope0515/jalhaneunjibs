@@ -6,9 +6,10 @@ export const useAuth = () => {
   const { user, accessToken, isLoggedIn } = storeToRefs(authStore)
 
   // 로그인 시도 함수
-  const login = async (credentials: { username: string; password: string }) => {
+  const login = async (credentials: { login: string; password: string }) => {
+    const { $api } = useApi()
     try {
-      const data = await $fetch<any>('/api/auth/login', {
+      const data = await $api<any>('/auth/login', {
         method: 'POST',
         body: credentials
       })

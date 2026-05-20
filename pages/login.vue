@@ -12,11 +12,11 @@
             <p class="desc">서비스 이용을 위해 로그인해주세요.</p>
             <form @submit.prevent="handleLogin">
               <div class="form-item">
-                <label for="id" class="form-item-label">아이디</label>
-                <AppInput 
+                <label for="id" class="form-item-label">이메일 또는 아이디</label>
+                <AppInput
                   v-model="id"
                   id="id"
-                  placeholder="아이디를 입력해주세요"
+                  placeholder="이메일 또는 아이디를 입력해주세요"
                   autocomplete="username"
                   required
                 />
@@ -58,8 +58,8 @@ const password = ref('')
 
 const handleLogin = async () => {
   await login({
-    username: id.value,
-    password: password.value
+    login: id.value,
+    password: password.value,
   })
 }
 </script>

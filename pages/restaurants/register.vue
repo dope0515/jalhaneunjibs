@@ -310,19 +310,6 @@
                             <img src="/assets/images/icon/ic_close.svg" width="12" height="12" alt="삭제" />
                           </span>
                         </button>
-                        <button
-                          type="button"
-                          class="menu-star-btn"
-                          :class="{ 'is-active': item.isRecommended }"
-                          :aria-pressed="item.isRecommended"
-                          :title="item.isRecommended ? '추천 해제' : '추천 메뉴로 설정'"
-                          @click="item.isRecommended = !item.isRecommended"
-                        >
-                          <img 
-                            :src="item.isRecommended ? '/assets/images/icon/ic_star.svg' : '/assets/images/icon/ic_star_off.svg'" 
-                            width="16" height="16" alt="추천" 
-                          />
-                        </button>
                         <div class="menu-item-info">
                           <input 
                             v-model="item.name" 
@@ -353,9 +340,24 @@
                             autocomplete="off"
                           />
                         </div>
-                        <button type="button" class="menu-item-remove" :aria-label="`${index + 1}번째 메뉴 삭제`" @click="analyzedMenuItems.splice(index, 1)">
-                          <img src="/assets/images/icon/ic_close.svg" width="16" height="16" alt="삭제" />
-                        </button>
+                        <div class="menu-item-actions">
+                          <button
+                            type="button"
+                            class="menu-star-btn"
+                            :class="{ 'is-active': item.isRecommended }"
+                            :aria-pressed="item.isRecommended"
+                            :title="item.isRecommended ? '추천 해제' : '추천 메뉴로 설정'"
+                            @click="item.isRecommended = !item.isRecommended"
+                          >
+                            <img 
+                              :src="item.isRecommended ? '/assets/images/icon/ic_star.svg' : '/assets/images/icon/ic_star_off.svg'" 
+                              width="16" height="16" alt="추천" 
+                            />
+                          </button>
+                          <button type="button" class="menu-item-remove" :aria-label="`${index + 1}번째 메뉴 삭제`" @click="analyzedMenuItems.splice(index, 1)">
+                            <img src="/assets/images/icon/ic_close.svg" width="16" height="16" alt="삭제" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                     
@@ -398,6 +400,7 @@
 </template>
 
 <script setup>
+const { $api } = useApi()
 const { loadSDK } = useKakaoMap()
 
 const categories = [
@@ -715,7 +718,7 @@ const analyzeMenuBoard = async () => {
   try {
     const data = new FormData()
     data.append('menuBoard', menuBoardFile.value)
-    const result = await $fetch('/api/menu/analyze', { method: 'POST', body: data })
+    const result = await $api('/menu/analyze', { method: 'POST', body: data })
     analyzedMenuItems.value = (result.menuItems || []).map(item => ({
       ...item,
       price: item.price ? Number(item.price.replace(/[^0-9]/g, '')).toLocaleString() : '',
@@ -838,7 +841,7 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
-    const data = await $fetch('/api/restaurants/register', {
+    const data = await $api('/restaurants/register', {
       method: 'POST',
       body: formData
     })

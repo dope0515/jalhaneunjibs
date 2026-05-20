@@ -71,11 +71,22 @@
         </Transition>
       </div>
 
+      <!-- 정렬 영역 -->
+      <div class="sort-wrap">
+        <button
+          v-for="opt in sortOptions"
+          :key="opt.value"
+          class="sort-btn"
+          :class="{ 'is-active': selectedSort === opt.value }"
+          @click="setSort(opt.value)"
+        >{{ opt.label }}</button>
+      </div>
+
       <!-- 결과 영역 -->
       <div class="list-container" :class="{ 'is-loading': isRefreshing }">
         <!-- 최초 로딩 스켈레톤 -->
         <div v-if="isFirstLoading" class="card-list">
-          <AppSkeleton v-for="n in 6" :key="n" />
+          <AppSkeleton v-for="n in 6" :key="n" class="skeleton-item" />
         </div>
 
         <!-- 결과 없음 (로딩 중이 아닐 때만 노출) -->
@@ -108,16 +119,25 @@
 </template>
 
 <script setup>
+const { $api } = useApi()
+
 const categories = ['한식', '중식', '일식', '양식', '카페', '주점', '분식', '아시아음식']
+
+const sortOptions = [
+  { label: '추천순', value: 'likes' },
+  { label: '조회순', value: 'views' },
+  { label: '리뷰순', value: 'reviews' },
+]
 
 const selectedCategory = ref(null)
 const selectedRegion1 = ref(null)
 const selectedRegion2 = ref(null)
+const selectedSort = ref('likes')
 const currentPage = ref(1)
 
 const { data: regionsData } = await useAsyncData(
   'regions',
-  () => $fetch('/api/restaurants/regions'),
+  () => $api('/restaurants/regions'),
 )
 
 // { "서울특별시": ["강남구", ...], ... }
@@ -129,16 +149,17 @@ const subRegions = computed(() =>
 
 const { data, status } = await useAsyncData(
   'restaurants',
-  () => $fetch('/api/restaurants', {
+  () => $api('/restaurants', {
     query: {
       ...(selectedCategory.value ? { category: selectedCategory.value } : {}),
       ...(selectedRegion1.value ? { region1: selectedRegion1.value } : {}),
       ...(selectedRegion2.value ? { region2: selectedRegion2.value } : {}),
+      sort: selectedSort.value,
       page: currentPage.value,
     },
   }),
-  { 
-    watch: [selectedCategory, selectedRegion1, selectedRegion2, currentPage],
+  {
+    watch: [selectedCategory, selectedRegion1, selectedRegion2, selectedSort, currentPage],
   }
 )
 
@@ -166,6 +187,11 @@ const setRegion1 = (r1) => {
 
 const setRegion2 = (r2) => {
   selectedRegion2.value = r2
+  currentPage.value = 1
+}
+
+const setSort = (sort) => {
+  selectedSort.value = sort
   currentPage.value = 1
 }
 

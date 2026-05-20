@@ -39,6 +39,13 @@ export default defineEventHandler(async (event) => {
   try {
     const formData = await readFormData(event)
 
+    // 등록자 userId (쿠키 또는 폼 데이터)
+    let registeredById: number | null = null
+    try {
+      const { getUserId } = await import('~/server/utils/auth')
+      registeredById = getUserId(event)
+    } catch { /* 비로그인 등록 시 null */ }
+
     // 데이터 추출
     const name = formData.get('name')?.toString()
     const description = formData.get('description')?.toString() || null
@@ -153,6 +160,7 @@ export default defineEventHandler(async (event) => {
         lng: parseFloat(lng),
         phoneNumber: phoneNumber || null,
         keywords,
+        registeredById,
         menus: menuItems.length > 0
           ? {
               create: menuItems.filter(item => item.name),

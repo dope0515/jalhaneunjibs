@@ -29,6 +29,11 @@
               맛집 등록
             </button>
           </li>
+          <li v-if="authStore.isLoggedIn" class="nav-item">
+            <NuxtLink to="/mypage" class="nav-link" title="마이페이지로 이동">
+              마이페이지
+            </NuxtLink>
+          </li>
           <li class="nav-item">
             <!-- Pinia 스토어 상태 직접 참조 -->
             <AppButton 

@@ -224,10 +224,14 @@
 </template>
 
 <script setup>
+const { $api } = useApi()
 const route = useRoute()
 const { user } = useAuth()
 
-const { data: restaurant, error } = await useFetch(`/api/restaurants/${route.params.id}`)
+const { data: restaurant, error } = await useAsyncData(
+  `restaurant-${route.params.id}`,
+  () => $api(`/restaurants/${route.params.id}`)
+)
 
 if (error.value) {
   throw createError({ statusCode: error.value.statusCode, message: '식당 정보를 불러올 수 없습니다.' })
@@ -387,7 +391,7 @@ const handleSubmit = async () => {
       if (m.imageFile) fd.append(`menuImage_${idx}`, m.imageFile)
     })
 
-    await $fetch(`/api/restaurants/${route.params.id}`, { method: 'PUT', body: fd })
+    await $api(`/restaurants/${route.params.id}`, { method: 'PUT', body: fd })
     navigateTo(`/restaurants/${route.params.id}`)
   } catch {
     alert('저장 중 오류가 발생했습니다.')

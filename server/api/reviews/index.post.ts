@@ -17,11 +17,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: '별점은 1~5 사이여야 합니다.' })
   }
 
-  // 이미지 업로드 (최대 3장)
+  // 유지할 기존 이미지 URL (프론트에서 명시적으로 전달)
+  const existingImagesRaw = formData.get('existingImages')?.toString()
+  const existingImages: string[] = existingImagesRaw ? JSON.parse(existingImagesRaw) : []
+
+  // 새로 추가한 이미지 업로드 (최대 3장 - 기존 이미지 수 고려)
   const imageFiles = formData.getAll('reviewImages') as File[]
   const uploadedImages: string[] = []
+  const remaining = 3 - existingImages.length
 
-  for (const file of imageFiles.slice(0, 3)) {
+  for (const file of imageFiles.slice(0, remaining)) {
     if (file instanceof File && file.size > 0) {
       try {
         const url = await uploadToCloudinary(file, 'reviews')
@@ -32,16 +37,8 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // 기존 리뷰가 있으면 이미지 처리 (수정 시 기존 이미지 유지 또는 교체)
-  const existingReview = await prisma.review.findUnique({
-    where: { userId_restaurantId: { userId, restaurantId } },
-  })
-
-  // 이미지 없이 수정할 경우: 기존 이미지 유지
-  const finalImages =
-    uploadedImages.length > 0
-      ? uploadedImages
-      : (existingReview?.images ?? [])
+  // 최종 이미지 = 유지한 기존 URL + 새로 업로드한 URL
+  const finalImages = [...existingImages, ...uploadedImages].slice(0, 3)
 
   // 1인 1리뷰 upsert
   const review = await prisma.review.upsert({
