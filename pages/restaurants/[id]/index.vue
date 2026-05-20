@@ -803,12 +803,12 @@ const formatDate = (dateStr) => {
 const handleEdit = () => navigateTo(`/restaurants/${route.params.id}/edit`)
 
 const handleDelete = async () => {
-  if (!confirm('정말 삭제하시겠습니까?')) return
+  if (!confirm('정말 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.')) return
   try {
     await $api(`/restaurants/${route.params.id}`, { method: 'DELETE' })
-    navigateTo('/restaurants')
+    await navigateTo('/restaurants')
   } catch (e) {
-    alert('오류 발생')
+    alert('삭제에 실패했습니다. 다시 시도해주세요.')
   }
 }
 

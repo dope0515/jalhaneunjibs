@@ -60,7 +60,7 @@ const visiblePages = computed(() => {
   transition: all 0.15s;
   touch-action: manipulation;
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, &.is-active) {
     border-color: $primary-color;
     color: $primary-color;
   }

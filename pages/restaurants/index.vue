@@ -83,7 +83,7 @@
       </div>
 
       <!-- 결과 영역 -->
-      <div class="list-container" :class="{ 'is-loading': isRefreshing }">
+      <div class="list-container">
         <!-- 최초 로딩 스켈레톤 -->
         <div v-if="isFirstLoading" class="card-list">
           <AppSkeleton v-for="n in 6" :key="n" class="skeleton-item" />
@@ -99,12 +99,10 @@
 
         <!-- 카드 목록 (데이터가 있으면 항상 유지) -->
         <AppCardList v-else :restaurants="restaurants" />
-        
-        <!-- 로딩 오버레이 (재로딩 시에만 노출) -->
-        <div v-if="isRefreshing" class="loading-overlay">
-          <div class="spinner"></div>
-        </div>
       </div>
+
+      <!-- 필터/정렬 변경 시 재로딩 오버레이 -->
+      <AppLoading :loading="isRefreshing" />
 
       <!-- 페이지네이션 -->
       <div class="pagination-wrap">

@@ -53,13 +53,16 @@
 
 <script setup>
 const { login } = useAuth()
+const { withLoading } = useLoading()
 const id = ref('')
 const password = ref('')
 
 const handleLogin = async () => {
-  await login({
-    login: id.value,
-    password: password.value,
+  await withLoading(async () => {
+    await login({
+      login: id.value,
+      password: password.value,
+    })
   })
 }
 </script>
