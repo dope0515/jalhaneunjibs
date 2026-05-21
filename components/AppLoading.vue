@@ -1,10 +1,13 @@
 <template>
   <Transition name="loading-fade">
     <div v-if="loading" class="app-loading-overlay">
-      <div class="app-loading-spinner">
-        <span></span>
-        <span></span>
-        <span></span>
+      <div class="app-loading-content">
+        <div class="app-loading-spinner">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <p v-if="message" class="app-loading-message">{{ message }}</p>
       </div>
     </div>
   </Transition>
@@ -13,6 +16,7 @@
 <script setup>
 defineProps({
   loading: { type: Boolean, default: false },
+  message: { type: String, default: '' },
 })
 </script>
 
@@ -26,6 +30,13 @@ defineProps({
   justify-content: center;
   align-items: center;
   z-index: 9999;
+}
+
+.app-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: rem(16);
 }
 
 .app-loading-spinner {
@@ -45,6 +56,11 @@ defineProps({
     &:nth-child(2) { animation-delay: 0.15s; }
     &:nth-child(3) { animation-delay: 0.3s; }
   }
+}
+
+.app-loading-message {
+  @include font(15, 22, 500, $gray-44);
+  text-align: center;
 }
 
 @keyframes loading-bounce {
