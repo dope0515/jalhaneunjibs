@@ -6,7 +6,7 @@
       <div class="mypage-hero">
         <div class="avatar">{{ userInitial }}</div>
         <div class="hero-info">
-          <h1 class="hero-name">{{ profile?.nickname || profile?.username }}</h1>
+          <h1 class="hero-name">{{ profile?.nickname || '사용자' }}</h1>
           <p class="hero-email">{{ profile?.email }}</p>
           <p class="hero-join">{{ joinDate }} 가입</p>
         </div>
@@ -37,10 +37,6 @@
           <!-- 기본 정보 카드 -->
           <div class="mypage-card">
             <h2 class="card-title">기본 정보</h2>
-            <div class="field-group">
-              <label class="field-label">아이디</label>
-              <p class="field-readonly">{{ profile?.username }}</p>
-            </div>
             <div class="field-group">
               <label class="field-label">이메일</label>
               <p class="field-readonly">{{ profile?.email }}</p>
@@ -299,7 +295,7 @@ const profileSaving = ref(false)
 const profileForm = ref({ nickname: '' })
 
 const userInitial = computed(() => {
-  const name = profile.value?.nickname || profile.value?.username || '?'
+  const name = profile.value?.nickname || '?'
   return name.charAt(0).toUpperCase()
 })
 

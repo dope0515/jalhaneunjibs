@@ -206,7 +206,7 @@
             <div v-if="otherReviews.length > 0" class="review-list">
               <div v-for="review in otherReviews" :key="review.id" class="review-item">
                 <div class="review-header">
-                  <span class="reviewer-name">{{ review.user.nickname || review.user.username }}</span>
+                  <span class="reviewer-name">{{ review.user.nickname || '사용자' }}</span>
                   <span class="review-date">{{ formatDate(review.createdAt) }}</span>
                   <button v-if="user?.role === 'ADMIN'" class="action-btn action-btn--delete" @click="deleteReviewById(review.id)">삭제</button>
                 </div>
@@ -250,7 +250,7 @@
               <div v-for="comment in restaurant.comments" :key="comment.id" class="comment-item">
                 <div class="comment-main">
                   <div class="comment-header">
-                    <span class="nickname">{{ comment.user.nickname || comment.user.username }}</span>
+                    <span class="nickname">{{ comment.user.nickname || '사용자' }}</span>
                     <span class="date">{{ formatDate(comment.createdAt) }}</span>
                   </div>
 
@@ -286,7 +286,7 @@
                 <div class="replies-list" v-if="comment.replies?.length">
                   <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
                     <div class="reply-header">
-                      <span class="nickname">{{ reply.user.nickname || reply.user.username }}</span>
+                      <span class="nickname">{{ reply.user.nickname || '사용자' }}</span>
                       <span class="date">{{ formatDate(reply.createdAt) }}</span>
                     </div>
 
