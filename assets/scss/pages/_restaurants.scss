@@ -73,7 +73,7 @@
       transition: background 0.15s;
 
       &:hover {
-        background: darken($gray-e4, 8%);
+        background: $gray-e4-hover;
       }
     }
   }
@@ -93,7 +93,7 @@
     transition: background 0.15s;
 
     &:hover {
-      background: darken($primary-color, 6%);
+      background: $primary-color-hover;
     }
   }
 
@@ -143,7 +143,12 @@
   .filter-group {
     display: flex;
     align-items: flex-start;
+    flex-direction: column;
     gap: rem(20);
+
+    @include tablet {
+      flex-direction: row;
+    }
 
     &--sub {
       padding-top: rem(20);
@@ -197,6 +202,7 @@
   .fade-leave-active {
     transition: opacity 0.2s ease;
   }
+
   .fade-enter-from,
   .fade-leave-to {
     opacity: 0;
@@ -209,6 +215,7 @@
     max-height: rem(200);
     overflow: hidden;
   }
+
   .filter-slide-enter-from,
   .filter-slide-leave-to {
     opacity: 0;
@@ -324,7 +331,10 @@
       margin-bottom: rem(12);
       @include font(16, 1, 500, $gray-78);
 
-      .rating { color: $tertiary-color; font-weight: 700; }
+      .rating {
+        color: $tertiary-color;
+        font-weight: 700;
+      }
     }
 
     .address {
@@ -456,20 +466,28 @@
             line-height: 1;
           }
 
-          &:hover { background: $secondary-color; }
+          &:hover {
+            background: $secondary-color;
+          }
 
           &.swiper-button-disabled {
             opacity: 0;
             pointer-events: none;
           }
+
           .swiper-navigation-icon {
             width: rem(11);
             height: rem(20);
           }
         }
 
-        .swiper-button-prev { left: rem(12); }
-        .swiper-button-next { right: rem(12); }
+        .swiper-button-prev {
+          left: rem(12);
+        }
+
+        .swiper-button-next {
+          right: rem(12);
+        }
 
         // 페이지네이션
         .swiper-pagination {
@@ -556,8 +574,13 @@
       &.has-image {
         cursor: pointer;
 
-        .menu-img { transition: transform 0.3s; }
-        &:hover .menu-img { transform: scale(1.06); }
+        .menu-img {
+          transition: transform 0.3s;
+        }
+
+        &:hover .menu-img {
+          transform: scale(1.06);
+        }
       }
 
       .menu-img-wrap {
@@ -602,9 +625,19 @@
           @include font(11, 1, 700);
         }
 
-        .menu-name  { @include font(16, 1.4, 700, $black); }
-        .menu-price { @include font(15, 1.4, 600, $primary-color); margin-top: rem(4); }
-        .menu-desc  { @include font(13, 1.4, 400, $gray-78); margin-top: rem(4); }
+        .menu-name {
+          @include font(16, 1.4, 700, $black);
+        }
+
+        .menu-price {
+          @include font(15, 1.4, 600, $primary-color);
+          margin-top: rem(4);
+        }
+
+        .menu-desc {
+          @include font(13, 1.4, 400, $gray-78);
+          margin-top: rem(4);
+        }
       }
 
       .menu-img-hint {
@@ -624,7 +657,9 @@
         transition: opacity 0.2s;
       }
 
-      &.has-image:hover .menu-img-hint { opacity: 1; }
+      &.has-image:hover .menu-img-hint {
+        opacity: 1;
+      }
     }
   }
 
@@ -662,14 +697,20 @@
       border-radius: rem(16);
       @include font(15, 1, 500, $gray-78);
 
-      a { color: $primary-color; font-weight: 700; text-decoration: underline; }
+      a {
+        color: $primary-color;
+        font-weight: 700;
+        text-decoration: underline;
+      }
     }
 
     .comment-item {
       padding: rem(24) 0;
       border-bottom: 1px solid $gray-e4;
 
-      &:last-child { border-bottom: none; }
+      &:last-child {
+        border-bottom: none;
+      }
 
       .comment-header {
         display: flex;
@@ -677,8 +718,13 @@
         gap: rem(12);
         margin-bottom: rem(8);
 
-        .nickname { @include font(16, 1, 700, $black); }
-        .date     { @include font(13, 1, 400, $gray-78); }
+        .nickname {
+          @include font(16, 1, 700, $black);
+        }
+
+        .date {
+          @include font(13, 1, 400, $gray-78);
+        }
       }
 
       .content {
@@ -697,8 +743,13 @@
           cursor: pointer;
           padding: 0;
 
-          &:hover { color: $primary-color; }
-          &.delete-btn:hover { color: #ef4444; }
+          &:hover {
+            color: $primary-color;
+          }
+
+          &.delete-btn:hover {
+            color: #ef4444;
+          }
         }
       }
     }
@@ -759,7 +810,9 @@
       .reply-item {
         padding: rem(16) 0;
 
-        &:first-child { padding-top: 0; }
+        &:first-child {
+          padding-top: 0;
+        }
 
         .reply-header {
           display: flex;
@@ -767,11 +820,19 @@
           gap: rem(12);
           margin-bottom: rem(4);
 
-          .nickname { @include font(14, 1, 700, $black); }
-          .date     { @include font(12, 1, 400, $gray-78); }
+          .nickname {
+            @include font(14, 1, 700, $black);
+          }
+
+          .date {
+            @include font(12, 1, 400, $gray-78);
+          }
         }
 
-        .content { @include font(14, 1.6, 400, $gray-44); margin-bottom: rem(8); }
+        .content {
+          @include font(14, 1.6, 400, $gray-44);
+          margin-bottom: rem(8);
+        }
 
         .reply-actions {
           display: flex;
@@ -784,8 +845,13 @@
             @include font(12, 1, 500, $gray-78);
             padding: 0;
 
-            &:hover { color: $primary-color; }
-            &.delete-btn:hover { color: #ef4444; }
+            &:hover {
+              color: $primary-color;
+            }
+
+            &.delete-btn:hover {
+              color: #ef4444;
+            }
           }
         }
       }
@@ -814,7 +880,9 @@
       overflow: hidden;
       margin-bottom: rem(20);
 
-      .map { height: 100%; }
+      .map {
+        height: 100%;
+      }
     }
 
     .location-details {
@@ -848,14 +916,21 @@
         padding: rem(12) 0;
         border-bottom: 1px solid $bg-color;
 
-        &:last-child { border-bottom: none; }
+        &:last-child {
+          border-bottom: none;
+        }
 
-        .label { @include font(14, 1, 600, $gray-78); }
+        .label {
+          @include font(14, 1, 600, $gray-78);
+        }
+
         .value {
           @include font(14, 1.4, 500, $black);
           text-align: right;
 
-          &.pre-wrap { white-space: pre-wrap; }
+          &.pre-wrap {
+            white-space: pre-wrap;
+          }
         }
       }
     }
@@ -869,7 +944,9 @@
       flex-direction: column;
       gap: rem(12);
 
-      .filter-label { padding-top: 0; }
+      .filter-label {
+        padding-top: 0;
+      }
     }
   }
 
@@ -888,7 +965,9 @@
 @media (max-width: $bp-md) {
   .restaurant-detail {
     .menu-section {
-      .menu-card { width: 100%; }
+      .menu-card {
+        width: 100%;
+      }
     }
   }
 }
@@ -924,7 +1003,9 @@
     transition: background 0.2s;
     z-index: 10;
 
-    &:hover { background: rgba($white, 0.28); }
+    &:hover {
+      background: rgba($white, 0.28);
+    }
   }
 
   .lightbox-swiper {
@@ -954,8 +1035,14 @@
       flex-wrap: wrap;
       justify-content: center;
 
-      .lightbox-name  { @include font(18, 1, 700, $white); }
-      .lightbox-price { @include font(16, 1, 600, $secondary-color); }
+      .lightbox-name {
+        @include font(18, 1, 700, $white);
+      }
+
+      .lightbox-price {
+        @include font(16, 1, 600, $secondary-color);
+      }
+
       .lightbox-badge {
         padding: rem(3) rem(10);
         background: $tertiary-color;
@@ -987,17 +1074,25 @@
     transition: background 0.2s;
     z-index: 10;
 
-    &:hover { background: rgba($white, 0.28); }
+    &:hover {
+      background: rgba($white, 0.28);
+    }
   }
 
-  .lightbox-prev { left: rem(20); }
-  .lightbox-next { right: rem(20); }
+  .lightbox-prev {
+    left: rem(20);
+  }
+
+  .lightbox-next {
+    right: rem(20);
+  }
 }
 
 .lightbox-fade-enter-active,
 .lightbox-fade-leave-active {
   transition: opacity 0.25s ease;
 }
+
 .lightbox-fade-enter-from,
 .lightbox-fade-leave-to {
   opacity: 0;
@@ -1007,9 +1102,18 @@
   .menu-lightbox {
     padding: rem(64) rem(16) rem(24);
 
-    .lightbox-nav { width: rem(40); height: rem(40); }
-    .lightbox-prev { left: rem(8); }
-    .lightbox-next { right: rem(8); }
+    .lightbox-nav {
+      width: rem(40);
+      height: rem(40);
+    }
+
+    .lightbox-prev {
+      left: rem(8);
+    }
+
+    .lightbox-next {
+      right: rem(8);
+    }
   }
 }
 
@@ -1041,8 +1145,14 @@
     gap: rem(6);
     min-width: rem(90);
 
-    .score-number { @include font(40, 1, 700, $primary-color); }
-    .score-total  { @include font(12, 1.4, 400, $secondary-color); white-space: nowrap; }
+    .score-number {
+      @include font(40, 1, 700, $primary-color);
+    }
+
+    .score-total {
+      @include font(12, 1.4, 400, $secondary-color);
+      white-space: nowrap;
+    }
   }
 
   .summary-bars {
@@ -1057,10 +1167,31 @@
     align-items: center;
     gap: rem(8);
 
-    .bar-label { @include font(12, 1, 500, $secondary-color); width: rem(24); text-align: right; }
-    .bar-track  { flex: 1; height: rem(6); background: $gray-e4; border-radius: rem(3); overflow: hidden; }
-    .bar-fill   { height: 100%; background: $tertiary-color; border-radius: rem(3); transition: width 0.4s ease; }
-    .bar-count  { @include font(12, 1, 400, $secondary-color); width: rem(20); }
+    .bar-label {
+      @include font(12, 1, 500, $secondary-color);
+      width: rem(24);
+      text-align: right;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: rem(6);
+      background: $gray-e4;
+      border-radius: rem(3);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: $tertiary-color;
+      border-radius: rem(3);
+      transition: width 0.4s ease;
+    }
+
+    .bar-count {
+      @include font(12, 1, 400, $secondary-color);
+      width: rem(20);
+    }
   }
 
   // 내 리뷰 카드
@@ -1080,8 +1211,14 @@
     align-items: center;
     justify-content: space-between;
 
-    .my-review-label   { @include font(13, 1, 700, $secondary-color); }
-    .my-review-actions { display: flex; gap: rem(8); }
+    .my-review-label {
+      @include font(13, 1, 700, $secondary-color);
+    }
+
+    .my-review-actions {
+      display: flex;
+      gap: rem(8);
+    }
   }
 
   .my-review-content {
@@ -1099,7 +1236,10 @@
     flex-direction: column;
     gap: rem(12);
 
-    .form-guide { @include font(14, 1, 500, $secondary-color); margin: 0; }
+    .form-guide {
+      @include font(14, 1, 500, $secondary-color);
+      margin: 0;
+    }
 
     .review-textarea {
       width: 100%;
@@ -1132,7 +1272,11 @@
     @include font(14, 1.6, 400, $secondary-color);
     margin-bottom: rem(16);
 
-    a { color: $secondary-color; font-weight: 600; text-decoration: underline; }
+    a {
+      color: $secondary-color;
+      font-weight: 600;
+      text-decoration: underline;
+    }
   }
 
   // 리뷰 목록
@@ -1163,8 +1307,13 @@
     gap: rem(8);
     flex-wrap: wrap;
 
-    .reviewer-name { @include font(13, 1, 700, $black); }
-    .review-date   { @include font(12, 1, 400, $secondary-color); }
+    .reviewer-name {
+      @include font(13, 1, 700, $black);
+    }
+
+    .review-date {
+      @include font(12, 1, 400, $secondary-color);
+    }
   }
 
   .review-content {
@@ -1189,7 +1338,9 @@
     cursor: pointer;
     transition: opacity 0.15s;
 
-    &:hover { opacity: 0.85; }
+    &:hover {
+      opacity: 0.85;
+    }
   }
 
   // 이미지 업로더
@@ -1275,7 +1426,14 @@
     cursor: pointer;
     transition: all 0.15s;
 
-    &:hover { border-color: $secondary-color; color: $secondary-color; }
-    &--delete:hover { border-color: #ef4444; color: #ef4444; }
+    &:hover {
+      border-color: $secondary-color;
+      color: $secondary-color;
+    }
+
+    &--delete:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
   }
 }

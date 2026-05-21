@@ -46,7 +46,6 @@ if (isLoggedIn.value && !user.value?.role && accessToken.value) {
     authStore.setAuth(
       {
         id: profile.id,
-        username: profile.username,
         email: profile.email,
         nickname: profile.nickname,
         role: profile.role,

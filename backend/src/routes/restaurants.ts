@@ -227,15 +227,15 @@ router.get('/:id', async (req: Request, res: Response) => {
       include: {
         menus: { orderBy: { id: 'asc' } },
         reviews: {
-          include: { user: { select: { id: true, username: true, nickname: true } } },
+          include: { user: { select: { id: true, nickname: true } } },
           orderBy: { createdAt: 'desc' },
         },
         comments: {
           where: { parentId: null },
           include: {
-            user: { select: { id: true, username: true, nickname: true } },
+            user: { select: { id: true, nickname: true } },
             replies: {
-              include: { user: { select: { id: true, username: true, nickname: true } } },
+              include: { user: { select: { id: true, nickname: true } } },
               orderBy: { createdAt: 'asc' },
             },
           },

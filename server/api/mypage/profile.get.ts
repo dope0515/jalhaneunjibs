@@ -8,7 +8,6 @@ export default defineEventHandler(async (event) => {
     where: { id: userId },
     select: {
       id: true,
-      username: true,
       email: true,
       nickname: true,
       role: true,

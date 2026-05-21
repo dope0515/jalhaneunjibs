@@ -8,132 +8,124 @@
         </div>
         <div class="form-bx">
           <div class="form-inner">
-            <h2 class="title">환영합니다</h2>
-            <p class="desc">서비스 이용을 위해 회원가입을 해주세요.</p>
-            <form @submit.prevent="handleSignup">
-              <div class="form-item">
-                <label for="id" class="form-item-label">아이디</label>
-                <AppInput 
-                  v-model="id"
-                  id="id"
-                  placeholder="아이디를 입력해주세요"
-                  autocomplete="username"
-                  required
-                />
-              </div>
-              <div class="form-item">
-                <label for="password" class="form-item-label">비밀번호</label>
-                <AppInput 
-                  v-model="password"
-                  id="password"
-                  type="password"
-                  placeholder="영문, 숫자 포함 6자리 이상"
-                  minlength = "6"
-                  autocomplete="new-password"
-                  required
-                  show-password-toggle
-                />
-                <p v-if="password && !isPasswordValid" class="form-msg error">비밀번호는 영문과 숫자를 포함하여 6자리 이상이어야 합니다.</p>
-              </div>
-              <div class="form-item">
-                <label for="passwordCheck" class="form-item-label">비밀번호 확인</label>
-                <AppInput 
-                  v-model="passwordCheck"
-                  id="passwordCheck"
-                  type="password"
-                  placeholder="비밀번호를 다시 입력해주세요"
-                  minlength = "6"
-                  autocomplete="new-password"
-                  required
-                  show-password-toggle
-                />
-                <p v-if="passwordCheck && password !== passwordCheck" class="form-msg error">비밀번호가 일치하지 않습니다.</p>
-              </div>
-              <div class="form-item">
-                <label for="email" class="form-item-label">이메일</label>
-                <div class="input-with-btn">
+            <!-- 1단계: 회원가입 정보 입력 -->
+            <template v-if="!isPendingVerification">
+              <h2 class="title">환영합니다</h2>
+              <p class="desc">서비스 이용을 위해 회원가입을 해주세요.</p>
+              <form @submit.prevent="handleSignupSubmit">
+                <div class="form-item">
+                  <label for="email" class="form-item-label">이메일</label>
                   <AppInput 
-                    ref="emailInput"
                     v-model="email"
                     id="email"
                     type="email"
-                    placeholder="이메일을 입력해주세요"
+                    placeholder="이메일 주소를 입력해주세요"
                     autocomplete="email"
                     required
-                    :disabled="isEmailVerified"
                   />
-                  <AppButton 
-                    type="button" 
-                    size="sm" 
-                    color="black"
-                    @click="checkEmail"
-                    :disabled="isEmailVerified"
-                  >
-                    중복확인
-                  </AppButton>
                 </div>
-                <p v-if="emailMessage" :class="['form-msg', isEmailAvailable ? 'success' : 'error']">{{ emailMessage }}</p>
-              </div>
-
-              <!-- 이메일 인증 영역 -->
-              <div v-if="isEmailAvailable && !isEmailVerified" class="form-item">
-                <label class="form-item-label">이메일 인증</label>
-                <div class="input-with-btn">
-                  <AppButton 
-                    type="button" 
-                    size="sm" 
-                    color="black"
-                    @click="sendVerificationCode"
-                    :disabled="isSendingCode"
-                  >
-                    {{ isSendingCode ? '전송 중...' : '인증코드 전송' }}
-                  </AppButton>
-                </div>
-              </div>
-
-              <div v-if="isCodeSent && !isEmailVerified" class="form-item">
-                <label for="verificationCode" class="form-item-label">인증코드</label>
-                <div class="input-with-btn">
+                <div class="form-item">
+                  <label for="password" class="form-item-label">비밀번호</label>
                   <AppInput 
-                    ref="codeInput"
-                    v-model="verificationCode"
-                    id="verificationCode"
-                    placeholder="6자리 코드를 입력해주세요"
+                    v-model="password"
+                    id="password"
+                    type="password"
+                    placeholder="영문, 숫자 포함 6자리 이상"
+                    minlength = "6"
+                    autocomplete="new-password"
+                    required
+                    show-password-toggle
+                  />
+                  <p v-if="password && !isPasswordValid" class="form-msg error">비밀번호는 영문과 숫자를 포함하여 6자리 이상이어야 합니다.</p>
+                </div>
+                <div class="form-item">
+                  <label for="passwordCheck" class="form-item-label">비밀번호 확인</label>
+                  <AppInput 
+                    v-model="passwordCheck"
+                    id="passwordCheck"
+                    type="password"
+                    placeholder="비밀번호를 다시 입력해주세요"
+                    minlength = "6"
+                    autocomplete="new-password"
+                    required
+                    show-password-toggle
+                  />
+                  <p v-if="passwordCheck && password !== passwordCheck" class="form-msg error">비밀번호가 일치하지 않습니다.</p>
+                </div>
+                <div class="form-item">
+                  <label for="nickname" class="form-item-label">닉네임</label>
+                  <AppInput 
+                    v-model="nickname"
+                    id="nickname"
+                    placeholder="닉네임을 입력해주세요"
                     required
                   />
-                  <AppButton 
-                    type="button" 
-                    size="sm" 
-                    color="black"
-                    @click="verifyCode"
+                </div>
+                <div class="btn-bx">
+                  <AppButton
+                    type="submit"
+                    color="green"
+                    title="회원가입 진행 버튼"
+                    :disabled="isSendingCode"
                   >
-                    인증하기
+                    {{ isSendingCode ? '인증 코드 전송 중...' : '회원가입' }}
                   </AppButton>
                 </div>
-              </div>
+                <div class="footer-bx">
+                  <p class="desc">이미 계정이 있으신가요? <NuxtLink to="/login" class="link" title="로그인 페이지로 이동하기">로그인하기</NuxtLink></p>
+                </div>
+              </form>
+            </template>
 
-              <div class="form-item">
-                <label for="nickname" class="form-item-label">닉네임</label>
-                <AppInput 
-                  v-model="nickname"
-                  id="nickname"
-                  placeholder="닉네임을 입력해주세요"
-                  required
-                />
-              </div>
-              <div class="btn-bx">
-                <AppButton
-                  type="submit"
-                  color="green"
-                  title="회원가입 버튼"
-                >
-                  회원가입
-                </AppButton>
-              </div>
-              <div class="footer-bx">
-                <p class="desc">이미 계정이 있으신가요? <NuxtLink to="/login" class="link" title="로그인 페이지로 이동하기">로그인하기</NuxtLink></p>
-              </div>
-            </form>
+            <!-- 2단계: 이메일 인증 코드 입력 -->
+            <template v-else>
+              <h2 class="title">이메일 인증</h2>
+              <p class="desc">입력하신 이메일 <strong>{{ email }}</strong>(으)로 6자리 인증 코드가 전송되었습니다. 확인 후 인증 코드를 입력해주세요.</p>
+              <form @submit.prevent="handleVerifyAndSignup">
+                <div class="form-item">
+                  <label for="verificationCode" class="form-item-label">인증코드</label>
+                  <div class="input-with-timer">
+                    <AppInput 
+                      v-model="verificationCode"
+                      id="verificationCode"
+                      placeholder="6자리 코드를 입력해주세요"
+                      maxlength="6"
+                      required
+                      autocomplete="off"
+                    />
+                    <span class="timer-display" :class="{ 'timer-warning': timerSeconds < 60 }">{{ formattedTimer }}</span>
+                  </div>
+                  <p v-if="timerSeconds <= 0" class="form-msg error">인증 시간이 만료되었습니다. 재전송 버튼을 눌러주세요.</p>
+                </div>
+                
+                <div class="verification-actions">
+                  <AppButton
+                    type="button"
+                    size="sm"
+                    color="black"
+                    variant="outline"
+                    @click="resendCode"
+                    :disabled="isSendingCode"
+                  >
+                    {{ isSendingCode ? '재전송 중...' : '코드 재전송' }}
+                  </AppButton>
+                  <button type="button" class="back-link" @click="goBackToForm">
+                    이메일 정보 수정
+                  </button>
+                </div>
+
+                <div class="btn-bx">
+                  <AppButton
+                    type="submit"
+                    color="green"
+                    title="인증 및 가입 완료 버튼"
+                    :disabled="isVerifyingCode || timerSeconds <= 0"
+                  >
+                    {{ isVerifyingCode ? '인증 및 가입 중...' : '인증 및 가입 완료' }}
+                  </AppButton>
+                </div>
+              </form>
+            </template>
           </div>
         </div>
       </div>
@@ -142,86 +134,55 @@
 </template>
 
 <script setup>
+import { ref, computed, onUnmounted } from 'vue'
+
 const { $api } = useApi()
-const id = ref('')
 const email = ref('')
 const password = ref('')
 const passwordCheck = ref('')
 const nickname = ref('')
 
-const emailInput = ref(null)
-const codeInput = ref(null)
-
+const isPendingVerification = ref(false)
 const verificationCode = ref('')
-const isEmailAvailable = ref(false)
-const isEmailVerified = ref(false)
-const isCodeSent = ref(false)
 const isSendingCode = ref(false)
-const emailMessage = ref('')
+const isVerifyingCode = ref(false)
+
+const timerSeconds = ref(300)
+let timerInterval = null
 
 const isPasswordValid = computed(() => {
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/
   return passwordRegex.test(password.value)
 })
 
-const checkEmail = async () => {
-  if (!emailInput.value?.input.reportValidity()) return
-  
-  try {
-    const { isAvailable } = await $api('/auth/check-email', {
-      params: { email: email.value }
-    })
-    
-    isEmailAvailable.value = isAvailable
-    if (isAvailable) {
-      emailMessage.value = '사용 가능한 이메일입니다.'
+const startTimer = () => {
+  stopTimer()
+  timerSeconds.value = 300
+  timerInterval = setInterval(() => {
+    if (timerSeconds.value > 0) {
+      timerSeconds.value--
     } else {
-      emailMessage.value = '이미 사용 중인 이메일입니다.'
+      stopTimer()
     }
-  } catch (error) {
-    emailMessage.value = '이메일 확인 중 오류가 발생했습니다.'
+  }, 1000)
+}
+
+const stopTimer = () => {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
   }
 }
 
-const sendVerificationCode = async () => {
-  if (!emailInput.value?.input.reportValidity()) return
+const formattedTimer = computed(() => {
+  const m = Math.floor(timerSeconds.value / 60)
+  const s = timerSeconds.value % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+})
 
-  isSendingCode.value = true
-  try {
-    await $api('/auth/verify-send', {
-      method: 'POST',
-      body: { email: email.value }
-    })
-    isCodeSent.value = true
-    alert('인증 코드가 전송되었습니다. 이메일을 확인해주세요.')
-  } catch (error) {
-    alert(error.data?.statusMessage || '코드 전송에 실패했습니다.')
-  } finally {
-    isSendingCode.value = false
-  }
-}
-
-const verifyCode = async () => {
-  if (!codeInput.value?.input.reportValidity()) return
-
-  try {
-    await $api('/auth/verify-code', {
-      method: 'POST',
-      body: { 
-        email: email.value,
-        code: verificationCode.value
-      }
-    })
-    isEmailVerified.value = true
-    alert('이메일 인증이 완료되었습니다.')
-  } catch (error) {
-    alert(error.data?.statusMessage || '인증에 실패했습니다.')
-  }
-}
-
-const handleSignup = async () => {
-  if (!isEmailVerified.value) {
-    alert('이메일 인증이 필요합니다.')
+const handleSignupSubmit = async () => {
+  if (!email.value || !password.value || !passwordCheck.value || !nickname.value) {
+    alert('모든 필드를 입력해 주세요.')
     return
   }
 
@@ -235,39 +196,159 @@ const handleSignup = async () => {
     return
   }
 
+  isSendingCode.value = true
   try {
+    // 1. 이메일 중복 확인
+    const { isAvailable } = await $api('/auth/check-email', {
+      params: { email: email.value }
+    })
+    
+    if (!isAvailable) {
+      alert('이미 사용 중인 이메일입니다.')
+      return
+    }
+
+    // 2. 인증 코드 발송
+    await $api('/auth/verify-send', {
+      method: 'POST',
+      body: { email: email.value }
+    })
+
+    // 3. 타이머 가동 및 화면 전환
+    startTimer()
+    isPendingVerification.value = true
+    alert('인증 코드가 전송되었습니다. 이메일을 확인해 주세요.')
+  } catch (error) {
+    alert(error.data?.statusMessage || '인증 코드 발송에 실패했습니다.')
+  } finally {
+    isSendingCode.value = false
+  }
+}
+
+const handleVerifyAndSignup = async () => {
+  if (!verificationCode.value || verificationCode.value.length !== 6) {
+    alert('6자리 인증 코드를 입력해 주세요.')
+    return
+  }
+
+  if (timerSeconds.value <= 0) {
+    alert('인증 시간이 만료되었습니다. 다시 인증 코드를 발송해 주세요.')
+    return
+  }
+
+  isVerifyingCode.value = true
+  try {
+    // 1. 코드 검증
+    await $api('/auth/verify-code', {
+      method: 'POST',
+      body: { 
+        email: email.value,
+        code: verificationCode.value
+      }
+    })
+
+    // 2. 실제 회원가입 진행
     await $api('/auth/signup', {
       method: 'POST',
       body: {
-        username: id.value,
         email: email.value,
         password: password.value,
         nickname: nickname.value
       }
     })
+
+    stopTimer()
     alert('회원가입이 완료되었습니다! 로그인해 주세요.')
     navigateTo('/login')
   } catch (error) {
-    alert(error.data?.statusMessage || '회원가입에 실패했습니다.')
+    alert(error.data?.statusMessage || '인증 또는 가입 진행 중 오류가 발생했습니다.')
+  } finally {
+    isVerifyingCode.value = false
   }
 }
+
+const resendCode = async () => {
+  isSendingCode.value = true
+  try {
+    await $api('/auth/verify-send', {
+      method: 'POST',
+      body: { email: email.value }
+    })
+    startTimer()
+    alert('인증 코드가 재전송되었습니다. 이메일을 확인해 주세요.')
+  } catch (error) {
+    alert(error.data?.statusMessage || '인증 코드 재발송에 실패했습니다.')
+  } finally {
+    isSendingCode.value = false
+  }
+}
+
+const goBackToForm = () => {
+  stopTimer()
+  isPendingVerification.value = false
+  verificationCode.value = ''
+}
+
+onUnmounted(() => {
+  stopTimer()
+})
 </script>
 
 <style lang="scss" scoped>
-.input-with-btn {
+.input-with-timer {
+  position: relative;
   display: flex;
-  gap: 8px;
-  align-items: flex-start;
+  align-items: center;
 
-  .app-input {
+  :deep(.app-input) {
     flex: 1;
+    input {
+      padding-right: 60px; /* 타이머 영역을 감안한 여백 */
+    }
   }
 
+  .timer-display {
+    position: absolute;
+    right: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0d6b57;
+    pointer-events: none;
+    transition: color 0.3s ease;
+
+    &.timer-warning {
+      color: #dc3545;
+      font-weight: bold;
+      animation: pulse 1s infinite alternate;
+    }
+  }
+}
+
+.verification-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  margin-bottom: 24px;
+
   :deep(.app-button) {
-    flex-shrink: 0;
-    height: 48px; // AppInput 높이에 맞춤
-    padding: 0 16px;
-    white-space: nowrap;
+    height: 38px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .back-link {
+    font-size: 13px;
+    color: #666;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #000;
+    }
   }
 }
 
@@ -282,5 +363,10 @@ const handleSignup = async () => {
   &.error {
     color: #dc3545;
   }
+}
+
+@keyframes pulse {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
 }
 </style>

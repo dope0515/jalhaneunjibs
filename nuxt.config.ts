@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
 
+  experimental: {
+    appManifest: false
+  },
+
   app: {
     head: {
       title: '잘하는 집을 안 가봐서 그래',
