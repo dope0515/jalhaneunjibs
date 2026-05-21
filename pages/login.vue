@@ -33,6 +33,14 @@
                   required
                 />
               </div>
+
+              <div class="options-bx">
+                <label class="remember-me">
+                  <input type="checkbox" v-model="rememberMe" />
+                  <span>로그인 상태 유지</span>
+                </label>
+              </div>
+
               <div class="btn-bx">
                 <AppButton
                   type="submit"
@@ -194,6 +202,7 @@ const { withLoading } = useLoading()
 
 const email = ref('')
 const password = ref('')
+const rememberMe = ref(false)
 
 // 비밀번호 찾기 모달 관련 상태
 const showResetModal = ref(false)
@@ -353,6 +362,7 @@ const handleLogin = async () => {
     await login({
       login: email.value,
       password: password.value,
+      rememberMe: rememberMe.value
     })
   })
 }
