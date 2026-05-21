@@ -241,7 +241,12 @@ if (error.value) {
 if (!restaurant.value) {
   throw createError({ statusCode: 404, message: '식당 정보를 찾을 수 없습니다.' })
 }
-if (user.value?.role !== 'ADMIN') {
+
+// 본인이 등록한 식당이거나 관리자(ADMIN)인 경우에만 수정 가능
+const isOwner = user.value?.id === restaurant.value.registeredById
+const isAdmin = user.value?.role === 'ADMIN'
+
+if (!isOwner && !isAdmin) {
   throw createError({ statusCode: 403, message: '접근 권한이 없습니다.' })
 }
 
