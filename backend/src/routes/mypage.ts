@@ -12,7 +12,7 @@ router.use(authMiddleware)
 router.get('/profile', async (req: AuthRequest, res: Response) => {
   const user = await prisma.user.findUnique({
     where: { id: req.userId! },
-    select: { id: true, username: true, email: true, nickname: true, role: true, createdAt: true },
+    select: { id: true, email: true, nickname: true, role: true, createdAt: true },
   })
 
   if (!user) {
@@ -29,11 +29,24 @@ router.put('/profile', async (req: AuthRequest, res: Response) => {
   const updateData: Record<string, any> = {}
 
   if (nickname !== undefined) {
-    if (!nickname.trim()) {
+    const trimmed = nickname.trim()
+    if (!trimmed) {
       res.status(400).json({ message: '닉네임을 입력해 주세요.' })
       return
     }
-    updateData.nickname = nickname.trim()
+
+    // 닉네임 중복 체크 (본인 제외)
+    const existingNickname = await prisma.user.findFirst({
+      where: {
+        nickname: trimmed,
+        id: { not: req.userId! }
+      }
+    })
+    if (existingNickname) {
+      res.status(400).json({ message: '이미 사용 중인 닉네임입니다.' })
+      return
+    }
+    updateData.nickname = trimmed
   }
 
   if (newPassword) {
@@ -66,7 +79,7 @@ router.put('/profile', async (req: AuthRequest, res: Response) => {
   const updated = await prisma.user.update({
     where: { id: req.userId! },
     data: updateData,
-    select: { id: true, username: true, email: true, nickname: true, role: true },
+    select: { id: true, email: true, nickname: true, role: true },
   })
 
   res.json(updated)

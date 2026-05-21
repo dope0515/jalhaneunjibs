@@ -9,13 +9,10 @@ export default defineEventHandler(async (event) => {
 
   console.log(`[Login Attempt]: identifier=${identifier}, passwordLength=${password?.length}`)
 
-  // 1. username 또는 email 둘 다 허용
+  // 1. 이메일만 허용
   const user = await prisma.user.findFirst({
     where: {
-      OR: [
-        { username: identifier },
-        { email: identifier },
-      ],
+      email: identifier,
     },
   })
 
@@ -23,7 +20,7 @@ export default defineEventHandler(async (event) => {
     console.log(`[Login Failed]: User not found - ${identifier}`)
     throw createError({
       statusCode: 401,
-      statusMessage: '이메일(아이디) 또는 비밀번호가 일치하지 않습니다.'
+      statusMessage: '이메일 또는 비밀번호가 일치하지 않습니다.'
     })
   }
 
@@ -35,7 +32,7 @@ export default defineEventHandler(async (event) => {
     console.log(`[Login Failed]: Password mismatch for ${identifier}`)
     throw createError({
       statusCode: 401,
-      statusMessage: '이메일(아이디) 또는 비밀번호가 일치하지 않습니다.'
+      statusMessage: '이메일 또는 비밀번호가 일치하지 않습니다.'
     })
   }
 
@@ -76,7 +73,6 @@ export default defineEventHandler(async (event) => {
     user: {
       id: user.id,
       email: user.email,
-      username: user.username,
       nickname: user.nickname,
       role: user.role
     }

@@ -10,8 +10,22 @@ export default defineEventHandler(async (event) => {
   const updateData: Record<string, any> = {}
 
   if (nickname !== undefined) {
-    if (!nickname.trim()) throw createError({ statusCode: 400, message: '닉네임을 입력해 주세요.' })
-    updateData.nickname = nickname.trim()
+    const trimmed = nickname.trim()
+    if (!trimmed) throw createError({ statusCode: 400, message: '닉네임을 입력해 주세요.' })
+
+    const existingNickname = await prisma.user.findFirst({
+      where: {
+        nickname: trimmed,
+        id: { not: userId }
+      }
+    })
+    if (existingNickname) {
+      throw createError({
+        statusCode: 400,
+        message: '이미 사용 중인 닉네임입니다.'
+      })
+    }
+    updateData.nickname = trimmed
   }
 
   if (newPassword) {
@@ -35,7 +49,7 @@ export default defineEventHandler(async (event) => {
   const updated = await prisma.user.update({
     where: { id: userId },
     data: updateData,
-    select: { id: true, username: true, email: true, nickname: true, role: true },
+    select: { id: true, email: true, nickname: true, role: true },
   })
 
   return updated

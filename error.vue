@@ -180,7 +180,7 @@ const handleError = () => clearError({ redirect: '/' })
       color: $white;
 
       &:hover {
-        background: darken($primary-color, 6%);
+        background: $primary-color-hover;
       }
     }
   }

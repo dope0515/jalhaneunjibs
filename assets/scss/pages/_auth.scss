@@ -7,20 +7,21 @@
     min-height: rem(714);
     box-shadow: rem(0) rem(12) rem(40) rem(-10) rgba($black, 0.25);
     overflow: hidden;
+
     @include tablet {
       display: flex;
       border-radius: rem(24);
     }
+
     .title-bx {
       width: 100%;
       padding: rem(24);
       background: #000;
-      background: linear-gradient(
-        21deg,
-        rgba(0, 0, 0, 1) 0%,
-        rgba(71, 90, 78, 1) 61%,
-        rgba(159, 197, 174, 1) 100%
-      );
+      background: linear-gradient(21deg,
+          rgba(0, 0, 0, 1) 0%,
+          rgba(71, 90, 78, 1) 61%,
+          rgba(159, 197, 174, 1) 100%);
+
       @include tablet {
         display: flex;
         flex-direction: column;
@@ -28,13 +29,16 @@
         width: 50%;
         padding: rem(48);
       }
+
       .title {
         font-family: $font-family-serif;
         @include font(24, 28, 700);
         color: $white;
+
         @include tablet {
           @include font(36, 40, 700);
         }
+
         &::before {
           content: "";
           display: block;
@@ -42,6 +46,7 @@
           height: rem(2);
           background-color: $secondary-color;
           margin-block-end: rem(12);
+
           @include tablet {
             width: rem(48);
             height: rem(4);
@@ -49,42 +54,52 @@
           }
         }
       }
+
       .desc {
         @include font(12, 18, 300);
         color: $white;
         margin-block-start: rem(16);
         text-wrap: balance;
+
         @include tablet {
           @include font(16, 24, 300);
         }
       }
     }
+
     .form-bx {
       width: 100%;
       padding: rem(24);
       background-color: $white;
+
       @include tablet {
         width: 50%;
         padding: rem(64) rem(16);
       }
+
       .form-inner {
         width: 100%;
         margin-inline: auto;
+
         @include tablet {
           max-width: rem(400);
         }
+
         .title {
           font-family: $font-family-serif;
           @include font(30, 36, 700);
           margin-block-end: rem(8);
         }
+
         .desc {
           @include font(14, 20, 300);
           margin-block-end: rem(24);
+
           @include tablet {
             margin-block-end: rem(40);
           }
         }
+
         .form-item {
           &-label {
             display: inline-block;
@@ -92,31 +107,307 @@
             color: $gray-78;
             margin-block-end: rem(8);
           }
-          & + .form-item {
+
+          &+.form-item {
             margin-block-start: rem(16);
           }
         }
+
         .btn-bx {
           margin-block-start: rem(24);
+
           .app-button {
             width: 100%;
           }
         }
+
         .footer-bx {
-          margin-block-start: rem(16);
+          margin-block-start: rem(24);
+
           .desc {
             text-align: center;
+            margin-block-end: 0;
+
             .link {
               font-weight: 700;
               color: $primary-color;
               text-underline-position: under;
+
               &:hover {
                 text-decoration: underline;
               }
             }
           }
+
+          .forgot-password-desc {
+            margin-top: rem(8);
+
+            .link {
+              background: none;
+              border: none;
+              padding: 0;
+              cursor: pointer;
+              font-family: inherit;
+            }
+          }
         }
       }
     }
+  }
+
+  /* 비밀번호 재설정 모달 (라이트 테마) */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: rem(20);
+  }
+
+  .modal-card {
+    position: relative;
+    background: $white;
+    border-radius: rem(24);
+    box-shadow: 0 rem(32) rem(64) rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: rem(480);
+    padding: rem(32) rem(24);
+    border: 1px solid $gray-e4;
+    overflow: hidden;
+    color: $black;
+    @include tablet {
+      padding: rem(48);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: rem(20);
+      right: rem(20);
+      background: none;
+      border: none;
+      font-size: rem(32);
+      cursor: pointer;
+      color: $gray-78;
+      transition: all 0.2s ease;
+      line-height: 1;
+      @include tablet {
+        top: rem(24);
+        right: rem(24);
+      }
+
+      &:hover {
+        color: $black;
+      }
+    }
+
+    .app-input {
+      input {
+        background-color: #fafaf9;
+        border-color: #e7e5e4;
+        color: $black;
+
+        &::placeholder {
+          color: $gray-78;
+        }
+
+        &:focus {
+          border-color: $primary-color;
+          background-color: $white;
+        }
+
+        &[readonly] {
+          background-color: transparent;
+          color: $gray-78;
+        }
+      }
+
+      .password-toggle {
+        color: $gray-78;
+        &:hover {
+          color: $primary-color;
+        }
+        img {
+          filter: none; // 아이콘 색상 복원
+        }
+      }
+    }
+  }
+
+  .modal-title {
+    font-family: $font-family-serif;
+    @include font(24, 32, 700);
+    color: $black;
+    margin-bottom: rem(12);
+    @include tablet {
+      @include font(28, 36, 700);
+    }
+  }
+
+  .modal-desc {
+    @include font(14, 20, 300);
+    color: $gray-78;
+    margin-bottom: rem(28);
+    @include tablet {
+      @include font(15, 22, 300);
+      margin-bottom: rem(32);
+    }
+
+    strong {
+      font-weight: 500;
+      color: $primary-color;
+    }
+  }
+
+  .modal-step {
+    .form-item {
+      &-label {
+        display: inline-block;
+        @include font(12, 16, 700);
+        color: $gray-78;
+        margin-block-end: rem(8);
+        @include tablet {
+          @include font(13, 16, 700);
+        }
+      }
+      & + .form-item {
+        margin-block-start: rem(16);
+        @include tablet {
+          margin-block-start: rem(20);
+        }
+      }
+    }
+
+    .btn-bx {
+      margin-block-start: rem(24);
+      @include tablet {
+        margin-block-start: rem(32);
+      }
+      .app-button {
+        width: 100%;
+        height: rem(48);
+        @include tablet {
+          height: rem(52);
+        }
+      }
+    }
+  }
+
+  /* 타이머 입력창 */
+  .input-with-timer {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .app-input {
+      flex: 1;
+      input {
+        padding-right: rem(64);
+      }
+    }
+
+    .timer-display {
+      position: absolute;
+      right: rem(16);
+      font-size: rem(14);
+      font-weight: 500;
+      color: $primary-color;
+      pointer-events: none;
+      transition: color 0.3s ease;
+
+      &.timer-warning {
+        color: #ff4d4f;
+        font-weight: bold;
+        animation: pulse 1s infinite alternate;
+      }
+    }
+  }
+
+  .verification-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: rem(16);
+    margin-bottom: rem(24);
+    @include tablet {
+      margin-bottom: rem(32);
+    }
+
+    .app-button {
+      height: rem(36);
+      padding: 0 rem(12);
+      font-size: rem(12);
+      @include tablet {
+        height: rem(38);
+        padding: 0 rem(16);
+        font-size: rem(13);
+      }
+    }
+
+    .back-link {
+      font-size: rem(12);
+      color: $gray-78;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: color 0.2s ease;
+      @include tablet {
+        font-size: rem(13);
+      }
+
+      &:hover {
+        color: $black;
+      }
+    }
+  }
+
+
+  .form-msg {
+    margin-top: rem(4);
+    font-size: rem(12);
+
+    &.success {
+      color: #28a745;
+    }
+
+    &.error {
+      color: #dc3545;
+    }
+  }
+
+  /* Transitions */
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.3s ease;
+  }
+
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+
+  .slide-up-enter-active,
+  .slide-up-leave-active {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  }
+
+  .slide-up-enter-from,
+  .slide-up-leave-to {
+    transform: translateY(rem(20));
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.6;
+  }
+
+  to {
+    opacity: 1;
   }
 }

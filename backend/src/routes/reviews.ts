@@ -50,7 +50,7 @@ router.post(
         create: { userId, restaurantId, rating, content, images: finalImages },
         update: { rating, content, images: finalImages },
         include: {
-          user: { select: { id: true, username: true, nickname: true } },
+          user: { select: { id: true, nickname: true } },
         },
       })
 
