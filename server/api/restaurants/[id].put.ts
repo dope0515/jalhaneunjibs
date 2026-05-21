@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { uploadToCloudinary } from '~/server/utils/cloudinary'
+import { getUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   const id = parseInt(getRouterParam(event, 'id') ?? '')
@@ -7,23 +8,23 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: '유효한 식당 ID가 필요합니다.' })
   }
 
-  const formData = await readFormData(event)
-
-  const description       = formData.get('description')?.toString() ?? null
-  const phoneNumber       = formData.get('phoneNumber')?.toString() || null
-  const openingHours      = formData.get('openingHours')?.toString() || null
-  const keywordsRaw       = formData.get('keywords')?.toString()
-  const menusRaw          = formData.get('menus')?.toString()
-  const existingImagesRaw = formData.get('existingImages')?.toString()
-
-  const keywords: string[]     = keywordsRaw       ? JSON.parse(keywordsRaw)       : []
-  const menusPayload: any[]    = menusRaw           ? JSON.parse(menusRaw)           : []
-  const existingImages: string[] = existingImagesRaw ? JSON.parse(existingImagesRaw) : []
-
+  // 0. 권한 체크
   const restaurant = await prisma.restaurant.findUnique({ where: { id } })
   if (!restaurant) {
     throw createError({ statusCode: 404, message: '식당을 찾을 수 없습니다.' })
   }
+
+  const userId = getUserId(event)
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  
+  const isOwner = restaurant.registeredById === userId
+  const isAdmin = user?.role === 'ADMIN'
+
+  if (!isOwner && !isAdmin) {
+    throw createError({ statusCode: 403, message: '수정 권한이 없습니다.' })
+  }
+
+  const formData = await readFormData(event)
 
   // 1. 신규 매장 이미지 업로드
   const newRestaurantImageFiles = formData.getAll('restaurantImages') as File[]

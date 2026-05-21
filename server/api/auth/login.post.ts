@@ -3,11 +3,11 @@ import jwt from 'jsonwebtoken'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { login: loginId, password: rawPassword } = body
+  const { login: loginId, password: rawPassword, rememberMe } = body
   const password = rawPassword?.trim()
   const identifier = loginId?.trim()
 
-  console.log(`[Login Attempt]: identifier=${identifier}, passwordLength=${password?.length}`)
+  console.log(`[Login Attempt]: identifier=${identifier}, rememberMe=${rememberMe}`)
 
   // 1. 이메일만 허용
   const user = await prisma.user.findFirst({
@@ -38,17 +38,17 @@ export default defineEventHandler(async (event) => {
 
   console.log(`[Login Success]: ${identifier}`)
 
-  // 3. 토큰 생성 (아까 만든 .env의 키들을 여기서 꺼내 씁니다!)
+  // 3. 토큰 생성 (AccessToken은 짧게, RefreshToken은 길게)
   const accessToken = jwt.sign(
     { userId: user.id },
     process.env.ACCESS_TOKEN_SECRET!,
-    { expiresIn: '7d' }
+    { expiresIn: '1h' } // 1시간으로 단축 (보안 강화)
   )
 
   const refreshToken = jwt.sign(
     { userId: user.id },
     process.env.REFRESH_TOKEN_SECRET!,
-    { expiresIn: '7d' } // 리프레시 토큰은 길게!
+    { expiresIn: '7d' }
   )
 
   // 4. 리프레시 토큰을 DB에 저장 (나중에 로그아웃/만료 체크용)
@@ -64,7 +64,8 @@ export default defineEventHandler(async (event) => {
   setCookie(event, 'refresh_token', refreshToken, {
     httpOnly: true, // 클라이언트 JS에서 접근 불가 (보안 강화)
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7 // 7일
+    // rememberMe가 true일 때만 7일 유지, 아니면 브라우저 종료 시 삭제
+    ...(rememberMe ? { maxAge: 60 * 60 * 24 * 7 } : {})
   })
 
   // 6. 액세스 토큰과 유저 정보 반환

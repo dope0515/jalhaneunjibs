@@ -6,7 +6,7 @@ export const useAuth = () => {
   const { user, accessToken, isLoggedIn } = storeToRefs(authStore)
 
   // 로그인 시도 함수
-  const login = async (credentials: { login: string; password: string }) => {
+  const login = async (credentials: { login: string; password: string; rememberMe?: boolean }) => {
     const { $api } = useApi()
     try {
       const data = await $api<any>('/auth/login', {
@@ -15,7 +15,7 @@ export const useAuth = () => {
       })
 
       // Pinia 스토어에 상태 저장
-      authStore.setAuth(data.user, data.accessToken)
+      authStore.setAuth(data.user, data.accessToken, credentials.rememberMe)
 
       navigateTo('/')
     } catch (error: any) {
@@ -24,9 +24,18 @@ export const useAuth = () => {
   }
 
   // 로그아웃 함수
-  const logout = () => {
-    authStore.clearAuth()
-    navigateTo('/login')
+  const logout = async () => {
+    const { $api } = useApi()
+    try {
+      // 서버측 토큰 무효화 요청
+      await $api('/auth/logout', { method: 'POST' })
+    } catch (e) {
+      console.error('Logout API failed', e)
+    } finally {
+      // 클라이언트측 상태 초기화 (실패하더라도 수행)
+      authStore.clearAuth()
+      navigateTo('/login')
+    }
   }
 
   return {

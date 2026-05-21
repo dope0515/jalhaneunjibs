@@ -14,7 +14,7 @@
           <p class="address">{{ restaurant.address }}</p>
         </div>
         <div class="header-right">
-          <div v-if="user?.role === 'ADMIN'" class="admin-actions">
+          <div v-if="user?.role === 'ADMIN' || user?.id === restaurant.registeredById" class="admin-actions">
             <AppButton size="sm" variant="outline" @click="handleEdit">정보 수정</AppButton>
             <AppButton size="sm" color="red" variant="outline" @click="handleDelete">삭제</AppButton>
           </div>
