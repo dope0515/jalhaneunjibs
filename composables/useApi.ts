@@ -23,6 +23,33 @@ export const useApi = () => {
         }
       }
     },
+    async onResponseError({ request, response, options }) {
+      // 401 에러(토큰 만료)가 발생했고, 이미 재시도 중이 아닐 때만 실행
+      if (response.status === 401 && !request.toString().includes('/auth/refresh')) {
+        try {
+          // 1. 새로운 액세스 토큰 발급 요청 (리프레시 토큰 사용)
+          const { accessToken: newToken } = await $fetch<{ accessToken: string }>('/api/auth/refresh', {
+            method: 'POST',
+          })
+
+          // 2. 스토어 및 쿠키 업데이트
+          authStore.updateToken(newToken)
+
+          // 3. 이전 요청 재시도
+          options.headers = {
+            ...options.headers,
+            Authorization: `Bearer ${newToken}`,
+          }
+          return await $fetch(request, options)
+        } catch (refreshError) {
+          // 리프레시 토큰마저 만료된 경우 로그아웃 처리
+          authStore.clearAuth()
+          if (process.client) {
+            navigateTo('/login')
+          }
+        }
+      }
+    }
   })
 
   return { $api }

@@ -115,13 +115,36 @@
 
         .btn-bx {
           margin-block-start: rem(24);
-
           .app-button {
             width: 100%;
           }
         }
+        .options-bx {
+          margin-top: rem(12);
+          display: flex;
+          align-items: center;
 
+          .remember-me {
+            display: flex;
+            align-items: center;
+            gap: rem(6);
+            cursor: pointer;
+            @include font(14, 1, 400, $gray-78);
+
+            input[type="checkbox"] {
+              width: rem(16);
+              height: rem(16);
+              accent-color: $primary-color;
+              cursor: pointer;
+            }
+
+            span {
+              user-select: none;
+            }
+          }
+        }
         .footer-bx {
+
           margin-block-start: rem(24);
 
           .desc {
