@@ -2,25 +2,37 @@ import bcrypt from 'bcrypt'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { username, email, password: rawPassword, nickname } = body
+  const { email, password: rawPassword, nickname } = body
   const password = rawPassword?.trim()
 
-  if (!username || !email || !password) {
+  if (!email || !password) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'ID, Email and password are required',
+      statusMessage: 'Email and password are required',
     })
+  }
+
+  // 1. 닉네임 중복 체크
+  if (nickname) {
+    const existingNickname = await prisma.user.findUnique({
+      where: { nickname: nickname.trim() }
+    })
+    if (existingNickname) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: '이미 사용 중인 닉네임입니다.',
+      })
+    }
   }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10)
-    
+
     const user = await prisma.user.create({
       data: {
-        username,
         email,
         password: hashedPassword,
-        nickname,
+        nickname: nickname?.trim(),
         emailVerified: true,
       },
     })
@@ -40,14 +52,13 @@ export default defineEventHandler(async (event) => {
       meta: error.meta,
       stack: error.stack
     })
-    
-    // Handle duplicate email/username error
+
+    // Handle duplicate error
     if (error.code === 'P2002') {
-      const target = error.meta?.target || []
-      const field = target.includes('email') ? '이메일' : '아이디'
+      const isNickname = error.meta?.target?.includes('nickname')
       throw createError({
         statusCode: 400,
-        statusMessage: `이미 사용 중인 ${field}입니다.`,
+        statusMessage: isNickname ? '이미 사용 중인 닉네임입니다.' : '이미 사용 중인 이메일입니다.',
       })
     }
 

@@ -23,7 +23,6 @@ export default defineEventHandler(async (event) => {
             user: {
               select: {
                 id: true,
-                username: true,
                 nickname: true
               }
             }
@@ -36,7 +35,6 @@ export default defineEventHandler(async (event) => {
             user: {
               select: {
                 id: true,
-                username: true,
                 nickname: true
               }
             },
@@ -45,7 +43,6 @@ export default defineEventHandler(async (event) => {
                 user: {
                   select: {
                     id: true,
-                    username: true,
                     nickname: true
                   }
                 }
