@@ -1,6 +1,6 @@
 <template>
   <section class="register">
-    <AppLoading :loading="isSubmitting" message="맛집을 등록하고 있습니다..." />
+    <AppLoading :loading="isSubmitting" :message="submissionMessage" />
 
     <!-- 등록 성공 모달 -->
     <Teleport to="body">
@@ -435,6 +435,8 @@
 </template>
 
 <script setup>
+import imageCompression from 'browser-image-compression'
+
 const { $api } = useApi()
 const { loadSDK } = useKakaoMap()
 
@@ -477,6 +479,7 @@ const isAnalyzing = ref(false)
 const menuItemImageInputRef = ref(null)
 const currentEditingMenuIndex = ref(-1)
 const isSubmitting = ref(false)
+const submissionMessage = ref('맛집을 등록하고 있습니다...')
 const showSuccessModal = ref(false)
 const registeredRestaurantId = ref(null)
 const registeredRestaurantName = ref('')
@@ -844,41 +847,75 @@ const handleSubmit = async () => {
     return
   }
 
-  const formData = new FormData()
-  
-  Object.keys(form.value).forEach((key) => {
-    if (key === 'keywords') {
-      formData.append(key, JSON.stringify(form.value[key]))
-    } else {
-      formData.append(key, form.value[key])
-    }
-  })
-
-  if (restaurantImages.value.length > 0) {
-    restaurantImages.value.forEach(file => {
-      formData.append('restaurantImages', file)
-    })
-  }
-
-  if (analyzedMenuItems.value.length > 0) {
-    const itemsToSubmit = analyzedMenuItems.value.map((item, index) => {
-      if (item.imageFile) {
-        formData.append(`menuImage_${index}`, item.imageFile)
-      }
-      return {
-        name: item.name,
-        price: item.price ? item.price.replace(/,/g, '') : '', 
-        description: item.description,
-        isRecommended: item.isRecommended,
-        hasImage: !!item.imageFile 
-      }
-    })
-    
-    formData.append('menuItems', JSON.stringify(itemsToSubmit))
-  }
-
   isSubmitting.value = true
+  submissionMessage.value = '이미지를 최적화하고 있습니다...'
+
   try {
+    const compressionOptions = {
+      maxSizeMB: 0.8,
+      maxWidthOrHeight: 1280,
+      useWebWorker: true,
+    }
+
+    const formData = new FormData()
+    
+    // 1. 기본 정보 추가
+    Object.keys(form.value).forEach((key) => {
+      if (key === 'keywords') {
+        formData.append(key, JSON.stringify(form.value[key]))
+      } else {
+        formData.append(key, form.value[key])
+      }
+    })
+
+    // 2. 식당 이미지 압축 및 추가
+    if (restaurantImages.value.length > 0) {
+      submissionMessage.value = `매장 이미지를 최적화 중입니다... (0/${restaurantImages.value.length})`
+      for (let i = 0; i < restaurantImages.value.length; i++) {
+        const file = restaurantImages.value[i]
+        try {
+          const compressedFile = await imageCompression(file, compressionOptions)
+          formData.append('restaurantImages', compressedFile)
+        } catch (e) {
+          console.error('Restaurant image compression error:', e)
+          formData.append('restaurantImages', file) // 실패 시 원본 전송
+        }
+        submissionMessage.value = `매장 이미지를 최적화 중입니다... (${i + 1}/${restaurantImages.value.length})`
+      }
+    }
+
+    // 3. 메뉴 아이템 압축 및 추가
+    if (analyzedMenuItems.value.length > 0) {
+      const menusWithImages = analyzedMenuItems.value.filter(item => item.imageFile)
+      let compressedCount = 0
+      
+      const itemsToSubmit = await Promise.all(analyzedMenuItems.value.map(async (item, index) => {
+        if (item.imageFile) {
+          submissionMessage.value = `메뉴 이미지를 최적화 중입니다... (${compressedCount + 1}/${menusWithImages.length})`
+          try {
+            const compressedFile = await imageCompression(item.imageFile, compressionOptions)
+            formData.append(`menuImage_${index}`, compressedFile)
+          } catch (e) {
+            console.error('Menu image compression error:', e)
+            formData.append(`menuImage_${index}`, item.imageFile)
+          }
+          compressedCount++
+        }
+        
+        return {
+          name: item.name,
+          price: item.price ? item.price.replace(/,/g, '') : '', 
+          description: item.description,
+          isRecommended: item.isRecommended,
+          hasImage: !!item.imageFile 
+        }
+      }))
+      
+      formData.append('menuItems', JSON.stringify(itemsToSubmit))
+    }
+
+    submissionMessage.value = '서버에 정보를 등록하고 있습니다...'
+    
     const data = await $api('/restaurants/register', {
       method: 'POST',
       body: formData
@@ -895,6 +932,7 @@ const handleSubmit = async () => {
     alert(error.data?.statusMessage || '등록 중 오류가 발생했습니다.')
   } finally {
     isSubmitting.value = false
+    submissionMessage.value = '맛집을 등록하고 있습니다...'
   }
 }
 
