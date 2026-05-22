@@ -40,6 +40,12 @@
             >
               <img :src="img" :alt="`매장 이미지 ${i + 1}`" class="r-img-thumb" />
               <span v-if="i === 0" class="r-img-badge">대표</span>
+              <button
+                v-else
+                type="button"
+                class="r-img-set-main"
+                @click="setAsMainImage('existing', i)"
+              >대표 설정</button>
               <button type="button" class="r-img-remove" @click="removeExistingImage(i)" aria-label="이미지 삭제">×</button>
             </div>
             <!-- 새로 추가한 이미지 미리보기 -->
@@ -50,6 +56,12 @@
             >
               <img :src="prev" alt="새 이미지 미리보기" class="r-img-thumb" />
               <span v-if="form.existingImages.length === 0 && i === 0" class="r-img-badge">대표</span>
+              <button
+                v-else
+                type="button"
+                class="r-img-set-main"
+                @click="setAsMainImage('new', i)"
+              >대표 설정</button>
               <button type="button" class="r-img-remove" @click="removeNewImage(i)" aria-label="이미지 삭제">×</button>
             </div>
             <!-- 추가 버튼 -->
@@ -192,15 +204,24 @@
                 <!-- 텍스트 입력 -->
                 <div class="menu-edit-fields">
                   <div class="menu-edit-top">
-                    <input v-model="menu.name" placeholder="메뉴 이름" class="edit-input menu-name-input" />
-                    <input
-                      v-model="menu.priceDisplay"
-                      placeholder="가격 (예: 12,000)"
-                      class="edit-input menu-price-input"
-                      @input="(e) => formatMenuPrice(e, menu)"
-                    />
+                    <div class="input-with-label">
+                      <label class="mobile-menu-label">메뉴</label>
+                      <input v-model="menu.name" placeholder="메뉴 이름" class="edit-input menu-name-input" />
+                    </div>
+                    <div class="input-with-label">
+                      <label class="mobile-menu-label">가격</label>
+                      <input
+                        v-model="menu.priceDisplay"
+                        placeholder="가격 (예: 12,000)"
+                        class="edit-input menu-price-input"
+                        @input="(e) => formatMenuPrice(e, menu)"
+                      />
+                    </div>
                   </div>
-                  <input v-model="menu.description" placeholder="메뉴 설명 (선택)" class="edit-input menu-desc-input" />
+                  <div class="input-with-label">
+                    <label class="mobile-menu-label">메뉴 설명 (선택)</label>
+                    <input v-model="menu.description" placeholder="메뉴 설명 (선택)" class="edit-input menu-desc-input" />
+                  </div>
                 </div>
 
                 <button type="button" class="menu-delete-btn" @click="removeMenu(i)" aria-label="메뉴 삭제">
@@ -309,6 +330,18 @@ const removeExistingImage = (i) => form.value.existingImages.splice(i, 1)
 const removeNewImage = (i) => {
   form.value.newImageFiles.splice(i, 1)
   form.value.newImagePreviews.splice(i, 1)
+}
+
+const setAsMainImage = (type, index) => {
+  if (type === 'existing') {
+    const item = form.value.existingImages.splice(index, 1)[0]
+    form.value.existingImages.unshift(item)
+  } else {
+    const file = form.value.newImageFiles.splice(index, 1)[0]
+    const preview = form.value.newImagePreviews.splice(index, 1)[0]
+    form.value.newImageFiles.unshift(file)
+    form.value.newImagePreviews.unshift(preview)
+  }
 }
 
 // ── 키워드 ────────────────────────────────────────────────────────

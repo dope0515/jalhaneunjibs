@@ -33,12 +33,12 @@
         <div class="search-actions">
           <button class="search-submit-btn" @click="submitSearch">검색</button>
         </div>
-        <Transition name="fade">
+        <!-- <Transition name="fade">
           <div v-if="searchKeyword" class="search-active-tag">
             <span>"{{ searchKeyword }}" 검색 결과</span>
             <button @click="clearSearch" aria-label="검색 해제">×</button>
           </div>
-        </Transition>
+        </Transition> -->
       </div>
 
       <!-- 필터 영역 -->

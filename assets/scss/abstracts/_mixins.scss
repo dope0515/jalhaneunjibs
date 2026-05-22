@@ -29,31 +29,43 @@
 }
 
 @mixin respond-to($breakpoint) {
-  @if $breakpoint == "xs" {
+  @if $breakpoint =="xs" {
     @media (max-width: #{rem($bp-xs - 1px)}) {
       @content;
     }
-  } @else if $breakpoint == "sm" {
-    @media (min-width: #{rem($bp-sm)}) {
-      @content;
-    }
-  } @else if $breakpoint == "md" {
+  }
+
+  @else if $breakpoint =="sm" {
     @media (min-width: #{rem($bp-md)}) {
       @content;
     }
-  } @else if $breakpoint == "lg" {
+  }
+
+  @else if $breakpoint =="md" {
+    @media (min-width: #{rem($bp-md)}) {
+      @content;
+    }
+  }
+
+  @else if $breakpoint =="lg" {
     @media (min-width: #{rem($bp-lg)}) {
       @content;
     }
-  } @else if $breakpoint == "xl" {
+  }
+
+  @else if $breakpoint =="xl" {
     @media (min-width: #{rem($bp-xl)}) {
       @content;
     }
-  } @else if $breakpoint == "2xl" {
+  }
+
+  @else if $breakpoint =="2xl" {
     @media (min-width: #{rem($bp-2xl)}) {
       @content;
     }
-  } @else if $breakpoint == "3xl" {
+  }
+
+  @else if $breakpoint =="3xl" {
     @media (min-width: #{rem($bp-3xl)}) {
       @content;
     }
@@ -68,7 +80,7 @@
 
 // 값 판별 헬퍼 (변수면 var(), 아니면 그대로)
 @function check-val($val) {
-  @if meta.type-of($val) ==string and string.index($val, "--") ==1 {
+  @if meta.type-of($val)==string and string.index($val, "--")==1 {
     @return var(#{$val});
   }
 
@@ -84,29 +96,27 @@
     $safe-fs: check-val($fs); // fs도 미리 안전한 값으로 확보
 
     // [1] 숫자인 경우: 10보다 크면 px값으로 간주 -> 비율 계산
-    @if meta.type-of($safe-lh) ==number {
+    @if meta.type-of($safe-lh)==number {
       @if math.is-unitless($safe-lh) and $safe-lh >10 {
-        @if meta.type-of($safe-fs) ==number {
+        @if meta.type-of($safe-fs)==number {
           // 둘 다 숫자: SCSS 미리 계산
           line-height: decimal-round(calc($safe-lh / $safe-fs));
-        } @else {
+        }
+
+        @else {
           // fs가 변수: CSS calc로 계산
           line-height: calc($safe-lh / $safe-fs);
         }
-      } @else {
+      }
+
+      @else {
         // 10 이하거나 단위 있으면 그대로
         line-height: $safe-lh;
       }
     }
 
     // [2] 변수인 경우(var): 무조건 비율 계산 시도 (calc)
-    @else if
-      meta.type-of($safe-lh)
-      ==string
-      and-
-      string.index($safe-lh, "var(")
-      ==1
-    {
+    @else if meta.type-of($safe-lh)==string and- string.index($safe-lh, "var(")==1 {
       line-height: calc($safe-lh / $safe-fs);
     }
 
@@ -127,20 +137,24 @@
   @if $ls !=0 {
     $safe-ls: check-val($ls);
 
-    @if meta.type-of($safe-ls) ==number and math.is-unitless($safe-ls) {
+    @if meta.type-of($safe-ls)==number and math.is-unitless($safe-ls) {
       letter-spacing: calc($safe-ls * 1em);
-    } @else {
+    }
+
+    @else {
       letter-spacing: $safe-ls;
     }
   }
 }
 
 @mixin text-ellipsis($lines: 1) {
-  @if $lines == 1 {
+  @if $lines ==1 {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  } @else {
+  }
+
+  @else {
     display: -webkit-box;
     overflow: hidden;
     -webkit-line-clamp: $lines;
