@@ -143,6 +143,7 @@
       &:hover,
       &.is-focused {
         background-color: #f0f7f4;
+
         .place-name {
           color: $primary-color;
         }
@@ -152,11 +153,13 @@
         display: block;
         @include font(15, 1.4, 700, $black);
       }
+
       .place-address {
         display: block;
         @include font(13, 1.4, 400, $gray-78);
         margin-top: rem(2);
       }
+
       .place-category {
         display: inline-block;
         margin-top: rem(6);
@@ -231,9 +234,28 @@
         padding: rem(4) 0;
         @include font(10, 1, 700);
       }
+
+      .set-main-btn {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba($gray-33, 0.7);
+        color: $white;
+        text-align: center;
+        padding: rem(4) 0;
+        @include font(10, 1, 700);
+        cursor: pointer;
+        border: none;
+        transition: background 0.2s;
+
+        &:hover {
+          background: rgba($primary-color, 0.9);
+        }
+      }
     }
 
-    @media (max-width: $bp-sm) {
+    @media (max-width: $bp-md) {
       .preview-item {
         width: calc(50% - rem(6));
       }
@@ -377,7 +399,9 @@
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .menu-items-result {
@@ -394,7 +418,7 @@
 
     .menu-items-count {
       @include font(15, 1, 700, $black);
-      
+
       &::before {
         display: none;
       }
@@ -414,7 +438,7 @@
       width: 100%;
     }
 
-    @media (max-width: $bp-sm) {
+    @media (max-width: $bp-md) {
       .menu-item-card {
         width: 100%;
       }
@@ -777,7 +801,10 @@
     flex-shrink: 0;
     transition: all 0.15s;
 
-    &:hover { border-color: $primary-color; color: $primary-color; }
+    &:hover {
+      border-color: $primary-color;
+      color: $primary-color;
+    }
   }
 
   .edit-sub {
@@ -804,11 +831,9 @@
     background: $white;
     border: 1px solid #ebebea;
     border-radius: rem(16);
-    padding: rem(28) rem(32);
+    padding: rem(20);
 
-    @media (max-width: $bp-sm) {
-      padding: rem(20);
-    }
+    @media (max-width: $bp-md) {}
   }
 
   .edit-section-header {
@@ -844,7 +869,11 @@
     background: $bg-color;
     transition: border-color 0.2s;
 
-    &:focus { outline: none; border-color: $secondary-color; background: $white; }
+    &:focus {
+      outline: none;
+      border-color: $secondary-color;
+      background: $white;
+    }
   }
 
   .edit-input {
@@ -857,8 +886,15 @@
     background: $bg-color;
     transition: border-color 0.2s;
 
-    &:focus { outline: none; border-color: $secondary-color; background: $white; }
-    &::placeholder { color: $gray-e4; }
+    &:focus {
+      outline: none;
+      border-color: $secondary-color;
+      background: $white;
+    }
+
+    &::placeholder {
+      color: $gray-e4;
+    }
   }
 
   .edit-field-row {
@@ -867,7 +903,9 @@
     gap: rem(6);
     margin-bottom: rem(16);
 
-    &:last-child { margin-bottom: 0; }
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   .edit-field-label {
@@ -890,7 +928,9 @@
     border: 1px solid $gray-e4;
     flex-shrink: 0;
 
-    &.is-new { border-color: rgba($secondary-color, 0.4); }
+    &.is-new {
+      border-color: rgba($secondary-color, 0.4);
+    }
   }
 
   .r-img-thumb {
@@ -911,6 +951,24 @@
     @include font(10, 1, 700);
   }
 
+  .r-img-set-main {
+    position: absolute;
+    bottom: rem(4);
+    left: rem(4);
+    background: rgba($gray-33, 0.6);
+    color: $white;
+    border-radius: rem(4);
+    padding: rem(2) rem(6);
+    @include font(10, 1, 700);
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba($primary-color, 0.9);
+    }
+  }
+
   .r-img-remove {
     position: absolute;
     top: rem(4);
@@ -928,7 +986,9 @@
     justify-content: center;
     padding: 0;
 
-    &:hover { background: #ef4444; }
+    &:hover {
+      background: #ef4444;
+    }
   }
 
   .r-img-add {
@@ -949,7 +1009,10 @@
     transition: all 0.15s;
     flex-shrink: 0;
 
-    &:hover { border-color: $secondary-color; color: $secondary-color; }
+    &:hover {
+      border-color: $secondary-color;
+      color: $secondary-color;
+    }
   }
 
   // 키워드
@@ -977,8 +1040,14 @@
     cursor: pointer;
     transition: opacity 0.15s;
 
-    &:disabled { opacity: 0.4; cursor: default; }
-    &:not(:disabled):hover { opacity: 0.85; }
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    &:not(:disabled):hover {
+      opacity: 0.85;
+    }
   }
 
   .tag-list {
@@ -1005,7 +1074,10 @@
       cursor: pointer;
       color: $secondary-color;
       opacity: 0.6;
-      &:hover { opacity: 1; }
+
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 
@@ -1028,7 +1100,9 @@
     cursor: pointer;
     transition: all 0.15s;
 
-    &:hover { background: rgba($secondary-color, 0.06); }
+    &:hover {
+      background: rgba($secondary-color, 0.06);
+    }
   }
 
   .menu-edit-list {
@@ -1044,28 +1118,49 @@
     background: $bg-color;
     transition: border-color 0.15s;
 
-    &:hover { border-color: #d1d5db; }
+    &:hover {
+      border-color: #d1d5db;
+    }
+
+    @media (max-width: $bp-md) {
+      padding: rem(14);
+    }
   }
 
   .menu-edit-row {
     display: flex;
-    align-items: flex-start;
-    gap: rem(12);
+    flex-direction: column;
+    gap: rem(8);
+    position: relative;
+
+    @include tablet {
+      align-items: flex-start;
+      flex-wrap: wrap;
+      flex-direction: row;
+      gap: rem(12);
+    }
   }
 
   // 메뉴 이미지 편집
   .menu-img-edit {
     flex-shrink: 0;
     position: relative;
-    width: rem(72);
-    height: rem(72);
+    width: 100%;
+    aspect-ratio: 1;
     border-radius: rem(8);
     overflow: hidden;
     cursor: pointer;
     border: 1px dashed #c8c8c0;
     background: $bg-color;
 
-    &:hover .menu-img-overlay { opacity: 1; }
+    @include tablet {
+      width: rem(72);
+      height: rem(72);
+    }
+
+    &:hover .menu-img-overlay {
+      opacity: 1;
+    }
   }
 
   .menu-img-thumb {
@@ -1086,9 +1181,14 @@
     color: $gray-78;
     transition: color 0.15s;
 
-    span { @include font(10, 1, 500); }
+    span {
+      @include font(10, 1, 500);
+    }
 
-    .menu-img-edit:hover & { color: $secondary-color; border-color: $secondary-color; }
+    .menu-img-edit:hover & {
+      color: $secondary-color;
+      border-color: $secondary-color;
+    }
   }
 
   .menu-img-overlay {
@@ -1121,7 +1221,16 @@
     padding: 0;
     z-index: 1;
 
-    &:hover { background: #ef4444; }
+    @media (max-width: $bp-md) {
+      top: rem(4);
+      right: rem(4);
+      width: rem(22);
+      height: rem(22);
+    }
+
+    &:hover {
+      background: #ef4444;
+    }
   }
 
   .recommend-toggle {
@@ -1144,7 +1253,26 @@
       color: $tertiary-color;
     }
 
-    &:not(.is-active):hover { border-color: $gray-78; color: $gray-78; }
+    &:not(.is-active):hover {
+      border-color: $gray-78;
+      color: $gray-78;
+    }
+  }
+
+  .input-with-label {
+    display: flex;
+    flex-direction: column;
+    gap: rem(4);
+    flex: 1;
+  }
+
+  .mobile-menu-label {
+    display: none;
+
+    @media (max-width: $bp-md) {
+      display: block;
+      @include font(12, 1, 600, $gray-78);
+    }
   }
 
   .menu-edit-fields {
@@ -1152,20 +1280,44 @@
     display: flex;
     flex-direction: column;
     gap: rem(8);
+    min-width: 0;
+
+    // 모바일: 새 줄로 떨어져서 전체 너비를 사용
+    @media (max-width: $bp-md) {
+      flex: 0 0 100%;
+      width: 100%;
+    }
   }
 
   .menu-edit-top {
     display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
     gap: rem(8);
 
-    @media (max-width: $bp-sm) {
-      flex-direction: column;
+    @include tablet {
+      flex-direction: row;
+      flex-wrap: nowrap;
     }
   }
 
-  .menu-name-input { flex: 1; }
-  .menu-price-input { width: rem(140); flex-shrink: 0; }
-  .menu-desc-input { width: 100%; }
+  .menu-name-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .menu-price-input {
+    width: 100%;
+    flex-shrink: 0;
+
+    @include tablet {
+      width: rem(140);
+    }
+  }
+
+  .menu-desc-input {
+    width: 100%;
+  }
 
   .menu-delete-btn {
     flex-shrink: 0;
@@ -1180,8 +1332,19 @@
     align-items: center;
     justify-content: center;
     transition: all 0.15s;
+    position: absolute;
+    top: 0;
+    right: 0;
 
-    &:hover { border-color: #ef4444; color: #ef4444; background: #fff5f5; }
+    @include tablet {
+      position: static;
+    }
+
+    &:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+      background: #fff5f5;
+    }
   }
 
   // 하단 저장 버튼

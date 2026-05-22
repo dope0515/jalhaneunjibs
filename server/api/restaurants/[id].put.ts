@@ -26,7 +26,45 @@ export default defineEventHandler(async (event) => {
 
   const formData = await readFormData(event)
 
-  // 1. 신규 매장 이미지 업로드
+  // 1. 데이터 추출 및 파싱
+  const description = formData.get('description')?.toString() || null
+  const phoneNumber = formData.get('phoneNumber')?.toString() || null
+  const openingHours = formData.get('openingHours')?.toString() || null
+
+  let keywords: string[] = []
+  const keywordsString = formData.get('keywords')?.toString()
+  if (keywordsString) {
+    try {
+      const parsed = JSON.parse(keywordsString)
+      if (Array.isArray(parsed)) keywords = parsed
+    } catch (e) {
+      console.error('[Parser] Keywords parsing failed:', e)
+    }
+  }
+
+  let existingImages: string[] = []
+  const existingImagesString = formData.get('existingImages')?.toString()
+  if (existingImagesString) {
+    try {
+      const parsed = JSON.parse(existingImagesString)
+      if (Array.isArray(parsed)) existingImages = parsed
+    } catch (e) {
+      console.error('[Parser] Existing images parsing failed:', e)
+    }
+  }
+
+  let menusPayload: any[] = []
+  const menusString = formData.get('menus')?.toString()
+  if (menusString) {
+    try {
+      const parsed = JSON.parse(menusString)
+      if (Array.isArray(parsed)) menusPayload = parsed
+    } catch (e) {
+      console.error('[Parser] Menus parsing failed:', e)
+    }
+  }
+
+  // 2. 신규 매장 이미지 업로드
   const newRestaurantImageFiles = formData.getAll('restaurantImages') as File[]
   const uploadedImages: string[] = []
   for (const file of newRestaurantImageFiles) {
@@ -41,9 +79,9 @@ export default defineEventHandler(async (event) => {
 
   // 최종 이미지 배열: 유지한 기존 URL + 새로 업로드된 URL (최대 5장)
   const finalImages = [...existingImages, ...uploadedImages].slice(0, 5)
-  const finalThumbnail = finalImages[0] ?? restaurant.thumbnail ?? null
+  const finalThumbnail = finalImages[0] ?? null
 
-  // 2. 식당 기본 정보 업데이트
+  // 3. 식당 기본 정보 업데이트
   await prisma.restaurant.update({
     where: { id },
     data: {
@@ -56,7 +94,7 @@ export default defineEventHandler(async (event) => {
     },
   })
 
-  // 2. 메뉴 처리
+  // 4. 메뉴 처리
   const existingMenus = await prisma.menu.findMany({
     where: { restaurantId: id },
     select: { id: true },

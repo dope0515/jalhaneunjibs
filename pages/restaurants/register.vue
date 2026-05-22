@@ -246,6 +246,12 @@
                           <img src="/assets/images/icon/ic_close.svg" width="14" height="14" alt="삭제" />
                         </span>
                         <span v-if="index === 0" class="main-badge">대표</span>
+                        <button
+                          v-else
+                          type="button"
+                          class="set-main-btn"
+                          @click.stop="setAsMainImage(index)"
+                        >대표 설정</button>
                       </div>
                     </div>
                   </div>
@@ -726,6 +732,13 @@ const handleDrop = (e) => {
 const removeRestaurantImage = (index) => {
   restaurantImages.value.splice(index, 1)
   restaurantPreviews.value.splice(index, 1)
+}
+
+const setAsMainImage = (index) => {
+  const file = restaurantImages.value.splice(index, 1)[0]
+  const preview = restaurantPreviews.value.splice(index, 1)[0]
+  restaurantImages.value.unshift(file)
+  restaurantPreviews.value.unshift(preview)
 }
 
 const triggerMenuBoardInput = () => menuBoardInputRef.value?.click()
