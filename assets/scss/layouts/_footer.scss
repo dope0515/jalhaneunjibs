@@ -4,38 +4,70 @@
 
 .footer {
   background-color: $bg-footer;
-  padding-block: rem(64);
+  padding-block: rem(48);
   color: $white;
+
+  @include tablet {
+    padding-block: rem(64);
+  }
+
   .content {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: rem(40);
+
+    @include tablet {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
     .txt-bx {
       display: flex;
       flex-direction: column;
       gap: rem(16);
+
       .title {
         font-family: $font-family-serif;
-        @include font(24, 32, 900, $white, -0.012);
-      }
-      .copyright {
-        @include font(16, 32, 400, $white, 0.05);
+        @include font(20, 1.3, 900, $white, -0.012);
+
+        @include tablet {
+          @include font(24, 1.3, 900);
+        }
       }
     }
+
     .service {
       &-title {
-        @include font(16, 32, 400, $white, 0.05);
+        @include font(16, 1.5, 700, $white, 0.05);
+        margin-block-end: rem(12);
       }
+
       &-list {
+        display: flex;
+        flex-direction: column;
+        gap: rem(8);
       }
+
       &-link {
-        @include font(16, 32, 400, $white, 0.05);
+        @include font(15, 1.5, 400, rgba($white, 0.7), 0.05);
+        transition: color 0.2s;
+
+        &:hover {
+          color: $white;
+        }
       }
     }
   }
+
   .info {
-    border-top: 1px solid rgba($white, 0.2);
-    padding-block-start: rem(20);
-    margin-block-start: rem(20);
+    border-top: 1px solid rgba($white, 0.1);
+    padding-block-start: rem(24);
+    margin-block-start: rem(40);
+
+    .copyright {
+      @include font(14, 1.5, 400, rgba($white, 0.5), 0.05);
+    }
   }
 }
