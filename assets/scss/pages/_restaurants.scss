@@ -144,10 +144,11 @@
     display: flex;
     align-items: flex-start;
     flex-direction: column;
-    gap: rem(20);
+    gap: rem(12);
 
     @include tablet {
       flex-direction: row;
+      gap: rem(24);
     }
 
     &--sub {
@@ -1001,42 +1002,6 @@
   }
 }
 
-// 반응형
-@media (max-width: $bp-lg) {
-  .restaurants-list {
-    .filter-group {
-      flex-direction: column;
-      gap: rem(12);
-
-      .filter-label {
-        padding-top: 0;
-      }
-    }
-  }
-
-  .restaurant-detail {
-    .detail-grid {
-      flex-direction: column;
-
-      .side-content {
-        width: 100%;
-        order: -1;
-      }
-    }
-  }
-}
-
-@media (max-width: $bp-md) {
-  .restaurant-detail {
-    .menu-section {
-      .menu-card {
-        width: 100%;
-      }
-    }
-  }
-}
-
-
 // ─── 메뉴 이미지 라이트박스 ───────────────────────────────────────────────────
 
 .menu-lightbox {
@@ -1162,43 +1127,24 @@
   opacity: 0;
 }
 
-@media (max-width: $bp-md) {
-  .menu-lightbox {
-    padding: rem(64) rem(16) rem(24);
-
-    .lightbox-nav {
-      width: rem(40);
-      height: rem(40);
-    }
-
-    .lightbox-prev {
-      left: rem(8);
-    }
-
-    .lightbox-next {
-      right: rem(8);
-    }
-  }
-}
-
-
 // ─── 리뷰 섹션 ────────────────────────────────────────────────────────────────
 
 .review-section {
 
   .review-summary {
     display: flex;
-    align-items: center;
-    gap: rem(32);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: rem(16);
     padding: rem(20) rem(24);
     background: $bg-color;
     border-radius: rem(12);
     margin-bottom: rem(24);
 
-    @media (max-width: $bp-md) {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: rem(16);
+    @include tablet {
+      flex-direction: row;
+      align-items: center;
+      gap: rem(32);
     }
   }
 

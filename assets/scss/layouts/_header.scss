@@ -19,12 +19,22 @@
 
   .logo {
     font-family: $font-family-serif;
-    @include font(24, 32, 900, $black, -0.012);
+    @include font(18, 1.2, 900, $black, -0.012);
     transition: color 0.3s;
+
+    @include tablet {
+      @include font(24, 1.2, 900);
+    }
   }
 
   // ── 데스크탑 nav ──────────────────────────────
   .nav {
+    display: none;
+
+    @include tablet {
+      display: block;
+    }
+
     &-list {
       display: flex;
       align-items: center;
@@ -37,7 +47,7 @@
 
   // ── 햄버거 버튼 (모바일) ──────────────────────
   .hamburger {
-    display: none;
+    display: flex;
     flex-direction: column;
     justify-content: center;
     gap: rem(5);
@@ -49,6 +59,10 @@
     padding: rem(6);
     border-radius: rem(8);
     transition: background 0.15s;
+
+    @include tablet {
+      display: none;
+    }
 
     &:hover {
       background: rgba($primary-color, 0.08);
@@ -172,17 +186,6 @@
 
   &__auth-btn {
     width: 100%;
-  }
-}
-
-// ── 반응형: 768px 이하 ─────────────────────────────
-@media (max-width: 768px) {
-  .header .nav {
-    display: none;
-  }
-
-  .header .hamburger {
-    display: flex;
   }
 }
 
