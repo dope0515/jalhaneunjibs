@@ -2,26 +2,55 @@
 @use "../abstracts/mixins" as *;
 
 .main-section {
+  padding-block: rem(60);
+
+  @include tablet {
+    padding-block: rem(100);
+  }
+
   .content-wrap {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     gap: rem(50);
+
     .title-bx {
       .title {
         font-family: $font-family-serif;
-        @include font(96, 1, 500);
+        @include font(36, 1.2, 500);
+        word-break: keep-all;
+
         span {
           font-family: inherit;
           color: $primary-color;
         }
+
+        @include tablet {
+          @include font(96, 1.1, 500);
+        }
       }
     }
+
     .desc-bx {
+      p {
+        @include font(16, 1.6, 400, $gray-44);
+
+        @include tablet {
+          @include font(20, 1.6, 400);
+        }
+      }
+
       .btn-bx {
         display: flex;
-        gap: rem(16);
-        margin-block-start: rem(56);
+        flex-direction: column;
+        gap: rem(12);
+        margin-block-start: rem(40);
+
+        @include tablet {
+          flex-direction: row;
+          margin-block-start: rem(56);
+          gap: rem(16);
+        }
       }
     }
   }

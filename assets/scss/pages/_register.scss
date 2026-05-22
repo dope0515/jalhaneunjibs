@@ -2,27 +2,56 @@
 @use "../abstracts/mixins" as *;
 
 .register {
+  padding-block: rem(40);
+
+  @include tablet {
+    padding-block: rem(60);
+  }
+
+  .title-bx {
+    margin-block-end: rem(32);
+    @include tablet {
+      margin-block-end: rem(40);
+    }
+  }
+
   .form-wrap {
     background: $white;
-    padding: rem(60);
-    border-radius: rem(24);
+    padding: rem(32) rem(20);
+    border-radius: rem(16);
     box-shadow: 0 rem(10) rem(40) rgba(0, 0, 0, 0.05);
     max-width: rem(1000);
     margin-inline: auto;
     width: 100%;
+
+    @include tablet {
+      padding: rem(60);
+      border-radius: rem(24);
+    }
   }
 
   .form-container {
     display: flex;
-    align-items: flex-start;
-    gap: rem(40);
+    flex-direction: column;
+    align-items: stretch;
+    gap: rem(48);
+
+    @include tablet {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: rem(40);
+    }
   }
 
   .form-fields {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: rem(24);
+    gap: rem(20);
+
+    @include tablet {
+      gap: rem(24);
+    }
   }
 
   .form-map {
@@ -30,8 +59,14 @@
     display: flex;
     flex-direction: column;
     gap: rem(12);
-    position: sticky;
-    top: calc(rem(100) + 5%);
+    position: static;
+    order: -1; 
+
+    @include tablet {
+      position: sticky;
+      top: calc(rem(100) + 5%);
+      order: 0;
+    }
   }
 
   .map {
@@ -185,11 +220,15 @@
 
     .preview-item {
       position: relative;
-      width: calc(33.333% - rem(8));
+      width: calc(50% - rem(6));
       aspect-ratio: 1 / 1;
       border-radius: rem(12);
       overflow: hidden;
       border: 1px solid $gray-e4;
+
+      @include tablet {
+        width: calc(33.333% - rem(8));
+      }
 
       img {
         width: 100%;
@@ -252,12 +291,6 @@
         &:hover {
           background: rgba($primary-color, 0.9);
         }
-      }
-    }
-
-    @media (max-width: $bp-md) {
-      .preview-item {
-        width: calc(50% - rem(6));
       }
     }
   }
@@ -436,12 +469,6 @@
 
     .menu-item-card {
       width: 100%;
-    }
-
-    @media (max-width: $bp-md) {
-      .menu-item-card {
-        width: 100%;
-      }
     }
   }
 
@@ -833,7 +860,9 @@
     border-radius: rem(16);
     padding: rem(20);
 
-    @media (max-width: $bp-md) {}
+    @include tablet {
+      padding: rem(28) rem(32);
+    }
   }
 
   .edit-section-header {
@@ -1114,7 +1143,7 @@
   .menu-edit-item {
     border: 1px solid #ebebea;
     border-radius: rem(12);
-    padding: rem(16);
+    padding: rem(14);
     background: $bg-color;
     transition: border-color 0.15s;
 
@@ -1122,8 +1151,8 @@
       border-color: #d1d5db;
     }
 
-    @media (max-width: $bp-md) {
-      padding: rem(14);
+    @include tablet {
+      padding: rem(16);
     }
   }
 
@@ -1205,10 +1234,10 @@
 
   .menu-img-remove {
     position: absolute;
-    top: rem(2);
-    right: rem(2);
-    width: rem(18);
-    height: rem(18);
+    top: rem(4);
+    right: rem(4);
+    width: rem(22);
+    height: rem(22);
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.6);
     color: $white;
@@ -1221,11 +1250,11 @@
     padding: 0;
     z-index: 1;
 
-    @media (max-width: $bp-md) {
-      top: rem(4);
-      right: rem(4);
-      width: rem(22);
-      height: rem(22);
+    @include tablet {
+      top: rem(2);
+      right: rem(2);
+      width: rem(18);
+      height: rem(18);
     }
 
     &:hover {
@@ -1267,25 +1296,24 @@
   }
 
   .mobile-menu-label {
-    display: none;
+    display: block;
+    @include font(12, 1, 600, $gray-78);
 
-    @media (max-width: $bp-md) {
-      display: block;
-      @include font(12, 1, 600, $gray-78);
+    @include tablet {
+      display: none;
     }
   }
 
   .menu-edit-fields {
-    flex: 1;
+    flex: 0 0 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: rem(8);
     min-width: 0;
 
-    // 모바일: 새 줄로 떨어져서 전체 너비를 사용
-    @media (max-width: $bp-md) {
-      flex: 0 0 100%;
-      width: 100%;
+    @include tablet {
+      flex: 1;
     }
   }
 

@@ -23,23 +23,35 @@ defineProps({
   width: min(rem(574), 100%);
   margin-inline: auto;
   margin-block-end: rem(48);
+
   .badge {
-    @include font(12,16,700);
+    @include font(12, 1.4, 700);
     color: $primary-color; 
     text-transform: uppercase;
     border: 1px solid $primary-color;
     padding: rem(4) rem(10);
     border-radius: rem(24);
   }
+
   .title {
     font-family: $font-family-serif;
-    @include font(40,1,700);
+    @include font(26, 1.2, 700);
     margin-block-start: rem(16);
+    word-break: keep-all;
+
+    @include tablet {
+      @include font(40, 1.2, 700);
+    }
   }
+
   .desc {
-    @include font(18,28,400);
+    @include font(14, 1.6, 400);
     text-wrap: balance;
     margin-block-start: rem(16);
+
+    @include tablet {
+      @include font(18, 1.6, 400);
+    }
   }
 }
 </style>
