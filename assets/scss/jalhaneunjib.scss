@@ -31,5 +31,9 @@ body {
 
 .main {
   min-height: 50dvh;
-  padding-block: rem(100);
+  padding-block: rem(60);
+
+  @include tablet {
+    padding-block: rem(100);
+  }
 }

@@ -17,10 +17,9 @@ export const useApi = () => {
     baseURL: '/api',
     onRequest({ options }) {
       if (accessToken.value) {
-        options.headers = {
-          ...options.headers,
-          Authorization: `Bearer ${accessToken.value}`,
-        }
+        const headers = new Headers(options.headers || {})
+        headers.set('Authorization', `Bearer ${accessToken.value}`)
+        options.headers = headers
       }
     },
     async onResponseError({ request, response, options }) {
@@ -36,11 +35,11 @@ export const useApi = () => {
           authStore.updateToken(newToken)
 
           // 3. 이전 요청 재시도
-          options.headers = {
-            ...options.headers,
-            Authorization: `Bearer ${newToken}`,
-          }
-          return await $fetch(request, options)
+          const headers = new Headers(options.headers || {})
+          headers.set('Authorization', `Bearer ${newToken}`)
+          options.headers = headers
+
+          return await $fetch(request, options as any)
         } catch (refreshError) {
           // 리프레시 토큰마저 만료된 경우 로그아웃 처리
           authStore.clearAuth()

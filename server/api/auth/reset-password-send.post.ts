@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
       subject: '[잘하는 집] 비밀번호 재설정 인증 코드입니다.',
       html: `
         <div style="font-family: 'Noto Sans KR', sans-serif; max-width: 500px; margin: 0 auto; padding: 40px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #0d4a3e; margin-bottom: 20px;">미식의 새로운 기준, 잘하는 집</h2>
+          <h2 style="color: #0d4a3e; margin-bottom: 20px;">당신만 알고 있던, 잘하는 집</h2>
           <p style="font-size: 16px; line-height: 1.6; color: #333;">안녕하세요! 비밀번호 재설정을 위한 인증 번호가 발송되었습니다.<br>아래의 인증 번호를 입력창에 입력하여 비밀번호를 재설정해 주세요.</p>
           <div style="margin: 30px 0; background-color: #f9f9f9; padding: 20px; text-align: center; border-radius: 8px;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #000;">${code}</span>

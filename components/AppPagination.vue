@@ -31,12 +31,12 @@ const props = defineProps({
 const emit = defineEmits(['change'])
 
 const visiblePages = computed(() => {
-  const delta = 2
-  const pages = []
-  const from = Math.max(1, props.currentPage - delta)
-  const to   = Math.min(props.totalPages, props.currentPage + delta)
-  for (let i = from; i <= to; i++) pages.push(i)
-  return pages
+  const delta = 1;
+  const pages = [];
+  const from = Math.max(1, props.currentPage - delta);
+  const to   = Math.min(props.totalPages, props.currentPage + delta);
+  for (let i = from; i <= to; i++) pages.push(i);
+  return pages;
 })
 </script>
 
