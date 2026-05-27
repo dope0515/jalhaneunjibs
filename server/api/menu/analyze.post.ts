@@ -6,29 +6,32 @@ export default defineEventHandler(async (event) => {
   const groqApiKey = 'REMOVED_GROQ_KEY'
 
   const formData = await readFormData(event)
-  const imageFile = formData.get('menuBoard') as File
+  const imageFiles = formData.getAll('menuBoard') as File[]
 
-  if (!imageFile || typeof imageFile === 'string') {
+  if (!imageFiles || imageFiles.length === 0 || typeof imageFiles[0] === 'string') {
     throw createError({ statusCode: 400, statusMessage: '이미지 파일이 필요합니다.' })
   }
 
-  // 이미지 처리를 위한 Buffer 변환 및 Base64 인코딩
-  const buffer = Buffer.from(await imageFile.arrayBuffer())
-  const base64 = buffer.toString('base64')
-  const dataUrl = `data:${imageFile.type || 'image/jpeg'};base64,${base64}`
-
   const groq = new Groq({ apiKey: groqApiKey })
+  let allMenuItems: any[] = []
 
   try {
-    const response = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct", // 최신 Llama 4 Vision 모델로 변경
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `이 식당 메뉴판 이미지를 분석해서 메뉴 항목들을 추출해주세요.
+    for (const imageFile of imageFiles) {
+      if (typeof imageFile === 'string') continue;
+      
+      const buffer = Buffer.from(await imageFile.arrayBuffer())
+      const base64 = buffer.toString('base64')
+      const dataUrl = `data:${imageFile.type || 'image/jpeg'};base64,${base64}`
+
+      const response = await groq.chat.completions.create({
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `이 식당 메뉴판 이미지를 분석해서 메뉴 항목들을 추출해주세요.
 
 가격을 분석할 때 다음 한국 식당/카페의 관습을 따르세요:
 - '10.0' 또는 '10,0' -> 10000원
@@ -36,47 +39,53 @@ export default defineEventHandler(async (event) => {
 - '20,000' 또는 '20000원' -> 20000원
 - 가격 정보가 없거나 '변동'인 경우 null로 반환하세요.
 
-반드시 다음 JSON 형식의 배열로만 답변하세요. 마크다운이나 다른 설명은 절대 포함하지 마세요.
+추가 조건:
+- 메뉴 설명(description)이 한글과 영어가 같이 적혀 있는 경우, 한글 설명만 추출하여 반환하세요.
+
+반드시 다음 JSON 형식의 객체로 답변하세요. "menus" 키 안에 배열을 넣어야 합니다. 마크다운이나 다른 설명은 절대 포함하지 마세요.
 
 형식:
-[
-  {
-    "name": "메뉴 이름 (한국어)",
-    "price": 가격 (반드시 숫자로만 변환, 예: 10000),
-    "description": "설명이 있다면 문자열, 없으면 null"
-  }
-]`
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: dataUrl
+{
+  "menus": [
+    {
+      "name": "메뉴 이름 (한국어)",
+      "price": 가격 (반드시 숫자로만 변환, 예: 10000),
+      "description": "설명이 있다면 문자열(한글만), 없으면 null"
+    }
+  ]
+}`
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: dataUrl
+                }
               }
-            }
-          ]
-        }
-      ],
-      temperature: 0.1, // 정확도를 위해 낮은 온도로 설정
-      response_format: { type: "json_object" } // JSON 응답 강제 (지원되는 모델의 경우)
-    })
+            ] as any
+          }
+        ],
+        temperature: 0.1,
+        response_format: { type: "json_object" }
+      })
 
-    const content = response.choices[0]?.message?.content || '[]'
-    
-    // Groq 응답에서 JSON 배열 추출 (때때로 객체로 감싸져 올 수 있음)
-    let menuItems = []
-    try {
-      const parsed = JSON.parse(content)
-      menuItems = Array.isArray(parsed) ? parsed : (parsed.menu || parsed.items || [])
-    } catch (e) {
-      // 마크다운 백틱 제거 시도
-      const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-      const parsed = JSON.parse(cleaned)
-      menuItems = Array.isArray(parsed) ? parsed : (parsed.menu || parsed.items || [])
+      const content = response.choices[0]?.message?.content || '{"menus": []}'
+      
+      let menuItems = []
+      try {
+        const parsed = JSON.parse(content)
+        menuItems = Array.isArray(parsed) ? parsed : (parsed.menus || parsed.menu || parsed.items || [])
+      } catch (e) {
+        const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+        const parsed = JSON.parse(cleaned)
+        menuItems = Array.isArray(parsed) ? parsed : (parsed.menus || parsed.menu || parsed.items || [])
+      }
+
+      allMenuItems = allMenuItems.concat(menuItems)
     }
 
     return {
       success: true,
-      menuItems: menuItems.map((item: any) => ({
+      menuItems: allMenuItems.map((item: any) => ({
         name: item.name || '',
         price: item.price != null ? String(item.price) : '',
         description: item.description || '',

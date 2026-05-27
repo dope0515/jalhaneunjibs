@@ -268,36 +268,40 @@
                     id="menu-board-upload"
                     name="menu-board-upload"
                     accept="image/*"
+                    multiple
                     class="sr-only"
                     @change="handleMenuBoardUpload"
                   />
-                  <button
-                    type="button"
-                    class="drop-zone"
-                    :aria-label="menuBoardPreview ? '메뉴판 이미지 수정' : '메뉴판 이미지 업로드'"
-                    :class="{ 'is-dragover': isDragOverMenu, 'has-image': menuBoardPreview }"
-                    @dragover.prevent="isDragOverMenu = true"
-                    @dragleave.prevent="isDragOverMenu = false"
-                    @drop.prevent="handleMenuBoardDrop"
-                    @click="triggerMenuBoardInput"
-                  >
-                    <template v-if="menuBoardPreview">
-                      <img :src="menuBoardPreview" alt="메뉴판 이미지 미리보기" class="drop-zone-preview" />
-                      <span class="drop-zone-remove" role="button" @click.stop="removeMenuBoard" aria-label="이미지 삭제">
-                        <img src="/assets/images/icon/ic_close.svg" width="18" height="18" alt="삭제" />
-                      </span>
-                    </template>
-                    <template v-else>
+                  <div class="image-upload-wrap">
+                    <button
+                      type="button"
+                      class="drop-zone"
+                      :aria-label="'메뉴판 이미지 업로드'"
+                      :class="{ 'is-dragover': isDragOverMenu }"
+                      @dragover.prevent="isDragOverMenu = true"
+                      @dragleave.prevent="isDragOverMenu = false"
+                      @drop.prevent="handleMenuBoardDrop"
+                      @click="triggerMenuBoardInput"
+                    >
                       <span class="drop-zone-content">
                         <img src="/assets/images/icon/ic_menu_board.svg" width="36" height="36" alt="" class="drop-zone-icon" aria-hidden="true" />
                         <span class="drop-zone-text">메뉴판 이미지를 올려주세요</span>
-                        <span class="drop-zone-sub">AI가 메뉴명·가격·설명을 자동으로 추출합니다</span>
+                        <span class="drop-zone-sub">여러 장의 메뉴판 이미지를 분석할 수 있습니다</span>
                       </span>
-                    </template>
-                  </button>
+                    </button>
+                    
+                    <div v-if="menuBoardPreviews.length > 0" class="preview-gallery">
+                      <div v-for="(src, index) in menuBoardPreviews" :key="index" class="preview-item">
+                        <img :src="src" alt="메뉴판 이미지 미리보기" />
+                        <span class="preview-remove" role="button" @click.stop="removeMenuBoardImage(index)" aria-label="이미지 삭제">
+                          <img src="/assets/images/icon/ic_close.svg" width="14" height="14" alt="삭제" />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
                   <button
-                    v-if="menuBoardPreview && !isAnalyzing"
+                    v-if="menuBoardPreviews.length > 0 && !isAnalyzing"
                     type="button"
                     class="analyze-btn"
                     @click="analyzeMenuBoard"
@@ -476,8 +480,8 @@ const restaurantPreviews = ref([])
 const fileInputRef = ref(null)
 const isDragOver = ref(false)
 
-const menuBoardFile = ref(null)
-const menuBoardPreview = ref(null)
+const menuBoardFiles = ref([])
+const menuBoardPreviews = ref([])
 const menuBoardInputRef = ref(null)
 const isDragOverMenu = ref(false)
 const isAnalyzing = ref(false)
@@ -743,35 +747,46 @@ const setAsMainImage = (index) => {
 
 const triggerMenuBoardInput = () => menuBoardInputRef.value?.click()
 
-const processMenuBoardFile = (file) => {
-  if (!file || !file.type.startsWith('image/')) return
-  menuBoardFile.value = file
-  const reader = new FileReader()
-  reader.onload = (e) => { menuBoardPreview.value = e.target.result }
-  reader.readAsDataURL(file)
+const processMenuBoardFiles = (files) => {
+  if (!files || files.length === 0) return
+  
+  const newFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
+  
+  newFiles.forEach(file => {
+    menuBoardFiles.value.push(file)
+    const reader = new FileReader()
+    reader.onload = (e) => { 
+      menuBoardPreviews.value.push(e.target.result) 
+    }
+    reader.readAsDataURL(file)
+  })
   analyzedMenuItems.value = []
 }
 
-const handleMenuBoardUpload = (e) => processMenuBoardFile(e.target.files[0])
+const handleMenuBoardUpload = (e) => processMenuBoardFiles(e.target.files)
 
 const handleMenuBoardDrop = (e) => {
   isDragOverMenu.value = false
-  processMenuBoardFile(e.dataTransfer.files[0])
+  processMenuBoardFiles(e.dataTransfer.files)
 }
 
-const removeMenuBoard = () => {
-  menuBoardFile.value = null
-  menuBoardPreview.value = null
-  analyzedMenuItems.value = []
-  if (menuBoardInputRef.value) menuBoardInputRef.value.value = ''
+const removeMenuBoardImage = (index) => {
+  menuBoardFiles.value.splice(index, 1)
+  menuBoardPreviews.value.splice(index, 1)
+  if (menuBoardFiles.value.length === 0) {
+    analyzedMenuItems.value = []
+    if (menuBoardInputRef.value) menuBoardInputRef.value.value = ''
+  }
 }
 
 const analyzeMenuBoard = async () => {
-  if (!menuBoardFile.value) return
+  if (menuBoardFiles.value.length === 0) return
   isAnalyzing.value = true
   try {
     const data = new FormData()
-    data.append('menuBoard', menuBoardFile.value)
+    menuBoardFiles.value.forEach(file => {
+      data.append('menuBoard', file)
+    })
     const result = await $api('/menu/analyze', { method: 'POST', body: data })
     analyzedMenuItems.value = (result.menuItems || []).map(item => ({
       ...item,
@@ -840,8 +855,8 @@ const resetForm = () => {
   analyzedMenuItems.value = []
   restaurantImages.value = []
   restaurantPreviews.value = []
-  menuBoardFile.value = null
-  menuBoardPreview.value = null
+  menuBoardFiles.value = []
+  menuBoardPreviews.value = []
   keywordInput.value = ''
   searchResults.value = []
   isDirty.value = false
@@ -927,7 +942,7 @@ const handleSubmit = async () => {
       formData.append('menuItems', JSON.stringify(itemsToSubmit))
     }
 
-    submissionMessage.value = '서버에 정보를 등록하고 있습니다...'
+    submissionMessage.value = '정보를 등록하고 있습니다...'
     
     const data = await $api('/restaurants/register', {
       method: 'POST',
