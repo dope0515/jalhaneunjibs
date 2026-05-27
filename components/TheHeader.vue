@@ -32,8 +32,9 @@
             </button>
           </li>
           <li v-if="authStore.isLoggedIn" class="nav-item">
-            <NuxtLink to="/mypage" class="nav-link" title="마이페이지로 이동">
-              마이페이지
+            <NuxtLink to="/mypage" class="user-profile" title="마이페이지로 이동">
+              <div class="user-avatar">{{ userInitial }}</div>
+              <span class="user-nickname">{{ authStore.user?.nickname }}</span>
             </NuxtLink>
           </li>
           <li class="nav-item">
@@ -86,6 +87,18 @@
             </svg>
           </button>
         </div>
+
+        <!-- 모바일 유저 정보 -->
+        <div v-if="authStore.isLoggedIn" class="nav-drawer__user">
+          <NuxtLink to="/mypage" class="user-profile" @click="menuOpen = false">
+            <div class="user-avatar">{{ userInitial }}</div>
+            <div class="user-info">
+              <span class="user-nickname">{{ authStore.user?.nickname }}</span>
+              <span class="user-email">{{ authStore.user?.email }}</span>
+            </div>
+          </NuxtLink>
+        </div>
+
         <ul class="nav-drawer__list">
           <li>
             <NuxtLink to="/restaurants" class="nav-drawer__link" @click="menuOpen = false">
@@ -96,11 +109,6 @@
             <button type="button" class="nav-drawer__link" @click="goToRegisterMobile">
               잘하는 집 알려주기
             </button>
-          </li>
-          <li v-if="authStore.isLoggedIn">
-            <NuxtLink to="/mypage" class="nav-drawer__link" @click="menuOpen = false">
-              마이페이지
-            </NuxtLink>
           </li>
         </ul>
         <div class="nav-drawer__footer">
@@ -134,6 +142,11 @@ const authStore = useAuthStore()
 const { logout } = useAuth()
 const menuOpen = ref(false)
 const route = useRoute()
+
+const userInitial = computed(() => {
+  const name = authStore.user?.nickname || '?'
+  return name.charAt(0).toUpperCase()
+})
 
 // 페이지 이동 시 드로어 자동 닫기
 watch(() => route.path, () => { menuOpen.value = false })
@@ -173,6 +186,62 @@ const handleLogoutMobile = () => {
   &:hover,
   &.router-link-active {
     color: $primary-color;
+  }
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: rem(8);
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.user-avatar {
+  width: rem(32);
+  height: rem(32);
+  border-radius: 50%;
+  background: $primary-color;
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  @include font(14, 1, 700);
+}
+
+.user-nickname {
+  @include font(14, 1, 600, $gray-44);
+}
+
+// 모바일 드로어용 스타일
+.nav-drawer__user {
+  padding: rem(20) rem(24);
+  border-bottom: 1px solid $gray-e4;
+  background: #fafaf9;
+
+  .user-avatar {
+    width: rem(44);
+    height: rem(44);
+    @include font(18, 1, 700);
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: rem(2);
+  }
+
+  .user-nickname {
+    @include font(16, 1.2, 700, $gray-44);
+  }
+
+  .user-email {
+    @include font(12, 1.2, 400, $gray-78);
   }
 }
 </style>
