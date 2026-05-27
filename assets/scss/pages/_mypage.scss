@@ -17,8 +17,14 @@
   cursor: pointer;
   transition: background 0.18s;
 
-  &:hover:not(:disabled) { background: color.adjust($primary-color, $lightness: -6%); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:hover:not(:disabled) {
+    background: color.adjust($primary-color, $lightness: -6%);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .btn-ghost {
@@ -34,12 +40,17 @@
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 
-  &:hover { background: #f5f5f4; }
+  &:hover {
+    background: #f5f5f4;
+  }
 
   &.btn-danger {
     color: #dc2626;
     border-color: #fecaca;
-    &:hover { background: #fff1f2; }
+
+    &:hover {
+      background: #fff1f2;
+    }
   }
 }
 
@@ -81,7 +92,9 @@
   outline: none;
   transition: border-color 0.15s;
 
-  &:focus { border-color: $primary-color; }
+  &:focus {
+    border-color: $primary-color;
+  }
 }
 
 .modal-check-row {
@@ -92,7 +105,11 @@
   margin-bottom: rem(24);
   cursor: pointer;
 
-  input[type="checkbox"] { width: rem(16); height: rem(16); accent-color: $primary-color; }
+  input[type="checkbox"] {
+    width: rem(16);
+    height: rem(16);
+    accent-color: $primary-color;
+  }
 }
 
 .modal-actions {
@@ -110,7 +127,6 @@
 
 // ─── 마이페이지 ────────────────────────────────────────────────────
 .mypage {
-  padding: rem(60) 0 rem(100);
 
   .inner {
     max-width: rem(900);
@@ -124,24 +140,36 @@
   display: flex;
   align-items: center;
   gap: rem(24);
-  margin-bottom: rem(48);
-  padding: rem(36) rem(32);
+  margin-block-end: rem(20);
+  padding: rem(20) rem(16);
   background: $white;
-  border-radius: rem(24);
+  border-radius: rem(12);
   box-shadow: 0 rem(4) rem(24) rgba(0, 0, 0, 0.05);
+
+  @include tablet {
+    padding: rem(36) rem(32);
+    margin-block-end: rem(48);
+    border-radius: rem(24);
+  }
 }
 
 .avatar {
   flex-shrink: 0;
-  width: rem(72);
-  height: rem(72);
+  width: rem(50);
+  height: rem(50);
   border-radius: 50%;
   background: $primary-color;
   color: $white;
-  @include font(28, 1, 700);
+  @include font(24, 1, 700);
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @include tablet {
+    width: rem(72);
+    height: rem(72);
+    @include font(28, 1, 700);
+  }
 }
 
 .hero-info {
@@ -151,7 +179,11 @@
 }
 
 .hero-name {
-  @include font(22, 30, 700, $gray-44);
+  @include font(18, 26, 700, $gray-44);
+
+  @include tablet {
+    @include font(22, 30, 700, $gray-44);
+  }
 }
 
 .hero-email {
@@ -165,21 +197,30 @@
 // 탭
 .mypage-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: rem(4);
-  margin-bottom: rem(36);
+  margin-block-end: rem(24);
   background: $white;
   border-radius: rem(16);
   padding: rem(6);
   box-shadow: 0 rem(2) rem(12) rgba(0, 0, 0, 0.05);
-  width: fit-content;
+  width: 100%;
+
+  @include tablet {
+    flex-wrap: nowrap;
+    width: fit-content;
+    margin-block-end: rem(48);
+  }
 }
 
 .tab-btn {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: calc(50% - rem(2));
   gap: rem(6);
-  padding: rem(10) rem(24);
+  padding: rem(10);
   border: none;
   border-radius: rem(12);
   @include font(14, 20, 500, $gray-78);
@@ -187,12 +228,20 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 
+  @include tablet {
+    width: auto;
+    padding: rem(10) rem(24);
+  }
+
   &.is-active {
     background: $primary-color;
     color: $white;
   }
 
-  &:not(.is-active):hover { background: #f5f5f4; color: $gray-44; }
+  &:not(.is-active):hover {
+    background: #f5f5f4;
+    color: $gray-44;
+  }
 }
 
 .tab-count {
@@ -207,12 +256,30 @@
   @include font(11, 1, 600);
 }
 
-.tab-btn.is-active .tab-count { background: rgba(255, 255, 255, 0.3); }
-.tab-btn:not(.is-active) .tab-count { background: $primary-color; color: $white; }
+.tab-btn.is-active .tab-count {
+  background: rgba(255, 255, 255, 0.3);
+}
 
-.tab-panel { animation: fadeIn 0.2s ease; }
+.tab-btn:not(.is-active) .tab-count {
+  background: $primary-color;
+  color: $white;
+}
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(rem(6)); } to { opacity: 1; transform: none; } }
+.tab-panel {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(rem(6));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 
 // 로딩/빈 상태
 .loading-msg {
@@ -229,10 +296,17 @@
   padding: rem(80) 0;
   color: $gray-78;
 
-  svg { opacity: 0.4; }
-  p { @include font(16, 24, 400, $gray-78); }
+  svg {
+    opacity: 0.4;
+  }
 
-  &--sm { padding: rem(40) 0; }
+  p {
+    @include font(16, 24, 400, $gray-78);
+  }
+
+  &--sm {
+    padding: rem(40) 0;
+  }
 }
 
 .empty-link {
@@ -242,10 +316,17 @@
 
 // ─── 계정 정보 탭 ───────────────────────────────────────────────────
 .mypage-cards {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: rem(24);
 
-  @include tablet { grid-template-columns: 1fr 1fr; }
+  @include tablet {
+    flex-direction: row;
+
+    .mypage-card {
+      flex: 1;
+    }
+  }
 }
 
 .mypage-card {
@@ -288,7 +369,9 @@
   outline: none;
   transition: border-color 0.15s;
 
-  &:focus { border-color: $primary-color; }
+  &:focus {
+    border-color: $primary-color;
+  }
 }
 
 .card-actions {
@@ -320,7 +403,10 @@
     box-shadow: 0 rem(8) rem(32) rgba(0, 0, 0, 0.11);
     transform: translateY(rem(-2));
 
-    .review-arrow { opacity: 1; transform: translateX(rem(3)); }
+    .review-arrow {
+      opacity: 1;
+      transform: translateX(rem(3));
+    }
   }
 }
 
@@ -329,7 +415,9 @@
   flex-shrink: 0;
   width: rem(110);
 
-  @include tablet { width: rem(150); }
+  @include tablet {
+    width: rem(150);
+  }
 }
 
 .my-restaurant-thumb {
@@ -347,9 +435,20 @@
   border-radius: rem(20);
   @include font(11, 16, 600);
 
-  &.status--green  { background: #dcfce7; color: #16a34a; }
-  &.status--red    { background: #fee2e2; color: #dc2626; }
-  &.status--gray   { background: #f1f5f9; color: $gray-78; }
+  &.status--green {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  &.status--red {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  &.status--gray {
+    background: #f1f5f9;
+    color: $gray-78;
+  }
 }
 
 .my-restaurant-body {
@@ -390,7 +489,9 @@
     gap: rem(4);
     @include font(12, 16, 500, $gray-78);
 
-    svg { color: $tertiary-color; }
+    svg {
+      color: $tertiary-color;
+    }
   }
 }
 
@@ -416,7 +517,10 @@
     box-shadow: 0 rem(8) rem(32) rgba(0, 0, 0, 0.11);
     transform: translateY(rem(-2));
 
-    .review-arrow { opacity: 1; transform: translateX(rem(3)); }
+    .review-arrow {
+      opacity: 1;
+      transform: translateX(rem(3));
+    }
   }
 }
 
@@ -513,14 +617,13 @@
 
 // ─── 내 찜 목록 탭 ──────────────────────────────────────────────────
 .collections-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: rem(20);
-
-  @include tablet { grid-template-columns: repeat(3, 1fr); }
 }
 
 .col-card {
+  width: 100%;
   position: relative;
   background: $white;
   border-radius: rem(20);
@@ -530,6 +633,14 @@
   transition: box-shadow 0.18s, transform 0.18s;
   border: none;
   text-align: left;
+
+  @include tablet {
+    width: calc(50% - rem(10));
+  }
+
+  @include desktop {
+    width: calc(100% / 3 - rem(13.33));
+  }
 
   &:hover {
     box-shadow: 0 rem(8) rem(32) rgba(0, 0, 0, 0.12);
@@ -575,16 +686,20 @@
 // 모자이크 썸네일
 .col-mosaic {
   width: 100%;
-  aspect-ratio: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  flex-wrap: wrap;
   gap: rem(2);
   overflow: hidden;
   border-radius: rem(20) rem(20) 0 0;
 
+  @include tablet {
+    aspect-ratio: 1;
+  }
+
   &__empty {
-    grid-column: 1 / -1;
-    grid-row: 1 / -1;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -593,6 +708,8 @@
   }
 
   &__cell {
+    width: calc(50% - rem(1));
+    height: calc(50% - rem(1));
     overflow: hidden;
 
     img {
@@ -603,10 +720,17 @@
     }
 
     // 1개: 전체 차지
-    &--1 { grid-column: 1 / -1; grid-row: 1 / -1; }
+    &--1 {
+      width: 100%;
+      height: 100%;
+    }
 
-    // 3개: 첫 번째만 왼쪽 전체, 나머지 오른쪽 반반
-    &--3:first-child { grid-row: 1 / -1; }
+    // 2개일 때도 높이 100%로
+    &--2 {
+      height: 100%;
+    }
+
+    // 3개 이상은 2x2 레이아웃처럼 보이게 50% 유지
   }
 }
 
@@ -648,7 +772,10 @@
   transition: background 0.15s, color 0.15s;
   z-index: 2;
 
-  &:hover { background: $white; color: $gray-44; }
+  &:hover {
+    background: $white;
+    color: $gray-44;
+  }
 }
 
 // ─── 컬렉션 상세 드로어 ─────────────────────────────────────────────
@@ -698,7 +825,9 @@
   flex-shrink: 0;
   transition: background 0.15s;
 
-  &:hover { background: $gray-e4; }
+  &:hover {
+    background: $gray-e4;
+  }
 }
 
 .drawer-title {
@@ -727,7 +856,9 @@
   overflow: hidden;
   transition: background 0.15s;
 
-  &:hover { background: #f1f5f9; }
+  &:hover {
+    background: #f1f5f9;
+  }
 }
 
 .drawer-item-link {
@@ -765,7 +896,10 @@
   @include text-ellipsis(1);
 }
 
-.drawer-item-rating { display: flex; align-items: center; }
+.drawer-item-rating {
+  display: flex;
+  align-items: center;
+}
 
 .drawer-item-addr {
   @include font(12, 16, 400, $gray-78);
@@ -787,7 +921,10 @@
   margin-right: rem(8);
   transition: background 0.15s, color 0.15s;
 
-  &:hover { background: #fee2e2; color: #dc2626; }
+  &:hover {
+    background: #fee2e2;
+    color: #dc2626;
+  }
 }
 
 // ─── 드로어 트랜지션 ────────────────────────────────────────────────
@@ -795,14 +932,18 @@
 .drawer-leave-active {
   transition: opacity 0.25s;
 
-  .drawer { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  .drawer {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
 .drawer-enter-from,
 .drawer-leave-to {
   opacity: 0;
 
-  .drawer { transform: translateX(100%); }
+  .drawer {
+    transform: translateX(100%);
+  }
 }
 
 // ─── 찜하기 모달 ────────────────────────────────────────────────────
@@ -825,7 +966,9 @@
   padding: rem(20) rem(20) rem(16);
   border-bottom: 1px solid #f1f5f9;
 
-  h3 { @include font(16, 24, 700, $gray-44); }
+  h3 {
+    @include font(16, 24, 700, $gray-44);
+  }
 }
 
 .fav-modal-close {
@@ -841,7 +984,9 @@
   color: $gray-44;
   transition: background 0.15s;
 
-  &:hover { background: $gray-e4; }
+  &:hover {
+    background: $gray-e4;
+  }
 }
 
 .fav-loading {
@@ -864,7 +1009,9 @@
   cursor: pointer;
   transition: background 0.12s;
 
-  &:hover { background: #fafaf9; }
+  &:hover {
+    background: #fafaf9;
+  }
 }
 
 .fav-col-thumb {
@@ -935,5 +1082,8 @@
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 
-  &:hover { background: #f0fdf4; border-color: $primary-color; }
+  &:hover {
+    background: #f0fdf4;
+    border-color: $primary-color;
+  }
 }

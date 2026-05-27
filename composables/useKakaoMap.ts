@@ -1,3 +1,9 @@
+declare global {
+  interface Window {
+    kakao: any
+  }
+}
+
 export const useKakaoMap = () => {
   const config = useRuntimeConfig()
   const kakaoKey = config.public.kakaoMapKey

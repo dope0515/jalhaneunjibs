@@ -81,7 +81,7 @@ const togglePasswordVisibility = () => {
     &[type="tel"],
     &[type="url"],
     &[type="number"] {
-      @include font(16, 20, 400);
+      @include font(16, 24, 400);
       border-radius: rem(8);
       padding: rem(12) rem(16);
       width: 100%;

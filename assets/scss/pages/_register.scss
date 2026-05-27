@@ -2,14 +2,9 @@
 @use "../abstracts/mixins" as *;
 
 .register {
-  padding-block: rem(40);
-
-  @include tablet {
-    padding-block: rem(60);
-  }
-
   .title-bx {
     margin-block-end: rem(32);
+
     @include tablet {
       margin-block-end: rem(40);
     }
@@ -60,7 +55,7 @@
     flex-direction: column;
     gap: rem(12);
     position: static;
-    order: -1; 
+    order: -1;
 
     @include tablet {
       position: sticky;

@@ -3,8 +3,8 @@
     <div class="inner">
       <div class="content-wrap">
         <div class="title-bx">
-          <h1 class="title">미식의 새로운 기준,<br>여기서 시작됩니다.</h1>
-          <p class="desc">엄선된 레스토랑 큐레이션과 프리미엄 미식 커뮤니티. 당신의 취향을 완성할 특별한 경험을 만나보세요.</p>
+          <h1 class="title">잘하는 집을,<br>안 가봐서 그래</h1>
+          <p class="desc">그 음식이 별로라고? 그건 자네가 진짜 잘하는 집을 안 가봐서 그래</p>
         </div>
         <div class="form-bx">
           <div class="form-inner">
