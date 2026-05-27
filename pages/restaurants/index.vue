@@ -33,12 +33,6 @@
         <div class="search-actions">
           <button class="search-submit-btn" @click="submitSearch">검색</button>
         </div>
-        <!-- <Transition name="fade">
-          <div v-if="searchKeyword" class="search-active-tag">
-            <span>"{{ searchKeyword }}" 검색 결과</span>
-            <button @click="clearSearch" aria-label="검색 해제">×</button>
-          </div>
-        </Transition> -->
       </div>
 
       <!-- 필터 영역 -->
@@ -136,8 +130,19 @@
         </div>
 
         <!-- 카드 목록 (데이터가 있으면 항상 유지) -->
-        <AppCardList v-else :restaurants="restaurants" />
+        <AppCardList 
+          v-else 
+          :restaurants="restaurants" 
+          @toggle-favorite="openFavoriteModal"
+        />
       </div>
+
+      <!-- 찜 저장 모달 -->
+      <AppFavoriteModal
+        v-model="favoriteModalOpen"
+        :restaurant-id="targetRestaurantId"
+        @changed="handleFavoriteChanged"
+      />
 
       <!-- 필터/정렬 변경 시 재로딩 오버레이 -->
       <AppLoading :loading="isRefreshing" />
@@ -221,6 +226,43 @@ const restaurants = computed(() => lastValidData.value?.restaurants ?? [])
 const totalPages = computed(() => lastValidData.value?.totalPages ?? 1)
 const isFirstLoading = computed(() => status.value === 'pending' && !lastValidData.value)
 const isRefreshing = computed(() => status.value === 'pending' && !!lastValidData.value)
+
+// 찜하기 관련
+const favoriteModalOpen = ref(false)
+const targetRestaurantId = ref(0)
+
+const openFavoriteModal = (restaurant) => {
+  targetRestaurantId.value = restaurant.id
+  favoriteModalOpen.value = true
+}
+
+const handleFavoriteChanged = ({ action, restaurantId }) => {
+  // 로컬 데이터 상태 업데이트
+  const target = restaurants.value.find(r => r.id === restaurantId)
+  if (target) {
+    if (action === 'added') {
+      target.isSaved = true
+      target.likes++
+    } else {
+      checkStillSaved(restaurantId)
+    }
+  }
+}
+
+const checkStillSaved = async (id) => {
+  try {
+    const status = await $api(`/mypage/favorites/status?restaurantId=${id}`)
+    const target = restaurants.value.find(r => r.id === id)
+    if (target) {
+      target.isSaved = status.isSaved
+      if (!status.isSaved) {
+        // 모든 컬렉션에서 빠졌을 때만 likes 감소 (단, 서버에서 이미 처리됨)
+        // 여기서는 likes를 수동으로 맞추기보다 그냥 UI적으로만 대응
+        target.likes = Math.max(0, target.likes - 1)
+      }
+    }
+  } catch (e) { /* noop */ }
+}
 
 const setCategory = (cat) => {
   selectedCategory.value = cat

@@ -221,8 +221,8 @@
   .filter-slide-leave-to {
     opacity: 0;
     max-height: 0;
-    padding-top: 0 !important;
-    border-top-color: transparent !important;
+    padding-top: 0;
+    border-top-color: transparent;
   }
 
   // 정렬 영역
@@ -555,7 +555,7 @@
           gap: rem(4);
           left: 50%;
           transform: translateX(-50%);
-          width: auto !important;
+          width: auto;
           padding: rem(5) rem(10);
           background: rgba($black, 0.35);
           border-radius: rem(100);
@@ -567,7 +567,7 @@
           background: rgba($white, 0.7);
           opacity: 1;
           border-radius: rem(100);
-          margin: 0 !important;
+          margin: 0;
           transition: width 0.2s ease, background 0.2s ease;
           flex-shrink: 0;
         }

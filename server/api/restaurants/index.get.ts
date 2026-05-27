@@ -1,8 +1,10 @@
 import { defineEventHandler, getQuery } from 'h3'
 import { prisma } from '~/server/utils/prisma'
+import { tryGetUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   const { category, region1, region2, keyword, page = '1', sort = 'latest' } = getQuery(event)
+  const userId = tryGetUserId(event)
 
   const pageNum = Math.max(1, parseInt(page as string))
   const pageSize = 6
@@ -56,8 +58,25 @@ export default defineEventHandler(async (event) => {
     prisma.restaurant.count({ where }),
   ])
 
+  // 로그인 상태라면 찜 상태 추가
+  let results = restaurants as any[]
+  if (userId) {
+    const favorites = await prisma.favorite.findMany({
+      where: {
+        userId,
+        restaurantId: { in: restaurants.map((r) => r.id) },
+      },
+      select: { restaurantId: true },
+    })
+    const savedIds = new Set(favorites.map((f) => f.restaurantId))
+    results = restaurants.map((r) => ({
+      ...r,
+      isSaved: savedIds.has(r.id),
+    }))
+  }
+
   return {
-    restaurants,
+    restaurants: results,
     total,
     page: pageNum,
     totalPages: Math.ceil(total / pageSize),
