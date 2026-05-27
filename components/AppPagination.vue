@@ -8,7 +8,7 @@
 
     <button
       v-for="p in visiblePages"
-      :key="p"
+      :key="`page-${p}`"
       class="page-btn"
       :class="{ 'is-active': p === currentPage }"
       @click="emit('change', p)"

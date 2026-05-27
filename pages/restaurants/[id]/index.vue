@@ -45,15 +45,24 @@
                 class="detail-swiper"
               >
                 <SwiperSlide v-for="(img, idx) in restaurant.images" :key="idx">
-                  <img :src="img" :alt="`${restaurant.name} 이미지 ${idx + 1}`" class="main-thumbnail" />
+                  <button type="button" class="image-btn main-thumbnail-btn" @click="openGenericLightbox(restaurant.images, idx)" :aria-label="`${restaurant.name} 이미지 ${idx + 1} 크게 보기`">
+                    <img :src="img" :alt="`${restaurant.name} 이미지 ${idx + 1}`" class="main-thumbnail" />
+                  </button>
                 </SwiperSlide>
               </Swiper>
-              <img 
+              <button 
                 v-else
-                :src="restaurant.thumbnail || '/assets/images/common/default.jpg'" 
-                :alt="restaurant.name" 
-                class="main-thumbnail" 
-              />
+                type="button"
+                class="image-btn main-thumbnail-btn"
+                @click="openGenericLightbox([restaurant.thumbnail || '/assets/images/common/default.jpg'], 0)"
+                aria-label="매장 대표 이미지 크게 보기"
+              >
+                <img 
+                  :src="restaurant.thumbnail || '/assets/images/common/default.jpg'" 
+                  :alt="restaurant.name" 
+                  class="main-thumbnail" 
+                />
+              </button>
             </div>
             <div class="content-text">
               <h2 class="section-title">식당 소개</h2>
@@ -136,13 +145,20 @@
                 <p v-if="myReview.content" class="my-review-content">{{ myReview.content }}</p>
                 <!-- 내 리뷰 이미지 -->
                 <div v-if="myReview.images?.length" class="review-images">
-                  <img
+                  <button 
                     v-for="(img, i) in myReview.images"
                     :key="i"
-                    :src="img"
-                    :alt="`리뷰 이미지 ${i + 1}`"
-                    class="review-img-thumb"
-                  />
+                    type="button"
+                    class="image-btn review-img-btn"
+                    @click="openGenericLightbox(myReview.images, i)"
+                    :aria-label="`리뷰 이미지 ${i + 1} 크게 보기`"
+                  >
+                    <img
+                      :src="img"
+                      :alt="`리뷰 이미지 ${i + 1}`"
+                      class="review-img-thumb"
+                    />
+                  </button>
                 </div>
               </div>
 
@@ -214,13 +230,20 @@
                 <p v-if="review.content" class="review-content">{{ review.content }}</p>
                 <!-- 리뷰 이미지 -->
                 <div v-if="review.images?.length" class="review-images">
-                  <img
+                  <button 
                     v-for="(img, i) in review.images"
                     :key="i"
-                    :src="img"
-                    :alt="`리뷰 이미지 ${i + 1}`"
-                    class="review-img-thumb"
-                  />
+                    type="button"
+                    class="image-btn review-img-btn"
+                    @click="openGenericLightbox(review.images, i)"
+                    :aria-label="`리뷰 이미지 ${i + 1} 크게 보기`"
+                  >
+                    <img
+                      :src="img"
+                      :alt="`리뷰 이미지 ${i + 1}`"
+                      class="review-img-thumb"
+                    />
+                  </button>
                 </div>
               </div>
             </div>
@@ -474,6 +497,46 @@
       </div>
     </Transition>
   </Teleport>
+
+  <!-- 일반 이미지 라이트박스 -->
+  <Teleport to="body">
+    <Transition name="lightbox-fade">
+      <div v-if="genericLightboxOpen" class="menu-lightbox" @click.self="closeGenericLightbox" role="dialog" aria-modal="true">
+
+        <button class="lightbox-close" @click="closeGenericLightbox" aria-label="닫기">
+          <img src="/assets/images/icon/ic_close.svg" width="20" height="20" alt="닫기" />
+        </button>
+
+        <Swiper
+          :modules="swiperModules"
+          :initial-slide="genericLightboxIndex"
+          :loop="genericLightboxImages.length > 1"
+          :keyboard="{ enabled: true }"
+          :navigation="{ prevEl: '.generic-prev', nextEl: '.generic-next' }"
+          class="lightbox-swiper"
+          @slide-change="onGenericSlideChange"
+        >
+          <SwiperSlide v-for="(img, i) in genericLightboxImages" :key="i">
+            <div class="slide-inner">
+              <img :src="img" class="lightbox-img" />
+            </div>
+          </SwiperSlide>
+        </Swiper>
+
+        <p v-if="genericLightboxImages.length > 1" class="lightbox-counter">
+          {{ genericCurrentSlide + 1 }} / {{ genericLightboxImages.length }}
+        </p>
+
+        <button v-if="genericLightboxImages.length > 1" class="lightbox-nav lightbox-prev generic-prev" aria-label="이전">
+          <img src="/assets/images/icon/ic_nav_prev.svg" width="22" height="22" alt="이전" />
+        </button>
+        <button v-if="genericLightboxImages.length > 1" class="lightbox-nav lightbox-next generic-next" aria-label="다음">
+          <img src="/assets/images/icon/ic_nav_next.svg" width="22" height="22" alt="다음" />
+        </button>
+
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
@@ -542,8 +605,35 @@ const onSlideChange = (swiper) => {
 }
 
 const handleKeydown = (e) => {
-  if (!lightboxOpen.value) return
-  if (e.key === 'Escape') closeLightbox()
+  if (e.key === 'Escape') {
+    if (lightboxOpen.value) closeLightbox()
+    if (genericLightboxOpen.value) closeGenericLightbox()
+  }
+}
+
+// ── 일반 이미지 라이트박스 ───────────────────────────────────────────────
+const genericLightboxOpen = ref(false)
+const genericLightboxImages = ref([])
+const genericLightboxIndex = ref(0)
+const genericCurrentSlide = ref(0)
+
+const openGenericLightbox = (images, index = 0) => {
+  genericLightboxImages.value = images
+  genericLightboxIndex.value = index
+  genericCurrentSlide.value = index
+  genericLightboxOpen.value = true
+  document.body.style.overflow = 'hidden'
+}
+
+const closeGenericLightbox = () => {
+  genericLightboxOpen.value = false
+  if (!lightboxOpen.value) {
+    document.body.style.overflow = ''
+  }
+}
+
+const onGenericSlideChange = (swiper) => {
+  genericCurrentSlide.value = swiper.realIndex
 }
 
 onMounted(() => window.addEventListener('keydown', handleKeydown))
@@ -817,3 +907,30 @@ const copyAddress = () => {
   alert('주소가 복사되었습니다.')
 }
 </script>
+
+<style lang="scss" scoped>
+.image-btn {
+  display: inline-block;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  
+  &.main-thumbnail-btn {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: hidden;
+  }
+
+  &.review-img-btn {
+    border-radius: rem(8);
+    overflow: hidden;
+    flex-shrink: 0;
+    
+    img {
+      display: block;
+    }
+  }
+}
+</style>
