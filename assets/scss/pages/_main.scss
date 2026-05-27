@@ -17,7 +17,7 @@
     .title-bx {
       .title {
         font-family: $font-family-serif;
-        @include font(36, 1.2, 500);
+        @include font(36, 1.2, 700);
         word-break: keep-all;
 
         span {
