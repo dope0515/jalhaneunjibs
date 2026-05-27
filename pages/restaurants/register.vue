@@ -430,7 +430,7 @@
               <!-- 지도 영역 -->
               <div class="form-map">
                 <p class="form-item-label">지도 미리보기</p>
-                <AppMap ref="mapRef" :lat="37.566826" :lng="126.9786567" :draggable="true" />
+                <AppMap ref="mapRef" :lat="mapInitialLat" :lng="mapInitialLng" :draggable="true" />
               </div>
             </div>
 
@@ -586,6 +586,30 @@ onMounted(() => {
     loadDraft()
     isDirty.value = false
   }, 100)
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+        
+        mapInitialLat.value = lat
+        mapInitialLng.value = lng
+        
+        if (mapRef.value) {
+          mapRef.value.setCenter(lat, lng)
+        }
+        
+        if (window.kakao && window.kakao.maps) {
+          userLocation.value = new window.kakao.maps.LatLng(lat, lng)
+        }
+      },
+      (error) => {
+        console.warn('위치 정보를 가져올 수 없습니다.', error)
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    )
+  }
 })
 
 onUnmounted(() => {
@@ -598,6 +622,8 @@ const handleSearchBlur = (e) => {
   }
 }
 
+const mapInitialLat = ref(37.566826)
+const mapInitialLng = ref(126.9786567)
 const userLocation = ref(null)
 
 let searchTimeout = null
