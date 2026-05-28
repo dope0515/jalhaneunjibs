@@ -377,12 +377,12 @@
   // 레이아웃
   .detail-grid {
     display: flex;
-    gap: rem(20);
     align-items: start;
     flex-direction: column-reverse;
 
     @include tablet {
       flex-direction: row;
+      gap: rem(20);
     }
 
     @include desktop {
@@ -443,11 +443,16 @@
   }
 
   .section-title {
-    @include font(24, 1, 800, $black);
+    @include font(18, 1, 700, $black);
     margin-bottom: rem(24);
     display: flex;
     align-items: center;
-    gap: rem(8);
+    gap: rem(6);
+
+    @include tablet {
+      @include font(24, 1, 800, $black);
+      gap: rem(8);
+    }
 
     &::before {
       content: '';
@@ -455,6 +460,11 @@
       height: rem(20);
       background: $primary-color;
       border-radius: rem(2);
+
+      @include tablet {
+        width: rem(3);
+        height: rem(16);
+      }
     }
   }
 
@@ -1134,7 +1144,7 @@
   .review-summary {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: rem(16);
     padding: rem(20) rem(24);
     background: $bg-color;
@@ -1143,7 +1153,6 @@
 
     @include tablet {
       flex-direction: row;
-      align-items: center;
       gap: rem(32);
     }
   }
@@ -1170,6 +1179,7 @@
     display: flex;
     flex-direction: column;
     gap: rem(6);
+    width: 100%;
   }
 
   .bar-row {
