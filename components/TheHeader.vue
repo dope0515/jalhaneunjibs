@@ -143,6 +143,13 @@ const { logout } = useAuth()
 const menuOpen = ref(false)
 const route = useRoute()
 
+// 드로어 열릴 때 배경 스크롤 방지
+useHead({
+  bodyAttrs: {
+    class: computed(() => menuOpen.value ? 'overflow-hidden' : '')
+  }
+})
+
 const userInitial = computed(() => {
   const name = authStore.user?.nickname || '?'
   return name.charAt(0).toUpperCase()
