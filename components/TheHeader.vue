@@ -244,10 +244,11 @@ const handleLogoutMobile = () => {
 
 // 모바일 드로어용 스타일
 .nav-drawer__user {
-  padding: rem(20) rem(24);
   border-bottom: 1px solid $gray-e4;
   background: #fafaf9;
-
+  .user-profile {
+    padding: rem(20) rem(24);
+  }
   .user-avatar {
     width: rem(44);
     height: rem(44);
