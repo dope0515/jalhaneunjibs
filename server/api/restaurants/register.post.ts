@@ -1,6 +1,7 @@
 import { defineEventHandler, readFormData, createError } from 'h3'
 import { v2 as cloudinary } from 'cloudinary'
 import { prisma } from '~/server/utils/prisma'
+import { tryGetUserId } from '~/server/utils/auth'
 
 // Cloudinary 설정
 cloudinary.config({
@@ -39,12 +40,8 @@ export default defineEventHandler(async (event) => {
   try {
     const formData = await readFormData(event)
 
-    // 등록자 userId (쿠키 또는 폼 데이터)
-    let registeredById: number | null = null
-    try {
-      const { getUserId } = await import('~/server/utils/auth')
-      registeredById = getUserId(event)
-    } catch { /* 비로그인 등록 시 null */ }
+    // 등록자 userId
+    const registeredById = tryGetUserId(event)
 
     // 데이터 추출
     const name = formData.get('name')?.toString()
@@ -52,15 +49,22 @@ export default defineEventHandler(async (event) => {
     const category = formData.get('category')?.toString()
     const address = formData.get('address')?.toString()
     const phoneNumber = formData.get('phoneNumber')?.toString() || null
-    const lat = formData.get('lat')?.toString()
-    const lng = formData.get('lng')?.toString()
-    const placeId = formData.get('placeId')?.toString()
+    const latStr = formData.get('lat')?.toString()
+    const lngStr = formData.get('lng')?.toString()
+    const placeId = formData.get('placeId')?.toString() || null
     const keywordsString = formData.get('keywords')?.toString()
     const menuItemsString = formData.get('menuItems')?.toString()
+    const openingHours = formData.get('openingHours')?.toString() || null
     const thumbnailFile = formData.get('thumbnail') // 레거시 지원용
     const restaurantImages = formData.getAll('restaurantImages') // 새 이미지 배열
     
-    // ... (중략) ...
+    // 필수 필드 체크
+    if (!name || !address || !latStr || !lngStr) {
+      throw createError({ statusCode: 400, statusMessage: '필수 정보(이름, 주소, 위치 등)가 누락되었습니다.' })
+    }
+
+    const lat = parseFloat(latStr)
+    const lng = parseFloat(lngStr)
 
     // 1. 식당 이미지 업로드 (Cloudinary)
     let uploadedImages: string[] = []
@@ -106,7 +110,7 @@ export default defineEventHandler(async (event) => {
       try {
         const parsed = JSON.parse(menuItemsString)
         if (Array.isArray(parsed)) {
-          menuItems = await Promise.all(parsed.map(async (item, index) => {
+          menuItems = await Promise.all(parsed.map(async (item: any, index: number) => {
             let itemImagePath: string | null = null
             
             // 메뉴 이미지가 있는 경우 업로드
@@ -137,10 +141,12 @@ export default defineEventHandler(async (event) => {
 
     const { region1, region2, region3 } = parseAddress(address)
 
-    // 4. 중복 식당 체크 (같은 placeId)
-    const existing = await prisma.restaurant.findUnique({ where: { placeId } })
-    if (existing) {
-      throw createError({ statusCode: 409, statusMessage: '이미 등록된 식당입니다.' })
+    // 4. 중복 식당 체크 (placeId가 있을 때만)
+    if (placeId) {
+      const existing = await prisma.restaurant.findUnique({ where: { placeId } })
+      if (existing) {
+        throw createError({ statusCode: 409, statusMessage: '이미 등록된 식당입니다.' })
+      }
     }
 
     // 5. DB 저장
@@ -156,9 +162,10 @@ export default defineEventHandler(async (event) => {
         region1,
         region2,
         region3,
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
+        lat,
+        lng,
         phoneNumber: phoneNumber || null,
+        openingHours,
         keywords,
         registeredById,
         menus: menuItems.length > 0

@@ -6,6 +6,12 @@
   align-items: center;
   gap: rem(2);
 
+  .star-container {
+    display: flex;
+    align-items: center;
+    gap: rem(2);
+  }
+
   // 사이즈 variants
   &--sm .star-item { width: rem(14); height: rem(14); }
   &--md .star-item { width: rem(22); height: rem(22); }
