@@ -1485,3 +1485,290 @@
     opacity: 0;
   }
 }
+
+// ==========================================
+// 영업시간 UI 컴포넌트 스타일
+// ==========================================
+.opening-hours-form {
+  display: flex;
+  flex-direction: column;
+  gap: rem(20);
+  background: #FAFAF9;
+  border: 1px solid #E7E5E4;
+  border-radius: rem(12);
+  padding: rem(20);
+  margin-block-start: rem(8);
+
+  .hours-sub-item {
+    display: flex;
+    flex-direction: column;
+    gap: rem(10);
+
+    &.has-divider {
+      border-top: 1px solid #E7E5E4;
+      padding-top: rem(16);
+      margin-top: rem(4);
+    }
+  }
+
+  .hours-sub-label {
+    @include font(14, 1, 700, $black);
+  }
+
+  .flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  // 프리셋 버튼 그룹
+  .preset-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(6);
+
+    .preset-btn {
+      padding: rem(6) rem(12);
+      background: $white;
+      border: 1px solid $gray-e4;
+      border-radius: rem(6);
+      @include font(13, 1.2, 500, $gray-78);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #f4f4f3;
+        border-color: #d6d3d1;
+      }
+
+      &.is-active {
+        background: $primary-color;
+        border-color: $primary-color;
+        color: $white;
+        font-weight: 700;
+        box-shadow: 0 rem(2) rem(8) rgba(21, 94, 78, 0.15);
+      }
+    }
+  }
+
+  // 요일 토글 버튼 그룹
+  .days-toggle-group,
+  .closed-days-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(6);
+    margin-top: rem(4);
+    animation: fadeIn 0.25s ease;
+
+    .day-toggle-btn {
+      width: rem(36);
+      height: rem(36);
+      border-radius: 50%;
+      background: $white;
+      border: 1px solid $gray-e4;
+      @include font(13, 1, 600, $gray-78);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        background: #f4f4f3;
+        border-color: #d6d3d1;
+      }
+
+      &.is-active {
+        background: $secondary-color;
+        border-color: $secondary-color;
+        color: $white;
+        transform: scale(1.05);
+        box-shadow: 0 rem(4) rem(10) rgba(5, 150, 105, 0.2);
+      }
+
+      &.is-red.is-active {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: $white;
+        box-shadow: 0 rem(4) rem(10) rgba(239, 68, 68, 0.2);
+      }
+    }
+  }
+
+  // 시간 선택 그룹
+  .time-range-group {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: rem(12);
+    animation: slideDown 0.25s ease;
+
+    @include mobile {
+      flex-direction: row;
+    }
+
+    .time-picker-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: rem(4);
+      width: 100%;
+
+      &::before {
+        content: attr(data-label);
+        @include font(12, 1, 600, $gray-78);
+
+        @include tablet {
+          display: none;
+        }
+      }
+    }
+
+    .time-picker-input {
+      width: 100%;
+      height: rem(44);
+      padding: rem(8) rem(10);
+      border: 1px solid #E7E5E4;
+      background: $white;
+      border-radius: rem(8);
+      @include font(15, 1, 500, $black);
+      outline: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+
+      @include tablet {
+        height: rem(40);
+      }
+
+      &:focus {
+        border-color: $secondary-color;
+        box-shadow: 0 0 0 rem(3) rgba(5, 150, 105, 0.1);
+      }
+    }
+
+    .time-separator {
+      display: none; // 기본(모바일) 숨김
+      @include font(15, 1, 500, $gray-78);
+      flex-shrink: 0;
+
+      @include tablet {
+        display: block; // 태블릿 이상 표시
+        margin-top: rem(10);
+      }
+    }
+  }
+
+  .time-single-group {
+    animation: slideDown 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    gap: rem(8);
+    width: 100%;
+
+    &::before {
+      content: attr(data-label);
+      @include font(12, 1, 600, $gray-78);
+
+      @include tablet {
+        display: none;
+      }
+    }
+
+    .time-picker-input {
+      width: 100%;
+      height: rem(44);
+      padding: rem(8) rem(12);
+      border: 1px solid #E7E5E4;
+      background: $white;
+      border-radius: rem(8);
+      @include font(15, 1, 500, $black);
+      outline: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+
+      @include mobile {
+        max-width: calc(50% - rem(4));
+      }
+
+      @include tablet {
+        width: rem(140);
+        max-width: unset;
+        height: rem(40);
+      }
+
+      &:focus {
+        border-color: $secondary-color;
+        box-shadow: 0 0 0 rem(3) rgba(5, 150, 105, 0.1);
+      }
+    }
+  }
+
+  // 토글 스위치 스타일
+  .switch-toggle {
+    position: relative;
+    display: inline-block;
+    width: rem(44);
+    height: rem(24);
+
+    input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+
+      &:checked+.switch-slider {
+        background-color: $secondary-color;
+
+        &:before {
+          transform: translateX(rem(20));
+        }
+      }
+    }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #E7E5E4;
+      transition: .3s;
+      border-radius: rem(34);
+
+      &:before {
+        position: absolute;
+        content: "";
+        height: rem(18);
+        width: rem(18);
+        left: rem(3);
+        bottom: rem(3);
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 rem(1) rem(3) rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(rem(-10));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

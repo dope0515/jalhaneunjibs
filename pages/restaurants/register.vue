@@ -201,11 +201,109 @@
                     target="_blank"
                     rel="noopener noreferrer"
                     class="kakao-place-link"
+                    style="margin-bottom: 8px; display: inline-flex;"
                   >
                     카카오맵에서 영업시간 확인하기
                     <img src="/assets/images/icon/ic_external.svg" width="14" height="14" alt="" aria-hidden="true" />
                   </a>
-                  <p v-else class="kakao-place-empty">식당을 검색해서 선택하면 카카오맵 링크가 연결됩니다</p>
+                  <p v-else class="kakao-place-empty" style="margin-bottom: 8px;">식당을 검색해서 선택하면 카카오맵 링크가 연결됩니다</p>
+
+                  <!-- 상세 영업시간 위젯 -->
+                  <div class="opening-hours-form">
+                    <!-- 요일 선택 -->
+                    <div class="hours-sub-item">
+                      <span class="hours-sub-label">영업 요일</span>
+                      <div class="preset-group">
+                        <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'everyday' }" @click="setDayPreset('everyday')">매일 (월~일)</button>
+                        <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'weekdays' }" @click="setDayPreset('weekdays')">평일 (월~금)</button>
+                        <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'weekends' }" @click="setDayPreset('weekends')">주말 (토~일)</button>
+                        <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'custom' }" @click="setDayPreset('custom')">직접 선택</button>
+                      </div>
+                      <div class="days-toggle-group" v-if="opData.dayType === 'custom'">
+                        <button 
+                          v-for="d in ['월', '화', '수', '목', '금', '토', '일']" 
+                          :key="d"
+                          type="button"
+                          class="day-toggle-btn"
+                          :class="{ 'is-active': opData.customDays.includes(d) }"
+                          @click="toggleCustomDay(d)"
+                        >
+                          {{ d }}
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- 영업 시간 -->
+                    <div class="hours-sub-item">
+                      <span class="hours-sub-label">영업 시간</span>
+                      <div class="time-range-group">
+                        <div class="time-picker-wrapper" data-label="시작">
+                          <input type="time" v-model="opData.openTime" class="time-picker-input" />
+                        </div>
+                        <span class="time-separator">~</span>
+                        <div class="time-picker-wrapper" data-label="종료">
+                          <input type="time" v-model="opData.closeTime" class="time-picker-input" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 브레이크 타임 -->
+                    <div class="hours-sub-item has-divider">
+                      <div class="flex-between">
+                        <span class="hours-sub-label">브레이크 타임</span>
+                        <label class="switch-toggle">
+                          <input type="checkbox" v-model="opData.hasBreakTime" />
+                          <span class="switch-slider"></span>
+                        </label>
+                      </div>
+                      <div class="time-range-group" v-if="opData.hasBreakTime">
+                        <div class="time-picker-wrapper" data-label="시작">
+                          <input type="time" v-model="opData.breakStartTime" class="time-picker-input" />
+                        </div>
+                        <span class="time-separator">~</span>
+                        <div class="time-picker-wrapper" data-label="종료">
+                          <input type="time" v-model="opData.breakEndTime" class="time-picker-input" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 라스트 오더 -->
+                    <div class="hours-sub-item">
+                      <div class="flex-between">
+                        <span class="hours-sub-label">라스트 오더</span>
+                        <label class="switch-toggle">
+                          <input type="checkbox" v-model="opData.hasLastOrder" />
+                          <span class="switch-slider"></span>
+                        </label>
+                      </div>
+                      <div class="time-single-group" v-if="opData.hasLastOrder" data-label="시간">
+                        <input type="time" v-model="opData.lastOrderTime" class="time-picker-input" />
+                      </div>
+                    </div>
+
+                    <!-- 정기 휴무일 -->
+                    <div class="hours-sub-item has-divider">
+                      <div class="flex-between">
+                        <span class="hours-sub-label">정기 휴무일</span>
+                        <label class="switch-toggle">
+                          <input type="checkbox" v-model="opData.hasClosedDays" />
+                          <span class="switch-slider"></span>
+                        </label>
+                      </div>
+                      <div class="closed-days-group" v-if="opData.hasClosedDays">
+                        <button 
+                          v-for="d in ['월', '화', '수', '목', '금', '토', '일']" 
+                          :key="`closed-${d}`"
+                          type="button"
+                          class="day-toggle-btn is-red"
+                          :class="{ 'is-active': opData.closedDays.includes(d) }"
+                          @click="toggleClosedDay(d)"
+                        >
+                          {{ d }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-item">
@@ -466,6 +564,98 @@ const form = ref({
   openingHours: '',
   keywords: []
 })
+
+// ── 상세 영업시간 데이터 및 헬퍼 ──────────────────────────────────
+const opData = ref({
+  dayType: 'everyday',
+  customDays: ['월', '화', '수', '목', '금', '토', '일'],
+  openTime: '11:30',
+  closeTime: '21:30',
+  hasBreakTime: true,
+  breakStartTime: '14:00',
+  breakEndTime: '17:00',
+  hasLastOrder: true,
+  lastOrderTime: '20:00',
+  hasClosedDays: false,
+  closedDays: []
+})
+
+const setDayPreset = (type) => {
+  opData.value.dayType = type
+  if (type === 'everyday') {
+    opData.value.customDays = ['월', '화', '수', '목', '금', '토', '일']
+  } else if (type === 'weekdays') {
+    opData.value.customDays = ['월', '화', '수', '목', '금']
+  } else if (type === 'weekends') {
+    opData.value.customDays = ['토', '일']
+  }
+}
+
+const toggleCustomDay = (d) => {
+  const idx = opData.value.customDays.indexOf(d)
+  if (idx > -1) {
+    opData.value.customDays.splice(idx, 1)
+  } else {
+    opData.value.customDays.push(d)
+  }
+  opData.value.dayType = 'custom'
+}
+
+const toggleClosedDay = (d) => {
+  const idx = opData.value.closedDays.indexOf(d)
+  if (idx > -1) {
+    opData.value.closedDays.splice(idx, 1)
+  } else {
+    opData.value.closedDays.push(d)
+  }
+}
+
+const computedOpeningHours = computed(() => {
+  let daysStr = ''
+  if (opData.value.dayType === 'everyday') {
+    daysStr = '월 ~ 일'
+  } else if (opData.value.dayType === 'weekdays') {
+    daysStr = '월 ~ 금'
+  } else if (opData.value.dayType === 'weekends') {
+    daysStr = '토 ~ 일'
+  } else {
+    const allDays = ['월', '화', '수', '목', '금', '토', '일']
+    const selected = allDays.filter(d => opData.value.customDays.includes(d))
+    if (selected.length === 0) {
+      daysStr = '요일 선택 없음'
+    } else if (selected.length === 7) {
+      daysStr = '월 ~ 일'
+    } else if (selected.length === 5 && selected.every(d => ['월', '화', '수', '목', '금'].includes(d))) {
+      daysStr = '월 ~ 금'
+    } else if (selected.length === 2 && selected.every(d => ['토', '일'].includes(d))) {
+      daysStr = '토 ~ 일'
+    } else {
+      daysStr = selected.join(', ')
+    }
+  }
+
+  let result = `${daysStr} : ${opData.value.openTime} ~ ${opData.value.closeTime}`
+  
+  if (opData.value.hasBreakTime) {
+    result += `\n브레이크 타임 : ${opData.value.breakStartTime} ~ ${opData.value.breakEndTime}`
+  }
+  
+  if (opData.value.hasLastOrder) {
+    result += `\n라스트 오더 : ${opData.value.lastOrderTime}`
+  }
+  
+  if (opData.value.hasClosedDays && opData.value.closedDays.length > 0) {
+    const allDays = ['월', '화', '수', '목', '금', '토', '일']
+    const selectedClosed = allDays.filter(d => opData.value.closedDays.includes(d))
+    result += `\n휴무일 : 매주 ${selectedClosed.join(', ')}요일`
+  }
+  
+  return result
+})
+
+watch(computedOpeningHours, (newVal) => {
+  form.value.openingHours = newVal
+}, { immediate: true })
 
 const searchResults = ref([])
 const focusedIndex = ref(-1)
@@ -877,6 +1067,19 @@ const resetForm = () => {
     placeId: '',
     openingHours: '',
     keywords: []
+  }
+  opData.value = {
+    dayType: 'everyday',
+    customDays: ['월', '화', '수', '목', '금', '토', '일'],
+    openTime: '11:30',
+    closeTime: '21:30',
+    hasBreakTime: true,
+    breakStartTime: '14:00',
+    breakEndTime: '17:00',
+    hasLastOrder: true,
+    lastOrderTime: '20:00',
+    hasClosedDays: false,
+    closedDays: []
   }
   analyzedMenuItems.value = []
   restaurantImages.value = []

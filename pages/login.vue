@@ -16,6 +16,7 @@
                 <AppInput
                   v-model="email"
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="이메일 주소를 입력해주세요"
                   autocomplete="email"
@@ -27,6 +28,7 @@
                 <AppInput 
                   v-model="password"
                   id="password"
+                  name="password"
                   type="password"
                   placeholder="비밀번호를 입력해주세요"
                   autocomplete="current-password"

@@ -2,30 +2,34 @@
   <div
     class="star-rating"
     :class="[`star-rating--${size}`, { 'is-readonly': readonly }]"
-    :aria-label="`별점 ${displayValue}점`"
   >
-    <span
-      v-for="i in 5"
-      :key="i"
-      class="star-item"
-      :class="{ 'is-lit': !readonly && activeValue >= i }"
-      @click="!readonly && select(i)"
-      @mouseenter="!readonly && (hoverValue = i)"
-      @mouseleave="!readonly && (hoverValue = 0)"
+    <div 
+      class="star-container"
+      role="img"
+      :aria-label="`평점 ${displayValue}점 (5점 만점)`"
     >
-      <!-- 빈 별 (항상 표시) -->
-      <img src="/assets/images/icon/ic_star_off.svg" class="star star--bg" alt="" aria-hidden="true" />
-      <!-- 채워진 별 (인터랙티브: is-lit 시 표시 / readonly: clip-path로 부분 표시) -->
-      <img
-        src="/assets/images/icon/ic_star.svg"
-        class="star star--fg"
-        alt=""
-        aria-hidden="true"
-        :style="readonly ? { clipPath: `inset(0 ${100 - getPartialFill(i)}% 0 0)` } : {}"
-      />
-    </span>
+      <span
+        v-for="i in 5"
+        :key="i"
+        class="star-item"
+        :class="{ 'is-lit': !readonly && activeValue >= i }"
+        @click="!readonly && select(i)"
+        @mouseenter="!readonly && (hoverValue = i)"
+        @mouseleave="!readonly && (hoverValue = 0)"
+      >
+        <!-- 개별 이미지는 단순 장식용이므로 aria-hidden 유지 (컨테이너에서 전체 평점 설명함) -->
+        <img src="/assets/images/icon/ic_star_off.svg" class="star star--bg" alt="" aria-hidden="true" />
+        <img
+          src="/assets/images/icon/ic_star.svg"
+          class="star star--fg"
+          alt=""
+          aria-hidden="true"
+          :style="readonly ? { clipPath: `inset(0 ${100 - getPartialFill(i)}% 0 0)` } : {}"
+        />
+      </span>
+    </div>
 
-    <span v-if="showLabel" class="star-label">{{ displayValue }}</span>
+    <span v-if="showLabel" class="star-label" aria-hidden="true">{{ displayValue }}</span>
   </div>
 </template>
 
