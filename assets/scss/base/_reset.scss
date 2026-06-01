@@ -8,9 +8,12 @@
   word-break: keep-all;
 }
 
+html,
 body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  // 스크롤바가 사라질 때 레이아웃이 밀리는 현상 방지
+  scrollbar-gutter: stable;
 }
 
 a {
