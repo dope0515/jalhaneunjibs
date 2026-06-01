@@ -77,7 +77,7 @@
     </Transition>
 
     <!-- 모바일 드로어 -->
-    <Transition name="drawer-slide">
+    <Transition name="drawer-slide" @after-leave="handleAfterLeave">
       <nav v-if="menuOpen" class="nav-drawer">
         <div class="nav-drawer__header">
           <span class="nav-drawer__logo">잘하는 집을<br>안 가봐서 그래</span>
@@ -144,9 +144,26 @@ const menuOpen = ref(false)
 const route = useRoute()
 
 // 드로어 열릴 때 배경 스크롤 방지
+const scrollLock = ref(false)
+let scrollPos = 0
+
+watch(menuOpen, (val) => {
+  if (val) {
+    scrollPos = window.scrollY
+    document.body.style.top = `-${scrollPos}px`
+    scrollLock.value = true
+  }
+})
+
+const handleAfterLeave = () => {
+  scrollLock.value = false
+  document.body.style.top = ''
+  window.scrollTo(0, scrollPos)
+}
+
 useHead({
   bodyAttrs: {
-    class: computed(() => menuOpen.value ? 'overflow-hidden' : '')
+    class: computed(() => scrollLock.value ? 'overflow-hidden' : '')
   }
 })
 
