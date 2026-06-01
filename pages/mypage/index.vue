@@ -117,7 +117,7 @@
           <div class="collections-grid">
 
             <!-- 컬렉션 카드 -->
-            <div
+            <button
               v-for="col in collections"
               :key="col.id"
               class="col-card"
@@ -152,12 +152,12 @@
                   <span v-if="col.isPrivate" class="col-private">· 나만 보기</span>
                 </span>
               </div>
-              <button class="col-menu-btn" @click.stop="startRenameCollection(col)" title="이름 변경">
+              <div class="col-menu-btn" @click.stop="startRenameCollection(col)" title="이름 변경" role="button" aria-label="이름 변경">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
                 </svg>
-              </button>
-            </div>
+              </div>
+            </button>
 
             <!-- 새 목록 만들기 카드 -->
             <button class="col-card col-card--new" @click="showCreateModal = true">
@@ -223,7 +223,7 @@
 
     <!-- ─── 드로어: 컬렉션 상세 ──────────────── -->
     <Teleport to="body">
-      <Transition name="drawer">
+      <Transition name="drawer" @after-leave="handleDrawerAfterLeave">
         <div v-if="activeCollection" class="drawer-overlay" @click.self="activeCollection = null">
           <div class="drawer">
             <div class="drawer-header">
@@ -405,6 +405,30 @@ const renameTarget = ref(null)
 const renameValue = ref('')
 const activeCollection = ref(null)
 const drawerLoading = ref(false)
+
+// 드로어 열릴 때 배경 스크롤 방지
+const scrollLock = ref(false)
+let scrollPos = 0
+
+watch(activeCollection, (val) => {
+  if (val) {
+    scrollPos = window.scrollY
+    document.body.style.top = `-${scrollPos}px`
+    scrollLock.value = true
+  }
+})
+
+const handleDrawerAfterLeave = () => {
+  scrollLock.value = false
+  document.body.style.top = ''
+  window.scrollTo(0, scrollPos)
+}
+
+useHead({
+  bodyAttrs: {
+    class: computed(() => scrollLock.value ? 'overflow-hidden' : '')
+  }
+})
 
 const loadCollections = async () => {
   collectionsLoading.value = true
