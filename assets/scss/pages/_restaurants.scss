@@ -235,7 +235,7 @@
 
   .sort-btn {
     padding: rem(6) rem(16);
-    background: none;
+    background: $white;
     border: 1px solid $gray-e4;
     border-radius: rem(100);
     @include font(13, 1, 500, $gray-78);
@@ -1010,6 +1010,15 @@
         .value {
           @include font(14, 1.4, 500, $black);
           text-align: right;
+
+          &:is(a) {
+            color: #0000ff;
+            text-decoration: underline;
+
+            &:hover {
+              text-decoration: none;
+            }
+          }
 
           &.pre-wrap {
             white-space: pre-wrap;

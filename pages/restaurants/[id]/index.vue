@@ -51,18 +51,24 @@
                 </SwiperSlide>
               </Swiper>
               <button 
-                v-else
+                v-else-if="restaurant.thumbnail"
                 type="button"
                 class="image-btn main-thumbnail-btn"
-                @click="openGenericLightbox([restaurant.thumbnail || '/assets/images/common/default.jpg'], 0)"
+                @click="openGenericLightbox([restaurant.thumbnail], 0)"
                 aria-label="매장 대표 이미지 크게 보기"
               >
                 <img 
-                  :src="restaurant.thumbnail || '/assets/images/common/default.jpg'" 
+                  :src="restaurant.thumbnail" 
                   :alt="restaurant.name" 
                   class="main-thumbnail" 
                 />
               </button>
+              <img 
+                v-else
+                src="/assets/images/common/default.jpg" 
+                :alt="restaurant.name" 
+                class="main-thumbnail" 
+              />
             </div>
             <div class="content-text">
               <h2 class="section-title">식당 소개</h2>
@@ -137,8 +143,8 @@
                 <div class="my-review-header">
                   <span class="my-review-label">내가 쓴 리뷰</span>
                   <div class="my-review-actions">
-                    <button class="action-btn" @click="startEditReview">수정</button>
-                    <button class="action-btn action-btn--delete" @click="deleteMyReview">삭제</button>
+                    <AppButton size="xs" variant="outline" @click="startEditReview">수정</AppButton>
+                    <AppButton size="xs" variant="outline" color="red" @click="deleteMyReview">삭제</AppButton>
                   </div>
                 </div>
                 <AppStarRating :modelValue="myReview.rating" readonly size="md" />
@@ -183,15 +189,16 @@
                     class="sr-only"
                     @change="handleReviewImages"
                   />
-                  <button
+                  <AppButton
                     v-if="totalImageCount < 3"
                     type="button"
-                    class="img-upload-btn"
+                    variant="outline"
+                    size="sm"
                     @click="reviewImgInputRef?.click()"
                   >
-                    <img src="/assets/images/icon/ic_upload.svg" width="16" height="16" alt="" aria-hidden="true" />
+                    <img src="/assets/images/icon/ic_upload.svg" width="16" height="16" alt="" aria-hidden="true" style="margin-right: 6px;" />
                     사진 추가 ({{ totalImageCount }}/3)
-                  </button>
+                  </AppButton>
                   <div v-if="reviewForm.allImages.length" class="img-preview-list">
                     <div
                       v-for="(item, i) in reviewForm.allImages"
@@ -224,7 +231,7 @@
                 <div class="review-header">
                   <span class="reviewer-name">{{ review.user.nickname || '사용자' }}</span>
                   <span class="review-date">{{ formatDate(review.createdAt) }}</span>
-                  <button v-if="user?.role === 'ADMIN'" class="action-btn action-btn--delete" @click="deleteReviewById(review.id)">삭제</button>
+                  <AppButton v-if="user?.role === 'ADMIN'" size="xs" variant="outline" color="red" @click="deleteReviewById(review.id)">삭제</AppButton>
                 </div>
                 <AppStarRating :modelValue="review.rating" readonly size="sm" />
                 <p v-if="review.content" class="review-content">{{ review.content }}</p>
@@ -288,10 +295,10 @@
                   <p v-else class="content">{{ comment.content }}</p>
 
                   <div class="comment-actions">
-                    <button @click="activeReplyId = activeReplyId === comment.id ? null : comment.id">답글 쓰기</button>
+                    <AppButton size="xs" variant="outline" @click="activeReplyId = activeReplyId === comment.id ? null : comment.id">답글 쓰기</AppButton>
                     <template v-if="user?.id === comment.userId || user?.role === 'ADMIN'">
-                      <button @click="startEdit(comment.id, comment.content)">수정</button>
-                      <button class="delete-btn" @click="deleteComment(comment.id)">삭제</button>
+                      <AppButton size="xs" variant="outline" @click="startEdit(comment.id, comment.content)">수정</AppButton>
+                      <AppButton size="xs" variant="outline" color="red" @click="deleteComment(comment.id)">삭제</AppButton>
                     </template>
                   </div>
                 </div>
@@ -324,8 +331,8 @@
                     <p v-else class="content">{{ reply.content }}</p>
 
                     <div class="reply-actions" v-if="user?.id === reply.userId || user?.role === 'ADMIN'">
-                      <button @click="startEdit(reply.id, reply.content)">수정</button>
-                      <button class="delete-btn" @click="deleteComment(reply.id)">삭제</button>
+                      <AppButton size="xs" variant="outline" @click="startEdit(reply.id, reply.content)">수정</AppButton>
+                      <AppButton size="xs" variant="outline" color="red" @click="deleteComment(reply.id)">삭제</AppButton>
                     </div>
                   </div>
                 </div>
@@ -355,7 +362,8 @@
             <ul class="contact-list">
               <li>
                 <span class="label">연락처</span>
-                <a :href="`tel:${restaurant.phoneNumber}`" class="value">{{ restaurant.phoneNumber || '정보 없음' }}</a>
+                <a v-if="restaurant.phoneNumber" :href="`tel:${restaurant.phoneNumber}`" class="value">{{ restaurant.phoneNumber }}</a>
+                <span v-else class="value">정보 없음</span>
               </li>
               <li>
                 <span class="label">영업시간</span>

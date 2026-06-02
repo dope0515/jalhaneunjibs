@@ -18,18 +18,18 @@
               <strong>{{ registeredRestaurantName }}</strong>이(가)<br>성공적으로 등록되었습니다.
             </p>
             <div class="register-success-actions">
-              <button class="register-success-btn register-success-btn--outline" @click="handleRegisterMore">
+              <AppButton variant="outline" color="white" size="md" @click="handleRegisterMore">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
                 잘하는 집을 더 입력하기
-              </button>
-              <button class="register-success-btn register-success-btn--primary" @click="handleGoToRestaurant">
+              </AppButton>
+              <AppButton color="green" size="md" @click="handleGoToRestaurant">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                 </svg>
                 보러가기
-              </button>
+              </AppButton>
             </div>
           </div>
         </div>
@@ -134,17 +134,19 @@
                 <div class="form-item">
                   <label class="form-item-label" id="category-label">카테고리</label>
                   <div class="category-group" role="group" aria-labelledby="category-label">
-                    <button 
+                    <AppButton 
                       v-for="cat in categories" 
                       :key="cat"
                       type="button"
-                      class="category-btn"
-                      :class="{ 'is-active': form.category === cat }"
+                      :variant="form.category === cat ? 'fill' : 'outline'"
+                      :color="form.category === cat ? 'green' : 'black'"
+                      shape="round"
+                      size="sm"
                       :aria-pressed="form.category === cat"
                       @click="form.category = cat"
                     >
                       {{ cat }}
-                    </button>
+                    </AppButton>
                   </div>
                 </div>
 
@@ -171,12 +173,14 @@
                         placeholder="예: 가성비, 데이트, 주차가능"
                         @keydown="handleKeywordKeydown"
                       />
-                      <button
+                      <AppButton
                         type="button"
-                        class="keyword-add-btn"
+                        color="green"
+                        size="md"
                         :disabled="!keywordInput.trim()"
                         @click="addCustomKeyword()"
-                      >등록</button>
+                        style="flex-shrink: 0;"
+                      >등록</AppButton>
                     </div>
                     <div class="tag-list">
                       <span v-for="(tag, index) in form.keywords" :key="tag" class="tag">
@@ -225,22 +229,25 @@
                       <div class="hours-sub-item has-divider">
                         <span class="hours-sub-label">영업 요일</span>
                         <div class="preset-group">
-                          <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'everyday' }" @click="setDayPreset('everyday')">매일 (월~일)</button>
-                          <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'weekdays' }" @click="setDayPreset('weekdays')">평일 (월~금)</button>
-                          <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'weekends' }" @click="setDayPreset('weekends')">주말 (토~일)</button>
-                          <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'custom' }" @click="setDayPreset('custom')">직접 선택</button>
+                          <AppButton type="button" size="sm" :variant="opData.dayType === 'everyday' ? 'fill' : 'outline'" :color="opData.dayType === 'everyday' ? 'green' : 'black'" @click="setDayPreset('everyday')">매일 (월~일)</AppButton>
+                          <AppButton type="button" size="sm" :variant="opData.dayType === 'weekdays' ? 'fill' : 'outline'" :color="opData.dayType === 'weekdays' ? 'green' : 'black'" @click="setDayPreset('weekdays')">평일 (월~금)</AppButton>
+                          <AppButton type="button" size="sm" :variant="opData.dayType === 'weekends' ? 'fill' : 'outline'" :color="opData.dayType === 'weekends' ? 'green' : 'black'" @click="setDayPreset('weekends')">주말 (토~일)</AppButton>
+                          <AppButton type="button" size="sm" :variant="opData.dayType === 'custom' ? 'fill' : 'outline'" :color="opData.dayType === 'custom' ? 'green' : 'black'" @click="setDayPreset('custom')">직접 선택</AppButton>
                         </div>
                         <div class="days-toggle-group" v-if="opData.dayType === 'custom'">
-                          <button 
+                          <AppButton 
                             v-for="d in ['월', '화', '수', '목', '금', '토', '일']" 
                             :key="d"
                             type="button"
-                            class="day-toggle-btn"
-                            :class="{ 'is-active': opData.customDays.includes(d) }"
+                            size="sm"
+                            shape="round"
+                            :variant="opData.customDays.includes(d) ? 'fill' : 'outline'"
+                            :color="opData.customDays.includes(d) ? 'green' : 'black'"
+                            style="width: 36px; height: 36px; padding: 0;"
                             @click="toggleCustomDay(d)"
                           >
                             {{ d }}
-                          </button>
+                          </AppButton>
                         </div>
                       </div>
 
@@ -302,16 +309,19 @@
                           </label>
                         </div>
                         <div class="closed-days-group" v-if="opData.hasClosedDays">
-                          <button 
+                          <AppButton 
                             v-for="d in ['월', '화', '수', '목', '금', '토', '일']" 
                             :key="`closed-${d}`"
                             type="button"
-                            class="day-toggle-btn is-red"
-                            :class="{ 'is-active': opData.closedDays.includes(d) }"
+                            size="sm"
+                            shape="round"
+                            :variant="opData.closedDays.includes(d) ? 'fill' : 'outline'"
+                            :color="opData.closedDays.includes(d) ? 'red' : 'black'"
+                            style="width: 36px; height: 36px; padding: 0;"
                             @click="toggleClosedDay(d)"
                           >
                             {{ d }}
-                          </button>
+                          </AppButton>
                         </div>
                       </div>
                     </template>
@@ -336,8 +346,8 @@
                       <div class="hours-sub-item has-divider">
                         <span class="hours-sub-label">주차 가능 여부</span>
                         <div class="preset-group">
-                          <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.available === true }" @click="parkingData.available = true">주차 가능</button>
-                          <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.available === false }" @click="parkingData.available = false">주차 불가</button>
+                          <AppButton type="button" size="sm" :variant="parkingData.available === true ? 'fill' : 'outline'" :color="parkingData.available === true ? 'green' : 'black'" @click="parkingData.available = true">주차 가능</AppButton>
+                          <AppButton type="button" size="sm" :variant="parkingData.available === false ? 'fill' : 'outline'" :color="parkingData.available === false ? 'green' : 'black'" @click="parkingData.available = false">주차 불가</AppButton>
                         </div>
                       </div>
 
@@ -346,10 +356,10 @@
                         <div class="hours-sub-item">
                           <span class="hours-sub-label">주차 유형</span>
                           <div class="preset-group">
-                            <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.type === '자체주차장' }" @click="parkingData.type = '자체주차장'">자체 주차장</button>
-                            <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.type === '발렛파킹' }" @click="parkingData.type = '발렛파킹'">발렛 파킹</button>
-                            <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.type === '공영주차장' }" @click="parkingData.type = '공영주차장'">공영 주차장</button>
-                            <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.type === '건물주차장' }" @click="parkingData.type = '건물주차장'">건물 주차장</button>
+                            <AppButton type="button" size="sm" :variant="parkingData.type === '자체주차장' ? 'fill' : 'outline'" :color="parkingData.type === '자체주차장' ? 'green' : 'black'" @click="parkingData.type = '자체주차장'">자체 주차장</AppButton>
+                            <AppButton type="button" size="sm" :variant="parkingData.type === '발렛파킹' ? 'fill' : 'outline'" :color="parkingData.type === '발렛파킹' ? 'green' : 'black'" @click="parkingData.type = '발렛파킹'">발렛 파킹</AppButton>
+                            <AppButton type="button" size="sm" :variant="parkingData.type === '공영주차장' ? 'fill' : 'outline'" :color="parkingData.type === '공영주차장' ? 'green' : 'black'" @click="parkingData.type = '공영주차장'">공영 주차장</AppButton>
+                            <AppButton type="button" size="sm" :variant="parkingData.type === '건물주차장' ? 'fill' : 'outline'" :color="parkingData.type === '건물주차장' ? 'green' : 'black'" @click="parkingData.type = '건물주차장'">건물 주차장</AppButton>
                           </div>
                         </div>
 
@@ -487,14 +497,16 @@
                     </div>
                   </div>
 
-                  <button
+                  <AppButton
                     v-if="menuBoardPreviews.length > 0 && !isAnalyzing"
                     type="button"
-                    class="analyze-btn"
+                    color="green"
+                    size="md"
+                    style="width: 100%; margin-top: 10px;"
                     @click="analyzeMenuBoard"
                   >
                     메뉴 분석하기
-                  </button>
+                  </AppButton>
 
                   <div v-if="isAnalyzing" class="analyzing-state" role="status">
                     <span class="analyzing-spinner"></span>
@@ -603,13 +615,15 @@
                       @change="handleMenuItemImageUpload"
                     />
 
-                    <button
+                    <AppButton
                       type="button"
-                      class="menu-item-add"
+                      variant="outline"
+                      size="md"
+                      style="width: 100%; margin-top: 10px;"
                       @click="analyzedMenuItems.push({ name: '', price: '', description: '', isRecommended: false, imageFile: null, imagePreview: null })"
                     >
                       + 메뉴 직접 추가
-                    </button>
+                    </AppButton>
                   </div>
                 </div>
               </div>
@@ -991,13 +1005,44 @@ const handleKeydown = (e) => {
   }
 }
 
+// 카테고리 매핑 헬퍼
+const getMajorCategory = (rawCategory) => {
+  if (!rawCategory) return ''
+  
+  // 1. 이미 대분류 리스트에 포함된 경우 그대로 반환
+  if (categories.includes(rawCategory)) return rawCategory
+
+  // 2. 키워드 기반 매핑
+  const mapping = {
+    '한식': ['육류', '고기', '족발', '보쌈', '백반', '한정식', '찌개', '전골', '국밥', '치킨', '닭요리', '게장', '냉면', '칼국수', '수제비', '곰탕', '해장국', '아구찜', '해물탕', '찜닭', '전', '부침개', '구이'],
+    '중식': ['중화요리', '짜장', '짬뽕', '마라탕', '양꼬치', '딤섬', '훠궈', '꿔바로우', '양갈비'],
+    '일식': ['초밥', '스시', '회', '라멘', '우동', '소바', '돈까스', '참치', '가츠동', '덮밥', '텐동', '오마카세', '꼬치구이', '야키토리'],
+    '양식': ['이탈리안', '파스타', '피자', '스테이크', '패밀리레스토랑', '햄버거', '샌드위치', '샐러드', '레스토랑', '브런치', '프랑스', '멕시칸', '타코', '바베큐'],
+    '카페': ['커피', '카페', '디저트', '베이커리', '찻집', '빵집', '도넛', '마카롱', '빙수', '샌드위치', '케이크', '와플', '아이스크림'],
+    '주점': ['술집', '포차', '호프', '바', '와인바', '이자카야', '맥주', '와인', '칵테일', '위스키', '실내포차', '민속주점'],
+    '분식': ['떡볶이', '김밥', '라면', '만두', '튀김', '순대', '어묵', '토스트', '도시락'],
+    '아시아음식': ['베트남', '태국', '인도', '멕시칸', '쌀국수', '샤브샤브', '커리', '돈까스', '퓨전', '동남아']
+  }
+
+  for (const [major, keywords] of Object.entries(mapping)) {
+    if (keywords.some(keyword => rawCategory.includes(keyword))) {
+      return major
+    }
+  }
+
+  // 3. 매핑 실패 시 '한식'을 기본값으로 하거나 빈 문자열 유지 (여기서는 빈 문자열)
+  return ''
+}
+
 const selectPlace = (place) => {
   if (searchTimeout) clearTimeout(searchTimeout)
+
+  const rawCat = place.category_name?.split(' > ').pop() || ''
 
   form.value.name = place.place_name
   form.value.address = place.road_address_name || place.address_name
   form.value.phoneNumber = place.phone
-  form.value.category = place.category_name?.split(' > ').pop() || ''
+  form.value.category = getMajorCategory(rawCat)
   form.value.lat = place.y
   form.value.lng = place.x
   form.value.placeId = place.id
@@ -1329,7 +1374,3 @@ const handleGoToRestaurant = () => {
   navigateTo(`/restaurants/${registeredRestaurantId.value}`)
 }
 </script>
-
-<style lang="scss" scoped>
-// 스타일은 assets/scss/pages/_register.scss로 분리되었습니다.
-</style>
