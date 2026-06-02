@@ -85,6 +85,7 @@ model Restaurant {
   // 비즈니스 정보 (선택)
   phoneNumber      String?  
   openingHours     String?  // "11:00 - 22:00" 같은 문자열 형식
+  parkingInfo      String?  // 주차 정보 (예: "주차 가능 · 20대 · 2시간 무료")
   
   // 키워드
   keywords         String[] // ["가성비", "데이트", "주차가능"]

@@ -907,7 +907,7 @@
     border-radius: rem(8);
     @include font(14, 1, 400, $gray-44);
     font-family: inherit;
-    background: $bg-color;
+    background: $white;
     transition: border-color 0.2s;
 
     &:focus {
@@ -1044,6 +1044,10 @@
     display: flex;
     gap: rem(8);
     margin-bottom: rem(12);
+
+    .app-input {
+      width: 100%;
+    }
 
     // AppInput 컴포넌트 래퍼가 flex: 1 되도록
     .keyword-app-input,

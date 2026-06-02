@@ -55,6 +55,7 @@ export default defineEventHandler(async (event) => {
     const keywordsString = formData.get('keywords')?.toString()
     const menuItemsString = formData.get('menuItems')?.toString()
     const openingHours = formData.get('openingHours')?.toString() || null
+    const parkingInfo = formData.get('parkingInfo')?.toString() || null
     const thumbnailFile = formData.get('thumbnail') // 레거시 지원용
     const restaurantImages = formData.getAll('restaurantImages') // 새 이미지 배열
     
@@ -166,6 +167,7 @@ export default defineEventHandler(async (event) => {
         lng,
         phoneNumber: phoneNumber || null,
         openingHours,
+        parkingInfo,
         keywords,
         registeredById,
         menus: menuItems.length > 0

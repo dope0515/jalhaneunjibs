@@ -361,6 +361,29 @@
                 <span class="label">영업시간</span>
                 <span class="value pre-wrap">{{ restaurant.openingHours || '정보 없음' }}</span>
               </li>
+              <li>
+                <span class="label">주차정보</span>
+                <div class="value parking-info-box">
+                  <template v-if="parkingInfoParsed">
+                    <div class="parking-status-tags">
+                      <span 
+                        class="status-badge" 
+                        :class="parkingInfoParsed.available ? 'is-available' : 'is-unavailable'"
+                      >
+                        {{ parkingInfoParsed.available ? '주차 가능' : '주차 불가' }}
+                      </span>
+                      <template v-if="parkingInfoParsed.available">
+                        <span class="type-tag">{{ parkingInfoParsed.type }}</span>
+                        <span class="fee-tag" :class="{ 'is-free': parkingInfoParsed.isFree }">
+                          {{ parkingInfoParsed.fee }}
+                        </span>
+                      </template>
+                    </div>
+                    <p v-if="parkingInfoParsed.memo" class="parking-memo">{{ parkingInfoParsed.memo }}</p>
+                  </template>
+                  <span v-else>정보 없음</span>
+                </div>
+              </li>
             </ul>
           </div>
         </aside>
@@ -799,31 +822,22 @@ const copyAddress = () => {
   navigator.clipboard.writeText(restaurant.value.address)
   alert('주소가 복사되었습니다.')
 }
+
+// ── 주차 정보 가공 ──────────────────────────────────────────────────
+const parkingInfoParsed = computed(() => {
+  const str = restaurant.value?.parkingInfo
+  if (!str) return null
+  if (str === '주차 불가') return { available: false }
+
+  const parts = str.split(' · ').map(p => p.trim())
+  return {
+    available: true,
+    type: parts[0],
+    fee: parts[1],
+    isFree: parts[1] === '무료',
+    memo: parts[2] || null
+  }
+})
 </script>
 
-<style lang="scss" scoped>
-.image-btn {
-  display: inline-block;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  
-  &.main-thumbnail-btn {
-    width: 100%;
-    height: 100%;
-    display: block;
-    overflow: hidden;
-  }
 
-  &.review-img-btn {
-    border-radius: rem(8);
-    overflow: hidden;
-    flex-shrink: 0;
-    
-    img {
-      display: block;
-    }
-  }
-}
-</style>
