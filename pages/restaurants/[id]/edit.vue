@@ -215,6 +215,84 @@
             </div>
           </div>
 
+          <!-- 주차 정보 -->
+          <div class="edit-field-row">
+            <label class="edit-field-label">주차 정보</label>
+            <div class="opening-hours-form">
+              <div class="hours-sub-item">
+                <div class="flex-between">
+                  <span class="hours-sub-label" style="font-size: 16px;">주차 정보 제공</span>
+                  <label class="switch-toggle">
+                    <input type="checkbox" v-model="parkingData.hasParking" />
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <template v-if="parkingData.hasParking">
+                <!-- 주차 가능 여부 -->
+                <div class="hours-sub-item has-divider">
+                  <span class="hours-sub-label">주차 가능 여부</span>
+                  <div class="preset-group">
+                    <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.available === true }" @click="parkingData.available = true">주차 가능</button>
+                    <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.available === false }" @click="parkingData.available = false">주차 불가</button>
+                  </div>
+                </div>
+
+                <template v-if="parkingData.available">
+                  <!-- 주차 유형 -->
+                  <div class="hours-sub-item">
+                    <span class="hours-sub-label">주차 유형</span>
+                    <div class="preset-group">
+                      <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.type === '자체주차장' }" @click="parkingData.type = '자체주차장'">자체 주차장</button>
+                      <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.type === '발렛파킹' }" @click="parkingData.type = '발렛파킹'">발렛 파킹</button>
+                      <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.type === '공영주차장' }" @click="parkingData.type = '공영주차장'">공영 주차장</button>
+                      <button type="button" class="preset-btn" :class="{ 'is-active': parkingData.type === '건물주차장' }" @click="parkingData.type = '건물주차장'">건물 주차장</button>
+                    </div>
+                  </div>
+
+                  <!-- 요금 -->
+                  <div class="hours-sub-item has-divider">
+                    <div class="flex-between">
+                      <span class="hours-sub-label">무료 주차</span>
+                      <label class="switch-toggle">
+                        <input type="checkbox" v-model="parkingData.isFree" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div v-if="!parkingData.isFree" class="hours-sub-item" style="margin-top: 10px;">
+                      <span class="hours-sub-label">요금 정보</span>
+                      <input
+                        v-model="parkingData.feeDesc"
+                        class="edit-input"
+                        style="width:100%; margin-top:6px;"
+                        placeholder="예: 1시간 2,000원, 이후 30분당 1,000원"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 추가 메모 -->
+                  <div class="hours-sub-item">
+                    <div class="flex-between">
+                      <span class="hours-sub-label">추가 메모</span>
+                      <label class="switch-toggle">
+                        <input type="checkbox" v-model="parkingData.hasMemo" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <input
+                      v-if="parkingData.hasMemo"
+                      v-model="parkingData.memo"
+                      class="edit-input"
+                      style="width:100%; margin-top:10px;"
+                      placeholder="예: 식당 입구 옆 주차장 이용"
+                    />
+                  </div>
+                </template>
+              </template>
+            </div>
+          </div>
+
         </div>
 
         <!-- ④ 키워드 -->
@@ -380,6 +458,7 @@ const form = ref({
   description: restaurant.value.description ?? '',
   phoneNumber: restaurant.value.phoneNumber ?? '',
   openingHours: restaurant.value.openingHours ?? '',
+  parkingInfo: restaurant.value.parkingInfo ?? '',
   keywords: [...(restaurant.value.keywords ?? [])],
   // 매장 이미지: images[] 우선, 비어있으면 thumbnail 폴백
   existingImages: (() => {
@@ -557,6 +636,53 @@ watch(computedOpeningHours, (newVal) => {
   form.value.openingHours = newVal
 }, { immediate: true })
 
+// ── 주차 정보 데이터 및 헬퍼 ──────────────────────────────────────
+const parseParkingInfo = (str) => {
+  const data = {
+    hasParking: !!str,
+    available: true,
+    type: '자체주차장',
+    isFree: true,
+    feeDesc: '',
+    hasMemo: false,
+    memo: '',
+  }
+  if (!str) return data
+  if (str === '주차 불가') {
+    data.available = false
+    return data
+  }
+  const parts = str.split(' · ').map(p => p.trim())
+  const types = ['자체주차장', '발렛파킹', '공영주차장', '건물주차장']
+  if (parts[0] && types.includes(parts[0])) data.type = parts[0]
+  if (parts[1] === '무료') {
+    data.isFree = true
+  } else if (parts[1]) {
+    data.isFree = false
+    data.feeDesc = parts[1]
+  }
+  if (parts[2]) {
+    data.hasMemo = true
+    data.memo = parts[2]
+  }
+  return data
+}
+
+const parkingData = ref(parseParkingInfo(restaurant.value.parkingInfo))
+
+const computedParkingInfo = computed(() => {
+  if (!parkingData.value.hasParking) return ''
+  if (!parkingData.value.available) return '주차 불가'
+  const parts = [parkingData.value.type]
+  parts.push(parkingData.value.isFree ? '무료' : (parkingData.value.feeDesc || '유료'))
+  if (parkingData.value.hasMemo && parkingData.value.memo) parts.push(parkingData.value.memo)
+  return parts.join(' · ')
+})
+
+watch(computedParkingInfo, (newVal) => {
+  form.value.parkingInfo = newVal
+}, { immediate: true })
+
 const totalImageCount = computed(
   () => form.value.existingImages.length + form.value.newImagePreviews.length
 )
@@ -671,6 +797,7 @@ const handleSubmit = async () => {
     fd.append('description', form.value.description)
     fd.append('phoneNumber', form.value.phoneNumber)
     fd.append('openingHours', form.value.openingHours)
+    fd.append('parkingInfo', form.value.parkingInfo)
     fd.append('keywords', JSON.stringify(form.value.keywords))
 
     // 매장 이미지: 유지할 기존 URL 목록 전달

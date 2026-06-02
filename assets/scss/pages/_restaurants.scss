@@ -927,12 +927,20 @@
 
   // 사이드바
   .side-content {
+    display: flex;
+    flex-direction: column;
+    gap: rem(24);
+    margin-block-end: rem(24);
+
+    @include tablet {
+      margin-block-end: 0;
+    }
+
     .side-card {
       background: $white;
       border-radius: rem(24);
       padding: rem(30);
       box-shadow: 0 rem(10) rem(40) rgba(0, 0, 0, 0.03);
-      margin-bottom: rem(24);
 
       @include tablet {
         padding: rem(30) rem(20);
@@ -1455,5 +1463,83 @@
       border-color: #ef4444;
       color: #ef4444;
     }
+  }
+}
+
+// ─── 유틸리티 및 기타 상세 스타일 ────────────────────────────────────────────────
+
+.image-btn {
+  display: inline-block;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  &.main-thumbnail-btn {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: hidden;
+  }
+
+  &.review-img-btn {
+    border-radius: rem(8);
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+      display: block;
+    }
+  }
+}
+
+.parking-info-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: rem(8);
+  width: 100%;
+
+  .parking-status-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: rem(4);
+  }
+
+  .status-badge {
+    padding: rem(2) rem(8);
+    border-radius: rem(4);
+    @include font(11, 1, 700, $white);
+
+    &.is-available {
+      background-color: #10b981; // emerald-500
+    }
+
+    &.is-unavailable {
+      background-color: #ef4444; // red-500
+    }
+  }
+
+  .type-tag,
+  .fee-tag {
+    padding: rem(2) rem(6);
+    background: $bg-color;
+    border: 1px solid $gray-e4;
+    border-radius: rem(4);
+    @include font(11, 1, 500, $gray-78);
+  }
+
+  .fee-tag.is-free {
+    color: $primary-color;
+    border-color: rgba($primary-color, 0.3);
+    background: rgba($primary-color, 0.05);
+  }
+
+  .parking-memo {
+    @include font(12, 1.4, 400, $gray-78);
+    margin: 0;
+    text-align: right;
+    text-wrap: balance;
   }
 }
