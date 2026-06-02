@@ -103,6 +103,11 @@ const mergedProps = computed(() => ({ ...dynamicProps.value, ...attrs }))
       border: 1px solid $gray-e4;
       &:hover { background-color: #f5f5f4; }
     }
+    &.btn-color-red {
+      background-color: #ef4444;
+      color: #fff;
+      &:hover { background-color: #dc2626; }
+    }
   }
 
   &.btn-variant-outline {
@@ -124,6 +129,11 @@ const mergedProps = computed(() => ({ ...dynamicProps.value, ...attrs }))
       border-color: #fff;
       color: #fff;
       &:hover { background-color: rgba(255, 255, 255, 0.1); }
+    }
+    &.btn-color-red {
+      border-color: #ef4444;
+      color: #ef4444;
+      &:hover { background-color: rgba(239, 68, 68, 0.05); }
     }
     
     // Default outline if no bg matches
