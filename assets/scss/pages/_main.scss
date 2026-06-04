@@ -9,47 +9,49 @@
   }
 
   .content-wrap {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: rem(50);
+    .text-wrap {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: rem(50);
 
-    .title-bx {
-      .title {
-        font-family: $font-family-serif;
-        @include font(36, 1.2, 700);
-        word-break: keep-all;
+      .title-bx {
+        .title {
+          font-family: $font-family-serif;
+          @include font(36, 1.2, 700);
+          word-break: keep-all;
 
-        span {
-          font-family: inherit;
-          color: $primary-color;
-        }
+          span {
+            font-family: inherit;
+            color: $primary-color;
+          }
 
-        @include tablet {
-          @include font(96, 1.1, 500);
-        }
-      }
-    }
-
-    .desc-bx {
-      p {
-        @include font(16, 1.6, 400, $gray-44);
-
-        @include tablet {
-          @include font(20, 1.6, 400);
+          @include tablet {
+            @include font(96, 1.1, 500);
+          }
         }
       }
 
-      .btn-bx {
-        display: flex;
-        flex-direction: column;
-        gap: rem(12);
-        margin-block-start: rem(40);
+      .desc-bx {
+        p {
+          @include font(16, 1.6, 400, $gray-44);
 
-        @include tablet {
-          flex-direction: row;
-          margin-block-start: rem(56);
-          gap: rem(16);
+          @include tablet {
+            @include font(20, 1.6, 400);
+          }
+        }
+
+        .btn-bx {
+          display: flex;
+          flex-direction: column;
+          gap: rem(12);
+          margin-block-start: rem(40);
+
+          @include tablet {
+            flex-direction: row;
+            margin-block-start: rem(56);
+            gap: rem(16);
+          }
         }
       }
     }
