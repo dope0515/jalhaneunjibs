@@ -3,7 +3,7 @@ import { prisma } from '~/server/utils/prisma'
 import { tryGetUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const { category, region1, region2, keyword, page = '1', sort = 'latest' } = getQuery(event)
+  const { category, region1, region2, keyword, priceMin, priceMax, page = '1', sort = 'latest' } = getQuery(event)
   const userId = tryGetUserId(event)
 
   const pageNum = Math.max(1, parseInt(page as string))
@@ -19,6 +19,16 @@ export default defineEventHandler(async (event) => {
       { name: { contains: keyword as string, mode: 'insensitive' } },
       { keywords: { has: keyword as string } },
     ]
+  }
+  if (priceMin !== undefined || priceMax !== undefined) {
+    const priceFilter: Record<string, number> = {}
+    if (priceMin !== undefined) priceFilter.gte = parseInt(priceMin as string)
+    if (priceMax !== undefined) priceFilter.lte = parseInt(priceMax as string)
+    where.menus = {
+      some: {
+        price: priceFilter,
+      },
+    }
   }
 
   const [restaurants, total] = await Promise.all([

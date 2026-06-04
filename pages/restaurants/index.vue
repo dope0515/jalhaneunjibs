@@ -95,6 +95,59 @@
             </div>
           </div>
         </Transition>
+
+        <!-- 가격대 필터 -->
+        <div class="filter-group filter-group--sub">
+          <span class="filter-label">가격대</span>
+          <div class="price-range-wrap">
+            <div class="price-range-labels">
+              <span class="price-range-value">
+                {{ priceMinLabel }}
+              </span>
+              <span class="price-range-sep">~</span>
+              <span class="price-range-value">
+                {{ priceMaxLabel }}
+              </span>
+              <button
+                v-if="priceMin > PRICE_MIN || priceMax < PRICE_MAX"
+                class="price-range-reset"
+                @click="resetPrice"
+                aria-label="가격대 초기화"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="price-range-slider">
+              <div
+                class="price-range-track-fill"
+                :style="trackFillStyle"
+              />
+              <input
+                type="range"
+                class="price-range-input price-range-input--min"
+                :min="PRICE_MIN"
+                :max="PRICE_MAX"
+                :step="PRICE_STEP"
+                :value="priceMin"
+                @input="onMinInput"
+              />
+              <input
+                type="range"
+                class="price-range-input price-range-input--max"
+                :min="PRICE_MIN"
+                :max="PRICE_MAX"
+                :step="PRICE_STEP"
+                :value="priceMax"
+                @input="onMaxInput"
+              />
+            </div>
+            <div class="price-range-ticks">
+              <span v-for="tick in priceTicks" :key="tick.value" class="price-tick">{{ tick.label }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 정렬 영역 -->
@@ -171,9 +224,24 @@ const sortOptions = [
   { label: '리뷰순', value: 'reviews' },
 ]
 
+const PRICE_MIN = 0
+const PRICE_MAX = 50000
+const PRICE_STEP = 5000
+
+const priceTicks = [
+  { value: 0,     label: '0' },
+  { value: 10000, label: '1만' },
+  { value: 20000, label: '2만' },
+  { value: 30000, label: '3만' },
+  { value: 40000, label: '4만' },
+  { value: 50000, label: '5만+' },
+]
+
 const selectedCategory = ref(null)
 const selectedRegion1 = ref(null)
 const selectedRegion2 = ref(null)
+const priceMin = ref(PRICE_MIN)
+const priceMax = ref(PRICE_MAX)
 const selectedSort = ref('latest')
 const currentPage = ref(1)
 const searchInput = ref('')
@@ -206,6 +274,8 @@ const { data, status } = await useAsyncData(
       ...(selectedCategory.value ? { category: selectedCategory.value } : {}),
       ...(selectedRegion1.value ? { region1: selectedRegion1.value } : {}),
       ...(selectedRegion2.value ? { region2: selectedRegion2.value } : {}),
+      ...(priceMin.value > PRICE_MIN ? { priceMin: priceMin.value } : {}),
+      ...(priceMax.value < PRICE_MAX ? { priceMax: priceMax.value } : {}),
       ...(searchKeyword.value ? { keyword: searchKeyword.value } : {}),
       sort: selectedSort.value,
       page: currentPage.value,
@@ -278,6 +348,47 @@ const setRegion1 = (r1) => {
 const setRegion2 = (r2) => {
   selectedRegion2.value = r2
   currentPage.value = 1
+}
+
+// 가격 레이블 포맷
+const formatPrice = (v) => v >= PRICE_MAX ? '5만원+' : v === 0 ? '0원' : `${(v / 10000).toFixed(v % 10000 === 0 ? 0 : 1)}만원`
+const priceMinLabel = computed(() => formatPrice(priceMin.value))
+const priceMaxLabel = computed(() => formatPrice(priceMax.value))
+
+// 슬라이더 트랙 체우기
+const trackFillStyle = computed(() => {
+  const range = PRICE_MAX - PRICE_MIN
+  const left = ((priceMin.value - PRICE_MIN) / range) * 100
+  const right = ((PRICE_MAX - priceMax.value) / range) * 100
+  return { left: `${left}%`, right: `${right}%` }
+})
+
+// 디바운스: 슬라이더 조작 후 300ms 뒤 API 호출
+let priceDebounceTimer = null
+const triggerPriceSearch = () => {
+  clearTimeout(priceDebounceTimer)
+  priceDebounceTimer = setTimeout(() => {
+    currentPage.value = 1
+    refreshNuxtData('restaurants')
+  }, 300)
+}
+
+const onMinInput = (e) => {
+  const val = Number(e.target.value)
+  priceMin.value = Math.min(val, priceMax.value - PRICE_STEP)
+  triggerPriceSearch()
+}
+
+const onMaxInput = (e) => {
+  const val = Number(e.target.value)
+  priceMax.value = Math.max(val, priceMin.value + PRICE_STEP)
+  triggerPriceSearch()
+}
+
+const resetPrice = () => {
+  priceMin.value = PRICE_MIN
+  priceMax.value = PRICE_MAX
+  triggerPriceSearch()
 }
 
 const setSort = (sort) => {

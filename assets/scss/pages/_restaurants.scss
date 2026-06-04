@@ -30,22 +30,28 @@
 
     .search-icon {
       position: absolute;
-      left: rem(16);
+      left: rem(10);
       color: $gray-78;
       pointer-events: none;
       flex-shrink: 0;
+      @include tablet {
+        left: rem(16);
+      }
     }
 
     .search-input {
       width: 100%;
-      height: rem(52);
-      padding: 0 rem(44) 0 rem(48);
+      height: rem(44);
+      padding: 0 rem(22) 0 rem(30);
       background: $white;
       border: 1.5px solid $gray-e4;
       border-radius: rem(14);
       @include font(15, 1, 400, $black);
       transition: border-color 0.15s, box-shadow 0.15s;
-
+      @include tablet {
+        height: rem(52);
+        padding: 0 rem(44) 0 rem(48);
+      }
       &::placeholder {
         color: $gray-78;
       }
@@ -84,14 +90,17 @@
   }
 
   .search-submit-btn {
-    padding: rem(10) rem(28);
+    padding: rem(6) rem(14);
     background: $primary-color;
     border: none;
     border-radius: rem(10);
     @include font(14, 1, 600, $white);
     cursor: pointer;
     transition: background 0.15s;
+    @include tablet {
 
+    padding: rem(10) rem(28);
+    }
     &:hover {
       background: $primary-color-hover;
     }
@@ -135,9 +144,12 @@
     gap: rem(24);
     margin-block-end: rem(24);
     background: $white;
-    padding: rem(32);
+    padding: rem(18) rem(20);
     border-radius: rem(24);
     box-shadow: 0 rem(10) rem(40) rgba(0, 0, 0, 0.03);
+    @include tablet {
+      padding: rem(32);
+    }
   }
 
   .filter-group {
@@ -159,9 +171,11 @@
 
   .filter-label {
     @include font(15, 1, 700, $black);
-    padding-top: rem(10);
     flex-shrink: 0;
     width: rem(80);
+    @include tablet {
+      padding-top: rem(6);
+    }
   }
 
   .filter-chips {
@@ -196,6 +210,141 @@
       padding: rem(6) rem(14);
       font-size: rem(13);
     }
+  }
+
+  // 가격대 레인지 슬라이더
+  .price-range-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: rem(10);
+    width: 100%;
+  }
+
+  .price-range-labels {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+  }
+
+  .price-range-value {
+    @include font(14, 1, 700, $primary-color);
+    background: rgba($primary-color, 0.08);
+    border: 1px solid rgba($primary-color, 0.2);
+    border-radius: rem(8);
+    padding: rem(4) rem(10);
+    min-width: rem(60);
+    text-align: center;
+  }
+
+  .price-range-sep {
+    @include font(13, 1, 500, $gray-78);
+  }
+
+  .price-range-reset {
+    margin-left: rem(4);
+    width: rem(22);
+    height: rem(22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $gray-e4;
+    border: none;
+    border-radius: 50%;
+    color: $gray-78;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: $primary-color;
+      color: $white;
+    }
+  }
+
+  .price-range-slider {
+    position: relative;
+    height: rem(6);
+    background: $gray-e4;
+    border-radius: rem(100);
+    margin: rem(10) rem(8);
+
+    // 선택된 구간 채우기
+    .price-range-track-fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: $primary-color;
+      border-radius: rem(100);
+      pointer-events: none;
+    }
+  }
+
+  .price-range-input {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 0;
+    transform: translateY(-50%);
+    appearance: none;
+    background: transparent;
+    pointer-events: none;
+    outline: none;
+    margin: 0;
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      pointer-events: all;
+      width: rem(20);
+      height: rem(20);
+      border-radius: 50%;
+      background: $white;
+      border: 2.5px solid $primary-color;
+      box-shadow: 0 rem(2) rem(8) rgba($primary-color, 0.3);
+      cursor: grab;
+      transition: transform 0.15s, box-shadow 0.15s;
+
+      &:active {
+        cursor: grabbing;
+        transform: scale(1.2);
+        box-shadow: 0 rem(2) rem(12) rgba($primary-color, 0.5);
+      }
+    }
+
+    &::-moz-range-thumb {
+      pointer-events: all;
+      width: rem(20);
+      height: rem(20);
+      border-radius: 50%;
+      background: $white;
+      border: 2.5px solid $primary-color;
+      box-shadow: 0 rem(2) rem(8) rgba($primary-color, 0.3);
+      cursor: grab;
+      transition: transform 0.15s, box-shadow 0.15s;
+
+      &:active {
+        cursor: grabbing;
+        transform: scale(1.2);
+      }
+    }
+
+    &--max {
+      z-index: 2;
+    }
+
+    &--min {
+      z-index: 3;
+    }
+  }
+
+  .price-range-ticks {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 rem(8);
+  }
+
+  .price-tick {
+    @include font(11, 1, 500, $gray-78);
   }
 
   // fade 트랜지션 (검색 태그 등)
