@@ -9,6 +9,14 @@ export default defineEventHandler(async (event) => {
 
   console.log(`[Login Attempt]: identifier=${identifier}, rememberMe=${rememberMe}`)
 
+  // 이메일 및 비밀번호 누락 검증 (400 Bad Request)
+  if (!identifier || !password) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: '이메일과 비밀번호를 모두 입력해 주세요.'
+    })
+  }
+
   // 1. 이메일만 허용
   const user = await prisma.user.findFirst({
     where: {
