@@ -236,6 +236,7 @@ const handleLogoutMobile = () => {
   align-items: center;
   justify-content: center;
   @include font(14, 1, 700);
+  text-transform: uppercase;
 }
 
 .user-nickname {

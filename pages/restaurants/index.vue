@@ -61,6 +61,18 @@
           <span class="filter-label">지역</span>
           <div class="filter-chips">
             <button
+              class="filter-btn filter-btn--location"
+              :class="{ 'is-loading': isLocating }"
+              @click="setLocationBasedRegion"
+            >
+              <svg v-if="!isLocating" class="loc-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span v-else class="loc-spinner"></span>
+              내 위치
+            </button>
+            <button
               class="filter-btn"
               :class="{ 'is-active': !selectedRegion1 }"
               @click="setRegion1(null)"
@@ -332,6 +344,102 @@ const checkStillSaved = async (id) => {
       }
     }
   } catch (e) { /* noop */ }
+}
+
+const { loadSDK } = useKakaoMap()
+const isLocating = ref(false)
+
+const REGION_SHORT_NAMES = {
+  '서울특별시': '서울',
+  '부산광역시': '부산',
+  '대구광역시': '대구',
+  '인천광역시': '인천',
+  '광주광역시': '광주',
+  '대전광역시': '대전',
+  '울산광역시': '울산',
+  '세종특별자치시': '세종',
+  '경기도': '경기도',
+  '강원특별자치도': '강원도',
+  '충청북도': '충청북도',
+  '충청남도': '충청남도',
+  '전북특별자치도': '전라북도',
+  '전라남도': '전라남도',
+  '경상북도': '경상북도',
+  '경상남도': '경상남도',
+  '제주특별자치도': '제주도',
+}
+
+const setLocationBasedRegion = () => {
+  if (process.server) return
+  if (!navigator.geolocation) {
+    alert('이 브라우저에서는 위치 정보(Geolocation)를 지원하지 않습니다.')
+    return
+  }
+
+  isLocating.value = true
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords
+
+      loadSDK(() => {
+        if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
+          alert('카카오 지도 라이브러리를 로드하지 못했습니다.')
+          isLocating.value = false
+          return
+        }
+
+        const geocoder = new window.kakao.maps.services.Geocoder()
+        geocoder.coord2RegionCode(longitude, latitude, (result, status) => {
+          isLocating.value = false
+
+          if (status === window.kakao.maps.services.Status.OK) {
+            const regionInfo = result.find((r) => r.region_type === 'H') || result[0]
+            if (regionInfo) {
+              const rawRegion1 = regionInfo.region_1depth_name
+              const rawRegion2 = regionInfo.region_2depth_name
+
+              const matchedR1 = REGION_SHORT_NAMES[rawRegion1] ?? rawRegion1
+              if (regionKeys.value.includes(matchedR1)) {
+                selectedRegion1.value = matchedR1
+                
+                const currentSubRegions = regionsMap.value[matchedR1] ?? []
+                const matchedR2 = currentSubRegions.find(sub => 
+                  rawRegion2.includes(sub) || sub.includes(rawRegion2)
+                ) || null
+
+                selectedRegion2.value = matchedR2
+                currentPage.value = 1
+              } else {
+                alert(`현재 위치(${matchedR1})에 등록된 맛집 지역이 없습니다.`)
+              }
+            } else {
+              alert('위치에 해당하는 행정 구역 정보를 찾을 수 없습니다.')
+            }
+          } else {
+            alert('주소 변환에 실패했습니다.')
+          }
+        })
+      })
+    },
+    (error) => {
+      isLocating.value = false
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          alert('위치 권한 허용이 거부되었습니다. 설정에서 허용해 주세요.')
+          break
+        case error.POSITION_UNAVAILABLE:
+          alert('위치 정보를 사용할 수 없습니다.')
+          break
+        case error.TIMEOUT:
+          alert('위치 정보를 가져오는 요청 시간이 초과되었습니다.')
+          break
+        default:
+          alert('위치 정보를 가져오는 중 오류가 발생했습니다.')
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  )
 }
 
 const setCategory = (cat) => {

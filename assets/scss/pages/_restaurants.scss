@@ -210,6 +210,51 @@
       padding: rem(6) rem(14);
       font-size: rem(13);
     }
+
+    &--location {
+      display: inline-flex;
+      align-items: center;
+      gap: rem(6);
+      background: rgba($primary-color, 0.04);
+      border-color: rgba($primary-color, 0.2);
+      color: $primary-color;
+
+      &:hover {
+        background: rgba($primary-color, 0.08);
+        border-color: $primary-color;
+        color: $primary-color;
+      }
+
+      &.is-loading {
+        pointer-events: none;
+        opacity: 0.7;
+      }
+
+      .loc-icon {
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+      }
+
+      &:hover .loc-icon {
+        transform: scale(1.1);
+      }
+
+      .loc-spinner {
+        display: inline-block;
+        width: rem(12);
+        height: rem(12);
+        border: 2px solid rgba($primary-color, 0.2);
+        border-top-color: $primary-color;
+        border-radius: 50%;
+        animation: loc-spin 0.8s linear infinite;
+      }
+    }
+  }
+
+  @keyframes loc-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   // 가격대 레인지 슬라이더
@@ -718,6 +763,9 @@
           padding: rem(5) rem(10);
           background: rgba($black, 0.35);
           border-radius: rem(100);
+          &.swiper-pagination-lock {
+            display: none;
+          }
         }
 
         .swiper-pagination-bullet {
