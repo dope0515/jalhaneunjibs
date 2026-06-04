@@ -16,7 +16,7 @@
               잘하는 집 보러가기
             </AppButton>
             <AppButton
-              color="red"
+              color="black"
               variant="outline"
               shape="round"
               arrow
