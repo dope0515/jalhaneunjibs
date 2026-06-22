@@ -30,8 +30,17 @@ export default defineEventHandler(async (event) => {
   const pageSize = 6
   const skip = (pageNum - 1) * pageSize
 
-  const where: Record<string, unknown> = {}
-  if (category) where.foodCategory = category
+  const where: Record<string, any> = {
+    status: (getQuery(event).status as any) || 'ACTIVE'
+  }
+  if (category) {
+    const categories = (category as string).split(',')
+    if (categories.length > 1) {
+      where.foodCategory = { in: categories }
+    } else {
+      where.foodCategory = category
+    }
+  }
   if (region1) {
     const variations = REGION_VARIATIONS[region1 as string] ?? [region1 as string]
     where.region1 = { in: variations }

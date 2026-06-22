@@ -2,58 +2,376 @@
 @use "../abstracts/mixins" as *;
 
 .main-section {
-  padding-block: rem(60);
+  padding-block: rem(60) rem(80);
+  background-color: #fcfcfc;
 
   @include tablet {
-    padding-block: rem(100);
+    padding-block: rem(80) rem(100);
   }
 
-  .content-wrap {
-    .text-wrap {
+  .main-content {
+    max-width: rem(1280);
+    margin: 0 auto;
+  }
+
+  // ─── Hero Row ─────────────────────────────────────────────────────────────
+  .hero-row {
+    display: flex;
+    flex-direction: column;
+    gap: rem(32);
+    margin-bottom: rem(32);
+
+    @include tablet {
+      flex-direction: row;
+      align-items: center;
+      gap: rem(40);
+      margin-bottom: rem(40);
+
+      .main-header {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .feature-card.ranking {
+        flex: 0 0 rem(440);
+      }
+    }
+
+    @include desktop {
+      gap: rem(56);
+      margin-bottom: rem(48);
+
+      .feature-card.ranking {
+        flex: 0 0 rem(520);
+      }
+    }
+  }
+
+  // ─── Main Header ──────────────────────────────────────────────────────────
+  .main-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .main-title {
+      font-family: $font-family-serif;
+      @include font(40, 1.2, 700);
+      word-break: keep-all;
+      margin-bottom: rem(20);
+
+      .highlight {
+        font: inherit;
+        color: $primary-color;
+        position: relative;
+        display: inline-block;
+
+        &::after {
+          content: "";
+          position: absolute;
+          bottom: rem(2);
+          left: 0;
+          width: 100%;
+          height: rem(10);
+          background-color: rgba($primary-color, 0.12);
+          z-index: -1;
+          border-radius: rem(4);
+        }
+      }
+
+      @include tablet {
+        @include font(52, 1.15, 700);
+      }
+
+      @include desktop {
+        @include font(64, 1.1, 700);
+      }
+    }
+
+    .main-desc {
+      @include font(15, 1.7, 400, $gray-66);
+      max-width: rem(480);
+      word-break: keep-all;
+      margin-bottom: rem(36);
+
+      @include tablet {
+        @include font(17, 1.7, 400, $gray-66);
+      }
+    }
+
+    .main-header-btns {
+      display: flex;
+      flex-direction: column;
+      gap: rem(12);
+      width: 100%;
+
+      @include tablet {
+        flex-direction: row;
+        gap: rem(14);
+        width: auto;
+      }
+    }
+  }
+
+  // ─── Feature Cards (공통) ─────────────────────────────────────────────────
+  .feature-card {
+    position: relative;
+    border-radius: rem(28);
+    overflow: hidden;
+    background-color: $white;
+    border: 1px solid $gray-e4;
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+    &:hover {
+      transform: translateY(rem(-8));
+      box-shadow: 0 rem(24) rem(56) rgba(0, 0, 0, 0.1);
+      border-color: $primary-color;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      @include font(14, 1, 600, $primary-color);
+      margin-top: auto;
+
+      .icon-arrow {
+        display: inline-block;
+        width: rem(14);
+        height: rem(10);
+        background-color: currentColor;
+        mask-image: url("@/assets/images/icon/ic_arrow.svg");
+        mask-repeat: no-repeat;
+        mask-position: center;
+        mask-size: contain;
+        transition: transform 0.3s ease;
+      }
+    }
+
+    &:hover .card-footer .icon-arrow {
+      transform: translateX(rem(5));
+    }
+  }
+
+  // ─── Ranking Card ─────────────────────────────────────────────────────────
+  .feature-card.ranking {
+    min-height: rem(400);
+
+    @include tablet {
+      min-height: rem(480);
+    }
+
+    @include desktop {
+      min-height: rem(520);
+    }
+
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.7s ease;
+      }
+
+      .default-bg {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0f2d25 0%, #1a4d3a 40%, #1e6b50 100%);
+        position: relative;
+
+        &::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image:
+            radial-gradient(circle at 20% 80%, rgba($secondary-color, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba($primary-color, 0.2) 0%, transparent 50%);
+        }
+      }
+    }
+
+    &:hover .card-bg img {
+      transform: scale(1.06);
+    }
+
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.85) 0%,
+        rgba(0, 0, 0, 0.3) 55%,
+        rgba(0, 0, 0, 0.05) 100%
+      );
+      padding: rem(36);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      z-index: 1;
+    }
+
+    .card-tag {
+      align-self: flex-start;
+      background-color: $primary-color;
+      color: $white;
+      padding: rem(6) rem(16);
+      border-radius: rem(100);
+      @include font(11, 1, 700);
+      letter-spacing: 0.08em;
+      margin-bottom: rem(20);
+    }
+
+    .restaurant-name {
+      @include font(30, 1.2, 700, $white);
+      margin-bottom: rem(10);
+      display: block;
+
+      @include tablet {
+        @include font(38, 1.2, 700, $white);
+      }
+    }
+
+    .rating-info {
+      display: flex;
+      align-items: center;
+      gap: rem(6);
+      @include font(17, 1, 600, #ffcc00);
+      margin-bottom: rem(24);
+
+      img {
+        width: rem(18);
+        height: rem(18);
+      }
+
+      .review-count {
+        @include font(13, 1, 400, rgba(255, 255, 255, 0.55));
+      }
+    }
+
+    p {
+      @include font(14, 1.5, 400, rgba(255, 255, 255, 0.7));
+      margin-bottom: rem(24);
+    }
+
+    .card-footer {
+      color: $white;
+
+      .icon-arrow {
+        background-color: $white;
+      }
+    }
+  }
+
+  // ─── Sub Grid → Flex Row (하단 3개 카드) ──────────────────────────────────
+  .sub-grid {
+    display: flex;
+    flex-direction: column;
+    gap: rem(20);
+
+    @include tablet {
+      flex-direction: row;
+      gap: rem(24);
+
+      .feature-card.taster,
+      .feature-card.recommend,
+      .feature-card.board {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    .feature-card.taster,
+    .feature-card.recommend,
+    .feature-card.board {
+      padding: rem(28) rem(28) rem(24);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: rem(50);
+      min-height: rem(100);
 
-      .title-bx {
-        .title {
-          font-family: $font-family-serif;
-          @include font(36, 1.2, 700);
-          word-break: keep-all;
-
-          span {
-            font-family: inherit;
-            color: $primary-color;
-          }
-
-          @include tablet {
-            @include font(96, 1.1, 500);
-          }
-        }
+      @include tablet {
+        padding: rem(32);
+        min-height: rem(220);
       }
 
-      .desc-bx {
-        p {
-          @include font(16, 1.6, 400, $gray-44);
+      .card-content {
+        display: flex;
+        align-items: flex-start;
+        gap: rem(18);
+        margin-bottom: rem(24);
 
-          @include tablet {
-            @include font(20, 1.6, 400);
-          }
-        }
-
-        .btn-bx {
-          display: flex;
+        @include tablet {
           flex-direction: column;
-          gap: rem(12);
-          margin-block-start: rem(40);
+          gap: 0;
+        }
+
+        .icon-bx {
+          flex-shrink: 0;
+          width: rem(52);
+          height: rem(52);
+          background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($secondary-color, 0.06) 100%);
+          border: 1px solid rgba($primary-color, 0.1);
+          border-radius: rem(16);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
 
           @include tablet {
-            flex-direction: row;
-            margin-block-start: rem(56);
-            gap: rem(16);
+            width: rem(60);
+            height: rem(60);
+            border-radius: rem(18);
+            margin-bottom: rem(20);
+          }
+
+          img {
+            width: rem(26);
+            height: rem(26);
+
+            @include tablet {
+              width: rem(30);
+              height: rem(30);
+            }
+          }
+        }
+
+        .text-bx {
+          .title {
+            @include font(18, 1.3, 700, $black);
+            margin-bottom: rem(8);
+
+            @include tablet {
+              @include font(20, 1.3, 700, $black);
+              margin-bottom: rem(10);
+            }
+          }
+
+          .desc {
+            @include font(13, 1.6, 400, $gray-66);
+            br {
+              display: none;
+            }
+            @include tablet {
+              @include font(14, 1.6, 400, $gray-66);
+              br {
+                display: block;
+              }
+            }
           }
         }
       }
+    }
+
+    .feature-card.taster:hover .icon-bx,
+    .feature-card.recommend:hover .icon-bx,
+    .feature-card.board:hover .icon-bx {
+      background: linear-gradient(135deg, rgba($primary-color, 0.14) 0%, rgba($secondary-color, 0.1) 100%);
+      border-color: rgba($primary-color, 0.25);
+      transform: scale(1.05);
     }
   }
 }

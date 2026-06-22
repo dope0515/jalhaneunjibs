@@ -25,6 +25,7 @@
           <span v-if="tab.id === 'reviews' && reviews.length" class="tab-count">{{ reviews.length }}</span>
           <span v-if="tab.id === 'collections' && collections.length" class="tab-count">{{ collections.length }}</span>
           <span v-if="tab.id === 'myRestaurants' && myRestaurants.length" class="tab-count">{{ myRestaurants.length }}</span>
+          <span v-if="tab.id === 'myPosts' && myPosts.length" class="tab-count">{{ myPosts.length }}</span>
         </button>
       </div>
 
@@ -111,7 +112,7 @@
       </div>
 
       <!-- 내 찜 목록 탭 -->
-      <div v-else class="tab-panel">
+      <div v-else-if="activeTab === 'collections'" class="tab-panel">
         <div v-if="collectionsLoading" class="loading-msg">불러오는 중…</div>
         <div v-else class="collections-section">
           <div class="collections-grid">
@@ -170,6 +171,34 @@
             </button>
 
           </div>
+        </div>
+      </div>
+
+      <!-- 내 문의 내역 탭 -->
+      <div v-else-if="activeTab === 'myPosts'" class="tab-panel">
+        <div v-if="myPostsLoading" class="loading-msg">불러오는 중…</div>
+        <div v-else-if="myPostsError" class="empty-state">
+          <p>{{ myPostsError }}</p>
+        </div>
+        <div v-else-if="myPosts.length === 0" class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <p>아직 남기신 문의가 없어요</p>
+          <NuxtLink to="/board" class="empty-link">문의하러 가기</NuxtLink>
+        </div>
+        <div v-else class="mypage-post-list">
+          <NuxtLink v-for="post in myPosts" :key="post.id" :to="`/board/${post.id}`" class="mypage-post-card">
+            <div class="post-header">
+              <div class="title-wrap">
+                <span v-if="post.reply" class="reply-badge">답변 완료</span>
+                <span v-else class="reply-badge waiting">답변 대기</span>
+                <h3 class="post-title">{{ post.title }}</h3>
+              </div>
+              <span class="post-date">{{ formatDate(post.createdAt) }}</span>
+            </div>
+            <p class="post-content">{{ post.content }}</p>
+          </NuxtLink>
         </div>
       </div>
 
@@ -286,6 +315,7 @@ const tabs = [
   { id: 'myRestaurants', label: '내 등록 맛집' },
   { id: 'reviews', label: '내 리뷰' },
   { id: 'collections', label: '내 찜 목록' },
+  { id: 'myPosts', label: '내 문의 내역' },
 ]
 const activeTab = ref('profile')
 
@@ -524,11 +554,36 @@ const formatDate = (iso) => {
   return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+// ── 내 문의 내역 상태 ───────────────────────────────────────
+const myPosts = ref([])
+const myPostsLoading = ref(false)
+const myPostsError = ref('')
+
+const loadMyPosts = async () => {
+  if (myPosts.value.length) return
+  myPostsLoading.value = true
+  myPostsError.value = ''
+  try {
+    const data = await $api('/board')
+    if (data.success) {
+      myPosts.value = data.posts
+    } else {
+      throw new Error('불러오기 실패')
+    }
+  } catch (e) {
+    myPostsError.value = '내 문의 내역을 불러오지 못했습니다.'
+    console.error('[mypage] loadMyPosts error:', e)
+  } finally {
+    myPostsLoading.value = false
+  }
+}
+
 // ── 감시자 및 실행 ───────────────────────────────────────
 watch(activeTab, (tab) => {
   if (tab === 'myRestaurants' && !myRestaurants.value.length && !myRestaurantsLoading.value) loadMyRestaurants()
   if (tab === 'reviews' && !reviews.value.length && !reviewsLoading.value) loadReviews()
   if (tab === 'collections' && !collections.value.length && !collectionsLoading.value) loadCollections()
+  if (tab === 'myPosts' && !myPosts.value.length && !myPostsLoading.value) loadMyPosts()
 })
 
 await loadProfile()

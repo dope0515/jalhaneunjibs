@@ -28,6 +28,7 @@ model User {
   favorites            Favorite[]             // 사용자가 즐겨찾기한 내역들
   collections          Collection[]           // 사용자가 만든 찜 폴더들
   registeredRestaurants Restaurant[]          // 사용자가 등록한 맛집들
+  posts                Post[]                 // 사용자가 쓴 게시글들
   refreshTokens        RefreshToken[]
 
   createdAt    DateTime @default(now())
@@ -57,6 +58,7 @@ enum RestaurantStatus {
   ACTIVE    // 영업 중
   CLOSED    // 폐업
   HIDDEN    // 숨김 (관리자용)
+  TASTER    // 기미상궁 (등록 전 후보)
 }
 
 model Restaurant {
@@ -191,6 +193,20 @@ model Collection {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  reply     String?  @db.Text // 운영자 답변
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // 10. 설계도: 댓글(Comment) 테이블

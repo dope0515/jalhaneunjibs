@@ -59,13 +59,16 @@ export default defineEventHandler(async (event) => {
     const thumbnailFile = formData.get('thumbnail') // 레거시 지원용
     const restaurantImages = formData.getAll('restaurantImages') // 새 이미지 배열
     
-    // 필수 필드 체크
-    if (!name || !address || !latStr || !lngStr) {
-      throw createError({ statusCode: 400, statusMessage: '필수 정보(이름, 주소, 위치 등)가 누락되었습니다.' })
+    // 상태 추출 (기본값 ACTIVE)
+    const status = (formData.get('status')?.toString() as any) || 'ACTIVE'
+    
+    // 필수 필드 체크 (기미상궁일 경우 주소/좌표 필수 해제 가능)
+    if (!name || (!address && status !== 'TASTER')) {
+      throw createError({ statusCode: 400, statusMessage: '필수 정보(이름 등)가 누락되었습니다.' })
     }
 
-    const lat = parseFloat(latStr)
-    const lng = parseFloat(lngStr)
+    const lat = latStr ? parseFloat(latStr) : null
+    const lng = lngStr ? parseFloat(lngStr) : null
 
     // 1. 식당 이미지 업로드 (Cloudinary)
     let uploadedImages: string[] = []
@@ -140,7 +143,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const { region1, region2, region3 } = parseAddress(address)
+    const { region1, region2, region3 } = parseAddress(address || '')
 
     // 4. 중복 식당 체크 (placeId가 있을 때만)
     if (placeId) {
@@ -159,7 +162,8 @@ export default defineEventHandler(async (event) => {
         thumbnail: thumbnailPath,
         images: uploadedImages,
         foodCategory: category,
-        address,
+        status: status,
+        address: address || '주소 미상',
         region1,
         region2,
         region3,

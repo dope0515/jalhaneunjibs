@@ -23,7 +23,8 @@ logs
 .env.*
 !.env.example
 
-/app/generated/prisma
-
 # Uploads
 /public/uploads
+
+#rule
+CONVENTIONS.md

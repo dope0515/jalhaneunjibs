@@ -16,20 +16,47 @@
             <NuxtLink 
               to="/restaurants" 
               class="nav-link" 
-              title="잘하는 집 보러가기 페이지로 이동하기"
+              title="맛집 찾기 페이지로 이동하기"
             >
-              잘하는 집 보러가기
+              맛집 찾기
             </NuxtLink>
           </li>
           <li class="nav-item">
             <button 
               type="button"
               class="nav-link" 
-              title="잘하는 집 알려주기 페이지로 이동하기"
+              title="맛집 제보 페이지로 이동하기"
               @click="goToRegister"
             >
-              잘하는 집 알려주기
+              맛집 제보
             </button>
+          </li>
+          <li class="nav-item">
+            <NuxtLink
+              to="/taster"
+              class="nav-link"
+              title="기미상궁 페이지로 이동하기"
+            >
+              기미상궁
+            </NuxtLink>
+          </li>
+          <li class="nav-item">
+            <NuxtLink
+              to="/recommend"
+              class="nav-link"
+              title="맛집 추천 페이지로 이동하기"
+            >
+              맛집 추천
+            </NuxtLink>
+          </li>
+          <li class="nav-item">
+            <NuxtLink
+              to="/board"
+              class="nav-link"
+              title="문의하기 페이지로 이동하기"
+            >
+              문의하기
+            </NuxtLink>
           </li>
           <li v-if="authStore.isLoggedIn" class="nav-item">
             <NuxtLink to="/mypage" class="user-profile" title="마이페이지로 이동">
@@ -102,13 +129,28 @@
         <ul class="nav-drawer__list">
           <li>
             <NuxtLink to="/restaurants" class="nav-drawer__link" @click="menuOpen = false">
-              잘하는 집 보러가기
+              맛집 찾기
             </NuxtLink>
           </li>
           <li>
             <button type="button" class="nav-drawer__link" @click="goToRegisterMobile">
-              잘하는 집 알려주기
+              맛집 제보
             </button>
+          </li>
+          <li>
+            <NuxtLink to="/taster" class="nav-drawer__link" @click="menuOpen = false">
+              기미상궁
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/recommend" class="nav-drawer__link" @click="menuOpen = false">
+              맛집 추천
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/board" class="nav-drawer__link" @click="menuOpen = false">
+              문의하기
+            </NuxtLink>
           </li>
         </ul>
         <div class="nav-drawer__footer">
@@ -198,76 +240,3 @@ const handleLogoutMobile = () => {
   logout()
 }
 </script>
-
-<style lang="scss" scoped>
-.nav-link {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-  
-  &:hover,
-  &.router-link-active {
-    color: $primary-color;
-  }
-}
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: rem(8);
-  text-decoration: none;
-  color: inherit;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 0.8;
-  }
-}
-
-.user-avatar {
-  width: rem(32);
-  height: rem(32);
-  border-radius: 50%;
-  background: $primary-color;
-  color: $white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  @include font(14, 1, 700);
-  text-transform: uppercase;
-}
-
-.user-nickname {
-  @include font(14, 1, 600, $gray-44);
-}
-
-// 모바일 드로어용 스타일
-.nav-drawer__user {
-  border-bottom: 1px solid $gray-e4;
-  background: #fafaf9;
-  .user-profile {
-    padding: rem(20) rem(24);
-  }
-  .user-avatar {
-    width: rem(44);
-    height: rem(44);
-    @include font(18, 1, 700);
-  }
-
-  .user-info {
-    display: flex;
-    flex-direction: column;
-    gap: rem(2);
-  }
-
-  .user-nickname {
-    @include font(16, 1.2, 700, $gray-44);
-  }
-
-  .user-email {
-    @include font(12, 1.2, 400, $gray-78);
-  }
-}
-</style>
