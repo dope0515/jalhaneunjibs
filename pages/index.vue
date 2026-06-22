@@ -57,7 +57,7 @@
         <!-- 하단 기능 카드 나열 -->
         <div class="sub-grid" data-aos="fade-up" data-aos-delay="100">
           <!-- 2. 기미상궁 -->
-          <NuxtLink to="/taster" class="feature-card taster">
+          <!-- <NuxtLink to="/taster" class="feature-card taster">
             <div class="card-content">
               <div class="icon-bx">
                 <img src="~/assets/images/icon/ic_cutlery.svg" alt="Taster">
@@ -71,7 +71,7 @@
               <span class="label">가보기 전 확인하기</span>
               <i class="icon-arrow"></i>
             </div>
-          </NuxtLink>
+          </NuxtLink> -->
 
           <!-- 3. 잘하는 집 추천 -->
           <NuxtLink to="/recommend" class="feature-card recommend">

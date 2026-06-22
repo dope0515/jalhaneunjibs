@@ -31,7 +31,7 @@
               맛집 제보
             </button>
           </li>
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <NuxtLink
               to="/taster"
               class="nav-link"
@@ -39,7 +39,7 @@
             >
               기미상궁
             </NuxtLink>
-          </li>
+          </li> -->
           <li class="nav-item">
             <NuxtLink
               to="/recommend"
