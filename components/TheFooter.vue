@@ -17,6 +17,9 @@
             <li class="service-item">
               <NuxtLink to="/recommend" title="맛집 추천 페이지로 이동하기" class="service-link">맛집 추천</NuxtLink>
             </li>
+            <li class="service-item">
+              <NuxtLink to="/board" title="문의하기 페이지로 이동하기" class="service-link">문의하기</NuxtLink>
+            </li>
           </ul>
         </nav>
       </div>

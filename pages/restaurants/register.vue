@@ -90,17 +90,23 @@
                       <button
                         type="button"
                         class="result-item"
-                        :class="{ 'is-focused': focusedIndex === index }"
+                        :class="{
+                          'is-focused': focusedIndex === index,
+                          'is-registered': registeredPlaceIds.has(place.id)
+                        }"
+                        :disabled="registeredPlaceIds.has(place.id)"
                         role="option"
                         :aria-selected="focusedIndex === index"
+                        :aria-disabled="registeredPlaceIds.has(place.id)"
                         @click="selectPlace(place)"
-                        @mouseenter="focusedIndex = index"
-                        @focus="focusedIndex = index"
+                        @mouseenter="!registeredPlaceIds.has(place.id) && (focusedIndex = index)"
+                        @focus="!registeredPlaceIds.has(place.id) && (focusedIndex = index)"
                         @keydown.enter.stop="selectPlace(place)"
                       >
                         <span class="place-name">{{ place.place_name }}</span>
                         <span class="place-address">{{ place.road_address_name || place.address_name }}</span>
                         <span class="place-category" v-if="place.category_name">{{ place.category_name.split(' > ').pop() }}</span>
+                        <span v-if="registeredPlaceIds.has(place.id)" class="place-registered-badge">이미 등록된 식당입니다</span>
                       </button>
                     </li>
                   </ul>
@@ -788,6 +794,7 @@ watch(computedOpeningHours, (newVal) => {
 }, { immediate: true })
 
 const searchResults = ref([])
+const registeredPlaceIds = ref(new Set())
 const focusedIndex = ref(-1)
 const isSearchFocused = ref(false)
 const mapRef = ref(null)
@@ -966,12 +973,28 @@ const handleNameInput = (e) => {
     const ps = new window.kakao.maps.services.Places()
     const options = userLocation.value ? { location: userLocation.value } : {}
     
-    ps.keywordSearch(value, (data, status) => {
+    ps.keywordSearch(value, async (data, status) => {
       if (status === window.kakao.maps.services.Status.OK) {
         searchResults.value = data
         focusedIndex.value = -1
+
+        const ids = data.map((p) => p.id).filter(Boolean)
+        if (ids.length > 0) {
+          try {
+            const { registeredIds } = await $fetch(
+              '/api/restaurants/check-places',
+              { method: 'POST', body: { placeIds: ids } }
+            )
+            registeredPlaceIds.value = new Set(registeredIds)
+          } catch {
+            registeredPlaceIds.value = new Set()
+          }
+        } else {
+          registeredPlaceIds.value = new Set()
+        }
       } else {
         searchResults.value = []
+        registeredPlaceIds.value = new Set()
       }
     }, options)
   }, 400)
@@ -981,20 +1004,39 @@ const handleKeydown = (e) => {
   if (searchResults.value.length === 0) return
   if (e.isComposing) return
 
+  const isRegistered = (idx) =>
+    registeredPlaceIds.value.has(searchResults.value[idx]?.id)
+
   switch (e.key) {
-    case 'ArrowDown':
+    case 'ArrowDown': {
       e.preventDefault()
-      focusedIndex.value = (focusedIndex.value + 1) % searchResults.value.length
+      let next = (focusedIndex.value + 1) % searchResults.value.length
+      const start = next
+      while (isRegistered(next)) {
+        next = (next + 1) % searchResults.value.length
+        if (next === start) break
+      }
+      focusedIndex.value = next
       break
-    case 'ArrowUp':
+    }
+    case 'ArrowUp': {
       e.preventDefault()
-      focusedIndex.value = (focusedIndex.value - 1 + searchResults.value.length) % searchResults.value.length
+      let prev = (focusedIndex.value - 1 + searchResults.value.length) % searchResults.value.length
+      const start = prev
+      while (isRegistered(prev)) {
+        prev = (prev - 1 + searchResults.value.length) % searchResults.value.length
+        if (prev === start) break
+      }
+      focusedIndex.value = prev
       break
+    }
     case 'Enter':
       e.preventDefault()
       if (searchResults.value.length > 0) {
         const targetIndex = focusedIndex.value >= 0 ? focusedIndex.value : 0
-        selectPlace(searchResults.value[targetIndex])
+        if (!isRegistered(targetIndex)) {
+          selectPlace(searchResults.value[targetIndex])
+        }
       }
       break
     case 'Escape':
@@ -1035,6 +1077,7 @@ const getMajorCategory = (rawCategory) => {
 }
 
 const selectPlace = (place) => {
+  if (registeredPlaceIds.value.has(place.id)) return
   if (searchTimeout) clearTimeout(searchTimeout)
 
   const rawCat = place.category_name?.split(' > ').pop() || ''

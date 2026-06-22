@@ -198,6 +198,31 @@
         border-radius: rem(4);
         @include font(11, 1, 600, $gray-78);
       }
+
+      .place-registered-badge {
+        display: inline-block;
+        margin-top: rem(6);
+        margin-left: rem(4);
+        padding: rem(2) rem(8);
+        background-color: #fff0f0;
+        border: 1px solid #ffb3b3;
+        border-radius: rem(4);
+        @include font(11, 1, 600, #e03131);
+      }
+
+      &.is-registered {
+        cursor: not-allowed;
+        opacity: 0.6;
+        background-color: #fafafa;
+
+        &:hover {
+          background-color: #fafafa;
+        }
+
+        .place-name {
+          color: $gray-78;
+        }
+      }
     }
   }
 

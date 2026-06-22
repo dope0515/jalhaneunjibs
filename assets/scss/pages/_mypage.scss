@@ -708,7 +708,7 @@
   }
 
   @include desktop {
-    width: calc(100% / 3 - rem(13.33));
+    width: calc(100% / 3 - rem(13.333));
   }
 
   &:hover {

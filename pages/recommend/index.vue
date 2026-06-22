@@ -41,8 +41,16 @@
               </AppButton>
               <div class="region-selects" v-if="!useCurrentLocation">
                 <select v-model="selectedRegion1" class="custom-select">
-                  <option :value="null">지역 선택 (시/도)</option>
+                  <option :value="null">시/도 선택</option>
                   <option v-for="r1 in regionKeys" :key="r1" :value="r1">{{ r1 }}</option>
+                </select>
+                <select
+                  v-if="selectedRegion1 && region2Keys.length > 0"
+                  v-model="selectedRegion2"
+                  class="custom-select"
+                >
+                  <option :value="null">구/군 전체</option>
+                  <option v-for="r2 in region2Keys" :key="r2" :value="r2">{{ r2 }}</option>
                 </select>
               </div>
             </div>
@@ -136,41 +144,96 @@
 
         <!-- 단계 3: 룰렛 돌리기 -->
         <div v-if="step === 3" class="step-wrap roulette-step">
-          <div class="roulette-stage">
-            <div class="roulette-pointer"></div>
-            <div 
-              class="roulette-wheel" 
-              :style="wheelStyle"
-            >
-              <div 
-                v-for="(item, index) in selectedCandidates" 
-                :key="item.id" 
-                class="wheel-slice"
-                :style="getSliceStyle(index)"
-              >
-                <span class="slice-text">{{ item.name }}</span>
-              </div>
+          <div class="roulette-header">
+            <h3 class="step-title">오늘의 식당을 결정해볼까요?</h3>
+            <div class="roulette-chips">
+              <span v-for="item in selectedCandidates" :key="item.id" class="roulette-chip">{{ item.name }}</span>
             </div>
           </div>
 
-          <div class="roulette-actions">
-            <AppButton 
-              v-if="!isSpinning && !resultRestaurant" 
-              size="lg" 
-              color="green" 
-              shape="round" 
-              @click="spinRoulette"
-            >
-              룰렛 돌리기!
-            </AppButton>
-            
-            <div v-if="resultRestaurant && !isSpinning" class="result-card" data-aos="zoom-in">
-              <span class="res-cat">{{ resultRestaurant.foodCategory }}</span>
-              <h4 class="res-name">{{ resultRestaurant.name }}</h4>
-              <p class="res-addr">{{ resultRestaurant.address }}</p>
-              <div class="res-btns">
-                <AppButton :to="`/restaurants/${resultRestaurant.id}`" color="green" shape="round">식당 정보 보기</AppButton>
-                <AppButton variant="outline" shape="round" @click="reset">다시 하기</AppButton>
+          <div class="roulette-body">
+            <div class="roulette-stage">
+              <div class="roulette-glow"></div>
+              <div class="roulette-pointer">
+                <div class="pointer-pin"></div>
+              </div>
+              <svg
+                class="roulette-wheel"
+                viewBox="0 0 400 400"
+                :style="wheelStyle"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <!-- 외곽 테두리 링 -->
+                <circle cx="200" cy="200" r="199" fill="#1a1a1a" />
+                <circle cx="200" cy="200" r="194" fill="#2d2d2d" />
+                <!-- 슬라이스 -->
+                <g v-for="(item, index) in selectedCandidates" :key="item.id">
+                  <path
+                    :d="getSlicePath(index)"
+                    :fill="getSliceColor(index)"
+                    stroke="rgba(255,255,255,0.3)"
+                    stroke-width="1.5"
+                  />
+                  <text
+                    :transform="getSliceTextTransform(index)"
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                    :font-size="sliceTextFontSize"
+                    font-weight="700"
+                    fill="#1a1a1a"
+                    font-family="inherit"
+                  >{{ truncateSliceName(item.name) }}</text>
+                </g>
+                <!-- 중앙 캡 -->
+                <circle cx="200" cy="200" r="28" fill="#1a1a1a" />
+                <circle cx="200" cy="200" r="20" fill="#fff" />
+                <circle cx="200" cy="200" r="8" fill="#1a1a1a" />
+              </svg>
+            </div>
+
+            <div class="roulette-actions">
+              <template v-if="!resultRestaurant">
+                <AppButton
+                  v-if="!isSpinning"
+                  size="lg"
+                  color="green"
+                  shape="round"
+                  class="spin-btn"
+                  @click="spinRoulette"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                  룰렛 돌리기!
+                </AppButton>
+                <div v-else class="spinning-indicator">
+                  <div class="spin-dots">
+                    <span class="spin-dot"></span>
+                    <span class="spin-dot"></span>
+                    <span class="spin-dot"></span>
+                  </div>
+                  <p>결과를 정하는 중...</p>
+                </div>
+              </template>
+
+              <div v-if="resultRestaurant && !isSpinning" class="result-card">
+                <div class="result-icon">🎉</div>
+                <p class="res-label">오늘의 선택</p>
+                <span class="res-cat">{{ resultRestaurant.foodCategory }}</span>
+                <h4 class="res-name">{{ resultRestaurant.name }}</h4>
+                <p class="res-addr">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  {{ resultRestaurant.address }}
+                </p>
+                <div class="res-btns">
+                  <AppButton :to="`/restaurants/${resultRestaurant.id}`" color="green" shape="round">
+                    식당 정보 보기
+                  </AppButton>
+                  <AppButton variant="outline" shape="round" @click="resetSpin">다시 돌리기</AppButton>
+                </div>
+                <button type="button" class="restart-btn" @click="reset">처음부터 다시 하기</button>
               </div>
             </div>
           </div>
@@ -199,6 +262,14 @@ const resultRestaurant = ref(null)
 const { data: regionsData } = await useAsyncData('regions', () => $api('/restaurants/regions'))
 const regionKeys = computed(() => regionsData.value ? Object.keys(regionsData.value) : [])
 
+const selectedRegion2 = ref(null)
+const region2Keys = computed(() => {
+  if (!selectedRegion1.value || !regionsData.value) return []
+  return regionsData.value[selectedRegion1.value] ?? []
+})
+
+watch(selectedRegion1, () => { selectedRegion2.value = null })
+
 const formatPrice = (p) => p >= 100000 ? '금액 제한 없음' : `${Number(p).toLocaleString()}원 이하`
 
 const toggleCategory = (cat) => {
@@ -211,7 +282,10 @@ const toggleCategory = (cat) => {
 
 const toggleLocation = () => {
   useCurrentLocation.value = !useCurrentLocation.value
-  if (useCurrentLocation.value) selectedRegion1.value = null
+  if (useCurrentLocation.value) {
+    selectedRegion1.value = null
+    selectedRegion2.value = null
+  }
 }
 
 const fetchCandidates = async () => {
@@ -222,6 +296,7 @@ const fetchCandidates = async () => {
       limit: 30 // 선택 후보를 넉넉히 가져옴
     }
     if (selectedRegion1.value) query.region1 = selectedRegion1.value
+    if (selectedRegion2.value) query.region2 = selectedRegion2.value
 
     const { restaurants } = await $api('/restaurants', { query })
 
@@ -281,18 +356,61 @@ const spinRoulette = () => {
   }, 4000)
 }
 
-const getSliceStyle = (index) => {
+const getSlicePath = (index) => {
   const count = selectedCandidates.value.length
-  const degree = 360 / count
-  const rotate = index * degree
-  const skew = 90 - degree
-  
-  // 무지개색 계열로 자동 배색
-  const hue = (index * (360 / count))
-  return {
-    transform: `rotate(${rotate}deg) skewY(-${skew}deg)`,
-    backgroundColor: `hsl(${hue}, 70%, 95%)`
+  const sliceAngle = (2 * Math.PI) / count
+  const startAngle = index * sliceAngle - Math.PI / 2
+  const endAngle = startAngle + sliceAngle
+  const cx = 200, cy = 200, r = 187
+
+  if (count === 1) {
+    return `M ${cx - r} ${cy} a ${r} ${r} 0 1 1 ${r * 2} 0 a ${r} ${r} 0 1 1 -${r * 2} 0`
   }
+
+  const x1 = (cx + r * Math.cos(startAngle)).toFixed(3)
+  const y1 = (cy + r * Math.sin(startAngle)).toFixed(3)
+  const x2 = (cx + r * Math.cos(endAngle)).toFixed(3)
+  const y2 = (cy + r * Math.sin(endAngle)).toFixed(3)
+  const largeArc = sliceAngle > Math.PI ? 1 : 0
+
+  return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`
+}
+
+const getSliceColor = (index) => {
+  const count = selectedCandidates.value.length
+  const hue = index * (360 / count)
+  return `hsl(${hue}, 70%, 93%)`
+}
+
+const sliceTextFontSize = computed(() => {
+  const count = selectedCandidates.value.length
+  if (count <= 4) return 14
+  if (count <= 8) return 12
+  return 10
+})
+
+const truncateSliceName = (name) => {
+  const count = selectedCandidates.value.length
+  const maxLen = count <= 4 ? 8 : count <= 8 ? 6 : 5
+  return name.length > maxLen ? name.slice(0, maxLen - 1) + '…' : name
+}
+
+const getSliceTextTransform = (index) => {
+  const count = selectedCandidates.value.length
+  const sliceDeg = 360 / count
+  const midAngleDeg = index * sliceDeg + sliceDeg / 2 - 90
+  const midAngleRad = midAngleDeg * Math.PI / 180
+  const textR = count <= 4 ? 105 : count <= 8 ? 118 : 128
+  const cx = 200, cy = 200
+
+  const tx = (cx + textR * Math.cos(midAngleRad)).toFixed(2)
+  const ty = (cy + textR * Math.sin(midAngleRad)).toFixed(2)
+
+  // 왼쪽 반원(90°~270°)에 있는 텍스트는 180° 뒤집어 항상 읽기 쉽게 표시
+  const norm = ((midAngleDeg % 360) + 360) % 360
+  const rotation = (norm > 90 && norm <= 270) ? midAngleDeg + 180 : midAngleDeg
+
+  return `translate(${tx}, ${ty}) rotate(${rotation.toFixed(2)})`
 }
 
 const wheelStyle = computed(() => ({
@@ -300,12 +418,18 @@ const wheelStyle = computed(() => ({
   transition: isSpinning.value ? 'transform 4s cubic-bezier(0.15, 0, 0.15, 1)' : 'none'
 }))
 
+const resetSpin = () => {
+  resultRestaurant.value = null
+  // wheelRotation은 유지 → 바로 이어서 돌릴 때 자연스럽게 연속 회전
+}
+
 const reset = () => {
   step.value = 1
   fetchedRestaurants.value = []
   selectedCandidates.value = []
   resultRestaurant.value = null
   wheelRotation.value = 0
+  selectedRegion2.value = null
 }
 </script>
 
@@ -370,7 +494,8 @@ const reset = () => {
   }
 
   .location-box {
-    display: flex; gap: rem(16); align-items: center;
+    display: flex; gap: rem(16); align-items: center; flex-wrap: wrap;
+    .region-selects { display: flex; gap: rem(10); align-items: center; }
     .custom-select {
       appearance: none;
       -webkit-appearance: none;
@@ -466,40 +591,205 @@ const reset = () => {
   }
 
   // Roulette Step
-  .roulette-stage {
-    position: relative; width: rem(400); height: rem(400); margin: 0 auto rem(60);
-    .roulette-pointer {
-      position: absolute; top: rem(-20); left: 50%; transform: translateX(-50%);
-      width: rem(40); height: rem(50); background-color: $primary-color;
-      clip-path: polygon(0% 0%, 100% 0%, 50% 100%); z-index: 10;
-    }
-    .roulette-wheel {
-      width: 100%; height: 100%; border-radius: 50%; border: rem(12) solid #333;
-      position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-    .wheel-slice {
-      position: absolute; width: 50%; height: 50%; top: 0; right: 0;
-      transform-origin: 0% 100%; display: flex; align-items: center; justify-content: center;
-      border: 0.5px solid rgba(0,0,0,0.05);
+  .roulette-header {
+    text-align: center;
+    margin-bottom: rem(32);
 
-      .slice-text {
-        // 이 텍스트 회전 값은 슬라이스 개수에 따라 미세 조정이 필요할 수 있음
-        transform: skewY(0deg) rotate(0deg); 
-        @include font(14, 1.2, 700, $black);
-        width: rem(120); text-align: center;
-        position: absolute; left: rem(40); bottom: rem(40);
-        transform: rotate(45deg); // 기본 45도 방향
-      }
+    .step-title { margin-bottom: rem(16); }
+
+    .roulette-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: rem(8);
+    }
+
+    .roulette-chip {
+      display: inline-block;
+      padding: rem(6) rem(14);
+      background-color: $gray-f0;
+      border-radius: rem(100);
+      @include font(13, 1, 500, $gray-66);
     }
   }
 
+  .roulette-body {
+    display: flex;
+    align-items: flex-start;
+    gap: rem(48);
+    justify-content: center;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  .roulette-stage {
+    position: relative;
+    width: rem(380);
+    height: rem(380);
+    flex-shrink: 0;
+
+    .roulette-glow {
+      position: absolute;
+      inset: rem(-20);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba($primary-color, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .roulette-pointer {
+      position: absolute;
+      top: rem(-6);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .pointer-pin {
+        width: rem(20);
+        height: rem(44);
+        background: linear-gradient(180deg, #fff 0%, $primary-color 40%, darken($primary-color, 12%) 100%);
+        border-radius: rem(4) rem(4) 0 0;
+        clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
+        box-shadow: 0 rem(4) rem(12) rgba(0,0,0,0.25);
+      }
+    }
+
+    .roulette-wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+      box-shadow:
+        0 rem(20) rem(60) rgba(0,0,0,0.25),
+        0 0 0 rem(4) rgba(255,255,255,0.6);
+    }
+  }
+
+  .roulette-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: rem(380);
+    gap: rem(24);
+
+    .spin-btn {
+      width: rem(200);
+      font-size: rem(17);
+    }
+  }
+
+  .spinning-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: rem(14);
+
+    .spin-dots {
+      display: flex;
+      gap: rem(8);
+    }
+
+    .spin-dot {
+      display: block;
+      width: rem(10);
+      height: rem(10);
+      border-radius: 50%;
+      background-color: $primary-color;
+      animation: spin-bounce 1.2s infinite ease-in-out both;
+
+      &:nth-child(1) { animation-delay: -0.32s; }
+      &:nth-child(2) { animation-delay: -0.16s; }
+      &:nth-child(3) { animation-delay: 0s; }
+    }
+
+    p {
+      @include font(15, 1, 500, $gray-66);
+    }
+  }
+
+  @keyframes spin-bounce {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
   .result-card {
-    text-align: center; background-color: #f8fdfc; border: 1px solid $primary-color;
-    padding: rem(40); border-radius: rem(24);
-    .res-cat { @include font(14, 1, 600, $primary-color); }
-    .res-name { @include font(32, 1.2, 700, $black); margin-block: rem(12); }
-    .res-addr { @include font(16, 1, 400, $gray-66); margin-bottom: rem(32); }
-    .res-btns { display: flex; gap: rem(12); justify-content: center; }
+    width: 100%;
+    text-align: center;
+    background: linear-gradient(135deg, #f8fdfc 0%, #edfaf5 100%);
+    border: 1.5px solid rgba($primary-color, 0.3);
+    padding: rem(36) rem(32);
+    border-radius: rem(28);
+    box-shadow: 0 rem(8) rem(32) rgba($primary-color, 0.1);
+    animation: result-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+
+    .result-icon {
+      font-size: rem(48);
+      line-height: 1;
+      margin-bottom: rem(16);
+    }
+
+    .res-label {
+      @include font(13, 1, 600, $primary-color);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: rem(8);
+    }
+
+    .res-cat {
+      display: inline-block;
+      padding: rem(4) rem(12);
+      background-color: rgba($primary-color, 0.1);
+      border-radius: rem(100);
+      @include font(12, 1, 600, $primary-color);
+      margin-bottom: rem(10);
+    }
+
+    .res-name {
+      @include font(28, 1.2, 800, $black);
+      margin-bottom: rem(12);
+    }
+
+    .res-addr {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: rem(4);
+      @include font(14, 1.5, 400, $gray-66);
+      margin-bottom: rem(28);
+
+      svg { flex-shrink: 0; margin-top: rem(2); }
+    }
+
+    .res-btns {
+      display: flex;
+      gap: rem(10);
+      justify-content: center;
+    }
+
+    .restart-btn {
+      margin-top: rem(14);
+      background: none;
+      border: none;
+      cursor: pointer;
+      @include font(13, 1, 400, $gray-99);
+      text-decoration: underline;
+      text-underline-offset: rem(3);
+      transition: color 0.2s;
+
+      &:hover { color: $gray-66; }
+    }
+  }
+
+  @keyframes result-pop {
+    0% { opacity: 0; transform: scale(0.85) translateY(rem(16)); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
   }
 }
 </style>
