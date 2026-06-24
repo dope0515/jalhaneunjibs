@@ -435,15 +435,27 @@ const reset = () => {
 
 <style lang="scss" scoped>
 .recommend-page {
-  padding-block: rem(60);
+  padding-block: rem(32);
+  overflow-x: hidden;
+
+  @include tablet {
+    padding-block: rem(60);
+  }
 
   .recommend-container {
-    margin-top: rem(48);
+    margin-top: rem(24);
     background-color: $white;
     border: 1px solid $gray-e4;
-    border-radius: rem(32);
-    padding: rem(60) rem(40);
-    min-height: rem(600);
+    border-radius: rem(20);
+    padding: rem(24) rem(16);
+    min-height: auto;
+
+    @include tablet {
+      margin-top: rem(48);
+      border-radius: rem(32);
+      padding: rem(60) rem(40);
+      min-height: rem(600);
+    }
   }
 
   .step-wrap {
@@ -451,8 +463,23 @@ const reset = () => {
     margin: 0 auto;
   }
 
-  .step-title { @include font(24, 1, 700); margin-bottom: rem(12); }
-  .step-desc { @include font(15, 1, 400, $gray-66); }
+  .step-title {
+    @include font(20, 1.3, 700);
+    margin-bottom: rem(10);
+
+    @include tablet {
+      @include font(24, 1, 700);
+      margin-bottom: rem(12);
+    }
+  }
+
+  .step-desc {
+    @include font(14, 1.5, 400, $gray-66);
+
+    @include tablet {
+      @include font(15, 1, 400, $gray-66);
+    }
+  }
 
   .required {
     @include font(12, 1, 500, #ff4d4f);
@@ -467,39 +494,119 @@ const reset = () => {
 
   // Filter Step
   .filter-section {
-    margin-bottom: rem(48);
+    margin-bottom: rem(32);
+
+    @include tablet {
+      margin-bottom: rem(48);
+    }
+
     .filter-title {
-      @include font(20, 1, 700, $black);
-      margin-bottom: rem(24);
+      @include font(17, 1.3, 700, $black);
+      margin-bottom: rem(16);
       display: flex;
       align-items: center;
       gap: rem(8);
+
+      @include tablet {
+        @include font(20, 1, 700, $black);
+        margin-bottom: rem(24);
+      }
+
       &::before {
-        content: ""; width: rem(4); height: rem(20); background-color: $primary-color; border-radius: rem(2);
+        content: "";
+        width: rem(4);
+        height: rem(18);
+        background-color: $primary-color;
+        border-radius: rem(2);
+        flex-shrink: 0;
+
+        @include tablet {
+          height: rem(20);
+        }
       }
     }
   }
 
-  .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: rem(12); }
+  .category-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+
+    @include tablet {
+      gap: rem(12);
+    }
+  }
+
   .category-btn {
-    padding: rem(14); border: 1px solid $gray-e4; border-radius: rem(12);
-    @include font(15, 1, 500, $gray-66); transition: all 0.2s ease;
-    background-color: $white; cursor: pointer;
+    flex: 1 1 calc(50% - #{rem(4)});
+    min-width: calc(50% - #{rem(4)});
+    padding: rem(12);
+    border: 1px solid $gray-e4;
+    border-radius: rem(12);
+    @include font(14, 1, 500, $gray-66);
+    transition: all 0.2s ease;
+    background-color: $white;
+    cursor: pointer;
+
+    @include tablet {
+      flex: 1 1 calc(25% - #{rem(9)});
+      min-width: calc(25% - #{rem(9)});
+      padding: rem(14);
+      @include font(15, 1, 500, $gray-66);
+    }
+
     &:hover {
       border-color: $primary-color;
       color: $primary-color;
       background-color: rgba($primary-color, 0.02);
     }
-    &.is-active { background-color: $primary-color; border-color: $primary-color; color: $white; }
+
+    &.is-active {
+      background-color: $primary-color;
+      border-color: $primary-color;
+      color: $white;
+    }
   }
 
   .location-box {
-    display: flex; gap: rem(16); align-items: center; flex-wrap: wrap;
-    .region-selects { display: flex; gap: rem(10); align-items: center; }
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: rem(12);
+
+    @include tablet {
+      flex-direction: row;
+      align-items: center;
+      gap: rem(16);
+    }
+
+    :deep(.app-button) {
+      width: 100%;
+      justify-content: center;
+
+      @include tablet {
+        width: auto;
+      }
+    }
+
+    .region-selects {
+      display: flex;
+      flex-direction: column;
+      gap: rem(8);
+      width: 100%;
+
+      @include tablet {
+        flex-direction: row;
+        gap: rem(10);
+        width: auto;
+      }
+    }
+
     .custom-select {
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
+      width: 100%;
       padding: rem(12) rem(40) rem(12) rem(20);
       border: 1px solid $gray-e4;
       border-radius: rem(100);
@@ -513,7 +620,12 @@ const reset = () => {
       cursor: pointer;
       transition: all 0.2s ease;
 
+      @include tablet {
+        width: auto;
+      }
+
       &:hover { border-color: $primary-color; }
+
       &:focus {
         border-color: $primary-color;
         box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
@@ -522,126 +634,330 @@ const reset = () => {
   }
 
   .price-range-selector {
-    .price-display { @include font(28, 1, 700, $primary-color); margin-bottom: rem(20); text-align: center; }
-    .price-slider {
-      width: 100%; height: rem(8); background: $gray-e4; border-radius: rem(4); appearance: none; outline: none;
-      &::-webkit-slider-thumb {
-        appearance: none; width: rem(28); height: rem(28); background: $white; border: 2px solid $primary-color; border-radius: 50%; cursor: pointer;
-        box-shadow: 0 rem(2) rem(8) rgba(0,0,0,0.15); transition: transform 0.2s ease;
+    .price-display {
+      @include font(22, 1, 700, $primary-color);
+      margin-bottom: rem(16);
+      text-align: center;
+
+      @include tablet {
+        @include font(28, 1, 700, $primary-color);
+        margin-bottom: rem(20);
       }
+    }
+
+    .price-slider {
+      width: 100%;
+      height: rem(8);
+      background: $gray-e4;
+      border-radius: rem(4);
+      appearance: none;
+      outline: none;
+
+      &::-webkit-slider-thumb {
+        appearance: none;
+        width: rem(28);
+        height: rem(28);
+        background: $white;
+        border: 2px solid $primary-color;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 rem(2) rem(8) rgba(0,0,0,0.15);
+        transition: transform 0.2s ease;
+      }
+
       &::-webkit-slider-thumb:hover {
         transform: scale(1.15);
       }
     }
-    .price-labels { display: flex; justify-content: space-between; margin-top: rem(12); @include font(14, 1, 500, $gray-99); }
+
+    .price-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: rem(12);
+      @include font(13, 1, 500, $gray-99);
+
+      @include tablet {
+        @include font(14, 1, 500, $gray-99);
+      }
+    }
   }
 
   // Selection Step
   .selection-header {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    margin-bottom: rem(32); padding-bottom: rem(20); border-bottom: 1px solid $gray-f0;
-    .btns { display: flex; gap: rem(8); }
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: rem(16);
+    margin-bottom: rem(24);
+    padding-bottom: rem(16);
+    border-bottom: 1px solid $gray-f0;
+
+    @include tablet {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: rem(32);
+      padding-bottom: rem(20);
+    }
+
+    .btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: rem(8);
+      width: 100%;
+
+      :deep(.app-button) {
+        flex: 1 1 calc(50% - #{rem(4)});
+        min-width: calc(50% - #{rem(4)});
+        justify-content: center;
+      }
+
+      @include tablet {
+        width: auto;
+        flex-wrap: nowrap;
+
+        :deep(.app-button) {
+          flex: none;
+          min-width: 0;
+          width: auto;
+        }
+      }
+    }
   }
 
   .candidate-list {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: rem(16);
-    margin-bottom: rem(40);
+    display: flex;
+    flex-direction: column;
+    gap: rem(12);
+    margin-bottom: rem(24);
+
+    @include tablet {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: rem(16);
+      margin-bottom: rem(40);
+    }
   }
 
   .candidate-item {
-    display: flex; align-items: center; gap: rem(16); padding: rem(16);
-    border: 1px solid $gray-e4; border-radius: rem(16); cursor: pointer; transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: rem(12);
+    padding: rem(12);
+    border: 1px solid $gray-e4;
+    border-radius: rem(16);
+    cursor: pointer;
+    transition: all 0.2s ease;
     background-color: $white;
-    
-    &:hover { border-color: $primary-color; transform: translateY(rem(-2)); box-shadow: 0 rem(6) rem(16) rgba(0,0,0,0.06); }
+    width: 100%;
+
+    @include tablet {
+      gap: rem(16);
+      padding: rem(16);
+      width: calc(50% - #{rem(8)});
+    }
+
+    &:hover {
+      border-color: $primary-color;
+      transform: translateY(rem(-2));
+      box-shadow: 0 rem(6) rem(16) rgba(0,0,0,0.06);
+    }
+
     &.is-selected {
-      border-color: $primary-color; background-color: rgba($primary-color, 0.03);
-      .item-check .check-circle { background-color: $primary-color; border-color: $primary-color; }
+      border-color: $primary-color;
+      background-color: rgba($primary-color, 0.03);
+
+      .item-check .check-circle {
+        background-color: $primary-color;
+        border-color: $primary-color;
+      }
+
       .item-check .check-circle::after {
-        content: ''; display: block; width: rem(10); height: rem(6);
-        border-bottom: 2px solid $white; border-left: 2px solid $white;
+        content: '';
+        display: block;
+        width: rem(10);
+        height: rem(6);
+        border-bottom: 2px solid $white;
+        border-left: 2px solid $white;
         transform: rotate(-45deg) translate(rem(2), rem(-1));
       }
     }
 
     .item-img {
-      width: rem(60); height: rem(60); border-radius: rem(12); overflow: hidden; flex-shrink: 0;
+      width: rem(52);
+      height: rem(52);
+      border-radius: rem(12);
+      overflow: hidden;
+      flex-shrink: 0;
+
+      @include tablet {
+        width: rem(60);
+        height: rem(60);
+      }
+
       img { width: 100%; height: 100%; object-fit: cover; }
       .no-img { width: 100%; height: 100%; background-color: $gray-f0; }
     }
 
     .item-info {
-      flex: 1; min-width: 0;
+      flex: 1;
+      min-width: 0;
+
       .cat { @include font(12, 1, 500, $primary-color); }
-      .name { @include font(16, 1.3, 700, $black); margin-block: rem(4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .addr { @include font(13, 1, 400, $gray-99); }
+
+      .name {
+        @include font(15, 1.3, 700, $black);
+        margin-block: rem(4);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        @include tablet {
+          @include font(16, 1.3, 700, $black);
+        }
+      }
+
+      .addr { @include font(12, 1, 400, $gray-99); }
     }
 
     .item-check {
+      flex-shrink: 0;
+
       .check-circle {
-        width: rem(24); height: rem(24); border: 2px solid $gray-e4; border-radius: 50%;
-        transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        width: rem(24);
+        height: rem(24);
+        border: 2px solid $gray-e4;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
   }
 
   .action-bx {
-    display: flex; gap: rem(12); justify-content: center;
-    &.sticky-bottom { position: sticky; bottom: 0; background: white; padding-block: rem(20); border-top: 1px solid $gray-f0; z-index: 10; }
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: rem(10);
+
+    :deep(.app-button) {
+      width: 100%;
+      justify-content: center;
+    }
+
+    @include tablet {
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: rem(12);
+
+      :deep(.app-button) {
+        width: auto;
+      }
+    }
+
+    &.sticky-bottom {
+      position: sticky;
+      bottom: 0;
+      background: $white;
+      padding-block: rem(16);
+      margin-inline: rem(-16);
+      padding-inline: rem(16);
+      border-top: 1px solid $gray-f0;
+      z-index: 10;
+
+      @include tablet {
+        margin-inline: 0;
+        padding-inline: 0;
+        padding-block: rem(20);
+      }
+    }
   }
 
   // Roulette Step
   .roulette-header {
     text-align: center;
-    margin-bottom: rem(32);
+    margin-bottom: rem(24);
 
-    .step-title { margin-bottom: rem(16); }
+    @include tablet {
+      margin-bottom: rem(32);
+    }
+
+    .step-title { margin-bottom: rem(12); }
+
+    @include tablet {
+      .step-title { margin-bottom: rem(16); }
+    }
 
     .roulette-chips {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: rem(8);
+      gap: rem(6);
+
+      @include tablet {
+        gap: rem(8);
+      }
     }
 
     .roulette-chip {
       display: inline-block;
-      padding: rem(6) rem(14);
+      max-width: 100%;
+      padding: rem(5) rem(12);
       background-color: $gray-f0;
       border-radius: rem(100);
-      @include font(13, 1, 500, $gray-66);
+      @include font(12, 1, 500, $gray-66);
+      word-break: keep-all;
+
+      @include tablet {
+        padding: rem(6) rem(14);
+        @include font(13, 1, 500, $gray-66);
+      }
     }
   }
 
   .roulette-body {
     display: flex;
-    align-items: flex-start;
-    gap: rem(48);
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: rem(24);
 
-    @media (max-width: 768px) {
-      flex-direction: column;
-      align-items: center;
+    @include tablet {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: rem(48);
     }
   }
 
   .roulette-stage {
     position: relative;
-    width: rem(380);
-    height: rem(380);
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 1;
     flex-shrink: 0;
+    margin-inline: auto;
+
+    @include tablet {
+      max-width: rem(380);
+    }
 
     .roulette-glow {
       position: absolute;
-      inset: rem(-20);
+      inset: rem(-12);
       border-radius: 50%;
       background: radial-gradient(circle, rgba($primary-color, 0.12) 0%, transparent 70%);
       pointer-events: none;
+
+      @include tablet {
+        inset: rem(-20);
+      }
     }
 
     .roulette-pointer {
       position: absolute;
-      top: rem(-6);
+      top: rem(-4);
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
@@ -649,13 +965,22 @@ const reset = () => {
       flex-direction: column;
       align-items: center;
 
+      @include tablet {
+        top: rem(-6);
+      }
+
       .pointer-pin {
-        width: rem(20);
-        height: rem(44);
+        width: rem(16);
+        height: rem(36);
         background: linear-gradient(180deg, $white 0%, $primary-color 40%, $primary-color-hover 100%);
         border-radius: rem(4) rem(4) 0 0;
         clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
         box-shadow: 0 rem(4) rem(12) rgba(0,0,0,0.25);
+
+        @include tablet {
+          width: rem(20);
+          height: rem(44);
+        }
       }
     }
 
@@ -665,8 +990,14 @@ const reset = () => {
       border-radius: 50%;
       display: block;
       box-shadow:
-        0 rem(20) rem(60) rgba(0,0,0,0.25),
-        0 0 0 rem(4) rgba(255,255,255,0.6);
+        0 rem(12) rem(40) rgba(0,0,0,0.2),
+        0 0 0 rem(3) rgba(255,255,255,0.6);
+
+      @include tablet {
+        box-shadow:
+          0 rem(20) rem(60) rgba(0,0,0,0.25),
+          0 0 0 rem(4) rgba(255,255,255,0.6);
+      }
     }
   }
 
@@ -675,13 +1006,26 @@ const reset = () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex: 1;
-    min-height: rem(380);
-    gap: rem(24);
+    width: 100%;
+    min-height: auto;
+    gap: rem(20);
+
+    @include tablet {
+      flex: 1;
+      min-height: rem(380);
+      gap: rem(24);
+    }
 
     .spin-btn {
-      width: rem(200);
-      font-size: rem(17);
+      width: 100%;
+      max-width: rem(280);
+      font-size: rem(16);
+
+      @include tablet {
+        width: rem(200);
+        max-width: none;
+        font-size: rem(17);
+      }
     }
   }
 
@@ -724,22 +1068,36 @@ const reset = () => {
     text-align: center;
     background: linear-gradient(135deg, #f8fdfc 0%, #edfaf5 100%);
     border: 1.5px solid rgba($primary-color, 0.3);
-    padding: rem(36) rem(32);
-    border-radius: rem(28);
+    padding: rem(24) rem(16);
+    border-radius: rem(20);
     box-shadow: 0 rem(8) rem(32) rgba($primary-color, 0.1);
     animation: result-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 
+    @include tablet {
+      padding: rem(36) rem(32);
+      border-radius: rem(28);
+    }
+
     .result-icon {
-      font-size: rem(48);
+      font-size: rem(40);
       line-height: 1;
-      margin-bottom: rem(16);
+      margin-bottom: rem(12);
+
+      @include tablet {
+        font-size: rem(48);
+        margin-bottom: rem(16);
+      }
     }
 
     .res-label {
-      @include font(13, 1, 600, $primary-color);
+      @include font(12, 1, 600, $primary-color);
       text-transform: uppercase;
       letter-spacing: 0.1em;
       margin-bottom: rem(8);
+
+      @include tablet {
+        @include font(13, 1, 600, $primary-color);
+      }
     }
 
     .res-cat {
@@ -752,8 +1110,14 @@ const reset = () => {
     }
 
     .res-name {
-      @include font(28, 1.2, 800, $black);
-      margin-bottom: rem(12);
+      @include font(22, 1.3, 800, $black);
+      margin-bottom: rem(10);
+      word-break: keep-all;
+
+      @include tablet {
+        @include font(28, 1.2, 800, $black);
+        margin-bottom: rem(12);
+      }
     }
 
     .res-addr {
@@ -761,20 +1125,43 @@ const reset = () => {
       align-items: flex-start;
       justify-content: center;
       gap: rem(4);
-      @include font(14, 1.5, 400, $gray-66);
-      margin-bottom: rem(28);
+      @include font(13, 1.5, 400, $gray-66);
+      margin-bottom: rem(20);
+      word-break: keep-all;
+
+      @include tablet {
+        @include font(14, 1.5, 400, $gray-66);
+        margin-bottom: rem(28);
+      }
 
       svg { flex-shrink: 0; margin-top: rem(2); }
     }
 
     .res-btns {
       display: flex;
-      gap: rem(10);
-      justify-content: center;
+      flex-direction: column;
+      gap: rem(8);
+      width: 100%;
+
+      :deep(.app-button) {
+        width: 100%;
+        justify-content: center;
+      }
+
+      @include tablet {
+        flex-direction: row;
+        justify-content: center;
+        gap: rem(10);
+        width: auto;
+
+        :deep(.app-button) {
+          width: auto;
+        }
+      }
     }
 
     .restart-btn {
-      margin-top: rem(14);
+      margin-top: rem(12);
       background: none;
       border: none;
       cursor: pointer;
@@ -782,6 +1169,10 @@ const reset = () => {
       text-decoration: underline;
       text-underline-offset: rem(3);
       transition: color 0.2s;
+
+      @include tablet {
+        margin-top: rem(14);
+      }
 
       &:hover { color: $gray-66; }
     }
