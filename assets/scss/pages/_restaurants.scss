@@ -1522,6 +1522,59 @@
     padding-top: rem(20);
   }
 
+  // ─── 방문 인증 뱃지 ──────────────────────────────────────────────
+  .visit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(3);
+    padding: rem(3) rem(8) rem(3) rem(6);
+    border-radius: rem(100);
+    border: 1.5px dashed $gray-e4;
+    @include font(11, 1, 700, $gray-99);
+    transition: all 0.3s ease;
+    vertical-align: middle;
+
+    svg { flex-shrink: 0; }
+
+    &.is-earned {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border: 1.5px solid rgba($primary-color, 0.3);
+      border-style: solid;
+      color: $primary-color;
+      animation: badge-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+  }
+
+  @keyframes badge-pop {
+    0%   { transform: scale(0.75); opacity: 0; }
+    100% { transform: scale(1);    opacity: 1; }
+  }
+
+  .upload-row {
+    display: flex;
+    align-items: center;
+    gap: rem(12);
+    flex-wrap: wrap;
+  }
+
+  .visit-badge-wrap {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+  }
+
+  .visit-badge-hint {
+    @include font(12, 1, 400, $gray-78);
+    transition: color 0.3s;
+  }
+
+  .my-review-label-group {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+  }
+
+  // ─── 리뷰 목록 ───────────────────────────────────────────────────
   .review-item {
     display: flex;
     flex-direction: column;
@@ -1743,9 +1796,27 @@
   }
 
   .parking-memo {
-    @include font(12, 1.4, 400, $gray-78);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: rem(4);
+    @include font(12, 1.5, 400, $gray-78);
     margin: 0;
     text-align: right;
     text-wrap: balance;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      flex-shrink: 0;
+      width: rem(14);
+      height: rem(14);
+      margin-top: rem(1);
+      background-color: $gray-99;
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E");
+      mask-repeat: no-repeat;
+      mask-size: contain;
+      mask-position: center;
+    }
   }
 }

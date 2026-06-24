@@ -118,42 +118,87 @@
               </div>
 
               <template v-if="opData.hasOpeningHours">
-                <!-- 요일 선택 -->
                 <div class="hours-sub-item has-divider">
-                  <span class="hours-sub-label">영업 요일</span>
+                  <span class="hours-sub-label">시간 입력 방식</span>
                   <div class="preset-group">
-                    <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'everyday' }" @click="setDayPreset('everyday')">매일 (월~일)</button>
-                    <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'weekdays' }" @click="setDayPreset('weekdays')">평일 (월~금)</button>
-                    <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'weekends' }" @click="setDayPreset('weekends')">주말 (토~일)</button>
-                    <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'custom' }" @click="setDayPreset('custom')">직접 선택</button>
+                    <button type="button" class="preset-btn" :class="{ 'is-active': opData.scheduleMode === 'uniform' }" @click="opData.scheduleMode = 'uniform'">모든 요일 동일</button>
+                    <button type="button" class="preset-btn" :class="{ 'is-active': opData.scheduleMode === 'perDay' }" @click="opData.scheduleMode = 'perDay'">요일마다 다르게</button>
                   </div>
-                  <div class="days-toggle-group" v-if="opData.dayType === 'custom'">
-                    <button 
-                      v-for="d in ['월', '화', '수', '목', '금', '토', '일']" 
-                      :key="d"
-                      type="button"
-                      class="day-toggle-btn"
-                      :class="{ 'is-active': opData.customDays.includes(d) }"
-                      @click="toggleCustomDay(d)"
-                    >
-                      {{ d }}
-                    </button>
-                  </div>
+                  <p v-if="opData.scheduleMode === 'perDay'" class="hours-hint">요일별로 영업·휴무·시간을 각각 설정할 수 있어요.</p>
                 </div>
 
-                <!-- 영업 시간 -->
-                <div class="hours-sub-item">
-                  <span class="hours-sub-label">영업 시간</span>
-                  <div class="time-range-group">
-                    <div class="time-picker-wrapper" data-label="시작">
-                      <input type="time" v-model="opData.openTime" class="time-picker-input" />
+                <template v-if="opData.scheduleMode === 'uniform'">
+                  <!-- 요일 선택 -->
+                  <div class="hours-sub-item has-divider">
+                    <span class="hours-sub-label">영업 요일</span>
+                    <div class="preset-group">
+                      <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'everyday' }" @click="setDayPreset('everyday')">매일 (월~일)</button>
+                      <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'weekdays' }" @click="setDayPreset('weekdays')">평일 (월~금)</button>
+                      <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'weekends' }" @click="setDayPreset('weekends')">주말 (토~일)</button>
+                      <button type="button" class="preset-btn" :class="{ 'is-active': opData.dayType === 'custom' }" @click="setDayPreset('custom')">직접 선택</button>
                     </div>
-                    <span class="time-separator">~</span>
-                    <div class="time-picker-wrapper" data-label="종료">
-                      <input type="time" v-model="opData.closeTime" class="time-picker-input" />
+                    <div class="days-toggle-group" v-if="opData.dayType === 'custom'">
+                      <button 
+                        v-for="d in WEEKDAYS" 
+                        :key="d"
+                        type="button"
+                        class="day-toggle-btn"
+                        :class="{ 'is-active': opData.customDays.includes(d) }"
+                        @click="toggleCustomDay(d)"
+                      >
+                        {{ d }}
+                      </button>
                     </div>
                   </div>
-                </div>
+
+                  <!-- 영업 시간 -->
+                  <div class="hours-sub-item">
+                    <span class="hours-sub-label">영업 시간</span>
+                    <div class="time-range-group">
+                      <div class="time-picker-wrapper" data-label="시작">
+                        <input type="time" v-model="opData.openTime" class="time-picker-input" />
+                      </div>
+                      <span class="time-separator">~</span>
+                      <div class="time-picker-wrapper" data-label="종료">
+                        <input type="time" v-model="opData.closeTime" class="time-picker-input" />
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <div class="hours-sub-item has-divider">
+                    <span class="hours-sub-label">요일별 영업 시간</span>
+                    <div class="day-schedule-list">
+                      <div
+                        v-for="day in WEEKDAYS"
+                        :key="day"
+                        class="day-schedule-row"
+                        :class="{ 'is-closed': opData.daySchedules[day].closed }"
+                      >
+                        <span class="day-schedule-label">{{ day }}</span>
+                        <label class="day-closed-toggle">
+                          <input type="checkbox" v-model="opData.daySchedules[day].closed" />
+                          <span>휴무</span>
+                        </label>
+                        <div v-if="!opData.daySchedules[day].closed" class="time-range-group is-compact">
+                          <div class="time-picker-wrapper" data-label="시작">
+                            <input type="time" v-model="opData.daySchedules[day].openTime" class="time-picker-input" />
+                          </div>
+                          <span class="time-separator">~</span>
+                          <div class="time-picker-wrapper" data-label="종료">
+                            <input type="time" v-model="opData.daySchedules[day].closeTime" class="time-picker-input" />
+                          </div>
+                        </div>
+                        <span v-else class="day-closed-text">휴무</span>
+                      </div>
+                    </div>
+                    <div class="day-bulk-actions">
+                      <button type="button" class="preset-btn" @click="applyWeekdayBulk">평일에 월요일 시간 적용</button>
+                      <button type="button" class="preset-btn" @click="applyWeekendBulk">주말에 토요일 시간 적용</button>
+                    </div>
+                  </div>
+                </template>
 
                 <!-- 브레이크 타임 -->
                 <div class="hours-sub-item has-divider">
@@ -190,7 +235,7 @@
                 </div>
 
                 <!-- 정기 휴무일 -->
-                <div class="hours-sub-item has-divider">
+                <div v-if="opData.scheduleMode === 'uniform'" class="hours-sub-item has-divider">
                   <div class="flex-between">
                     <span class="hours-sub-label">정기 휴무일</span>
                     <label class="switch-toggle">
@@ -429,6 +474,8 @@
 </template>
 
 <script setup>
+import { WEEKDAYS, parseOpeningHours, formatOpeningHours } from '~/utils/openingHours'
+
 const { $api } = useApi()
 const route = useRoute()
 const { user } = useAuth()
@@ -485,82 +532,12 @@ const form = ref({
 })
 
 // ── 상세 영업시간 데이터 및 헬퍼 ──────────────────────────────────
-const parseOpeningHours = (str) => {
-  const data = {
-    hasOpeningHours: !!str,
-    dayType: 'everyday',
-    customDays: ['월', '화', '수', '목', '금', '토', '일'],
-    openTime: '11:30',
-    closeTime: '21:30',
-    hasBreakTime: false,
-    breakStartTime: '14:00',
-    breakEndTime: '17:00',
-    hasLastOrder: false,
-    lastOrderTime: '20:00',
-    hasClosedDays: false,
-    closedDays: []
-  }
-
-  if (!str) return data
-
-  const lines = str.split('\n').map(l => l.trim())
-  
-  for (const line of lines) {
-    if (line.includes('브레이크 타임')) {
-      const match = line.match(/브레이크 타임\s*:\s*(\d{2}:\d{2})\s*~\s*(\d{2}:\d{2})/)
-      if (match) {
-        data.hasBreakTime = true
-        data.breakStartTime = match[1]
-        data.breakEndTime = match[2]
-      }
-    } else if (line.includes('라스트 오더')) {
-      const match = line.match(/라스트 오더\s*:\s*(\d{2}:\d{2})/)
-      if (match) {
-        data.hasLastOrder = true
-        data.lastOrderTime = match[1]
-      }
-    } else if (line.includes('휴무일')) {
-      const match = line.match(/휴무일\s*:\s*매주\s*(.*?)요일/)
-      if (match) {
-        data.hasClosedDays = true
-        data.closedDays = match[1].split(',').map(d => d.trim())
-      }
-    } else if (line.includes(':')) {
-      const parts = line.split(':')
-      const daysPart = parts[0].trim()
-      const timePart = parts.slice(1).join(':').trim()
-      
-      const timeMatch = timePart.match(/(\d{2}:\d{2})\s*~\s*(\d{2}:\d{2})/)
-      if (timeMatch) {
-        data.openTime = timeMatch[1]
-        data.closeTime = timeMatch[2]
-      }
-
-      if (daysPart === '월 ~ 일') {
-        data.dayType = 'everyday'
-        data.customDays = ['월', '화', '수', '목', '금', '토', '일']
-      } else if (daysPart === '월 ~ 금') {
-        data.dayType = 'weekdays'
-        data.customDays = ['월', '화', '수', '목', '금']
-      } else if (daysPart === '토 ~ 일') {
-        data.dayType = 'weekends'
-        data.customDays = ['토', '일']
-      } else {
-        data.dayType = 'custom'
-        data.customDays = daysPart.split(',').map(d => d.trim())
-      }
-    }
-  }
-
-  return data
-}
-
 const opData = ref(parseOpeningHours(restaurant.value.openingHours))
 
 const setDayPreset = (type) => {
   opData.value.dayType = type
   if (type === 'everyday') {
-    opData.value.customDays = ['월', '화', '수', '목', '금', '토', '일']
+    opData.value.customDays = [...WEEKDAYS]
   } else if (type === 'weekdays') {
     opData.value.customDays = ['월', '화', '수', '목', '금']
   } else if (type === 'weekends') {
@@ -587,50 +564,25 @@ const toggleClosedDay = (d) => {
   }
 }
 
-const computedOpeningHours = computed(() => {
-  if (!opData.value.hasOpeningHours) return ''
-  
-  let daysStr = ''
-  if (opData.value.dayType === 'everyday') {
-    daysStr = '월 ~ 일'
-  } else if (opData.value.dayType === 'weekdays') {
-    daysStr = '월 ~ 금'
-  } else if (opData.value.dayType === 'weekends') {
-    daysStr = '토 ~ 일'
-  } else {
-    const allDays = ['월', '화', '수', '목', '금', '토', '일']
-    const selected = allDays.filter(d => opData.value.customDays.includes(d))
-    if (selected.length === 0) {
-      daysStr = '요일 선택 없음'
-    } else if (selected.length === 7) {
-      daysStr = '월 ~ 일'
-    } else if (selected.length === 5 && selected.every(d => ['월', '화', '수', '목', '금'].includes(d))) {
-      daysStr = '월 ~ 금'
-    } else if (selected.length === 2 && selected.every(d => ['토', '일'].includes(d))) {
-      daysStr = '토 ~ 일'
-    } else {
-      daysStr = selected.join(', ')
+const applyDaySchedule = (days, source) => {
+  days.forEach((day) => {
+    opData.value.daySchedules[day] = {
+      closed: source.closed,
+      openTime: source.openTime,
+      closeTime: source.closeTime,
     }
-  }
+  })
+}
 
-  let result = `${daysStr} : ${opData.value.openTime} ~ ${opData.value.closeTime}`
-  
-  if (opData.value.hasBreakTime) {
-    result += `\n브레이크 타임 : ${opData.value.breakStartTime} ~ ${opData.value.breakEndTime}`
-  }
-  
-  if (opData.value.hasLastOrder) {
-    result += `\n라스트 오더 : ${opData.value.lastOrderTime}`
-  }
-  
-  if (opData.value.hasClosedDays && opData.value.closedDays.length > 0) {
-    const allDays = ['월', '화', '수', '목', '금', '토', '일']
-    const selectedClosed = allDays.filter(d => opData.value.closedDays.includes(d))
-    result += `\n휴무일 : 매주 ${selectedClosed.join(', ')}요일`
-  }
-  
-  return result
-})
+const applyWeekdayBulk = () => {
+  applyDaySchedule(['월', '화', '수', '목', '금'], opData.value.daySchedules['월'])
+}
+
+const applyWeekendBulk = () => {
+  applyDaySchedule(['토', '일'], opData.value.daySchedules['토'])
+}
+
+const computedOpeningHours = computed(() => formatOpeningHours(opData.value))
 
 watch(computedOpeningHours, (newVal) => {
   form.value.openingHours = newVal

@@ -214,7 +214,7 @@
             class="modal-input"
             placeholder="예: 데이트 코스, 부모님과 함께"
             maxlength="30"
-            @keydown.enter="createCollection"
+            @keydown.enter="(e) => { if (!e.isComposing) createCollection() }"
           />
           <label class="modal-check-row">
             <input v-model="newColPrivate" type="checkbox" />
@@ -237,7 +237,7 @@
             v-model="renameValue"
             class="modal-input"
             maxlength="30"
-            @keydown.enter="confirmRename"
+            @keydown.enter="(e) => { if (!e.isComposing) confirmRename() }"
           />
           <div class="modal-actions">
             <button class="btn-ghost btn-danger" @click="deleteCollection(renameTarget)">목록 삭제</button>

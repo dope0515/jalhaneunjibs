@@ -478,6 +478,9 @@
     }
 
     .menu-recommend-hint {
+      display: flex;
+      align-items: center;
+      gap: rem(4);
       @include font(12, 1, 500, $gray-78);
     }
   }
@@ -639,29 +642,50 @@
     }
 
     .menu-star-btn {
-      width: rem(32);
-      height: rem(32);
-      border-radius: 50%;
-      background: $white;
-      border: 1px solid $gray-e4;
-      color: #d1d5db;
-      cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
+      gap: rem(4);
+      padding: rem(5) rem(10);
+      border-radius: rem(100);
+      background: $white;
+      border: 1.5px solid $gray-e4;
+      color: $gray-99;
+      cursor: pointer;
+      @include font(12, 1, 600, $gray-99);
+      white-space: nowrap;
       flex-shrink: 0;
+      transition: all 0.2s ease;
+
+      svg {
+        fill: none;
+        flex-shrink: 0;
+        transition: fill 0.2s ease, stroke 0.2s ease;
+      }
 
       &:hover {
         border-color: #f59e0b;
+        color: #d97706;
         background: #fffbeb;
+
+        svg { stroke: #d97706; }
       }
 
       &.is-active {
         background: #f59e0b;
         border-color: #f59e0b;
         color: $white;
-        box-shadow: 0 rem(4) rem(12) rgba(245, 158, 11, 0.3);
+        box-shadow: 0 rem(2) rem(8) rgba(245, 158, 11, 0.4);
+
+        svg {
+          fill: $white;
+          stroke: $white;
+        }
+
+        &:hover {
+          background: #e08c00;
+          border-color: #e08c00;
+          color: $white;
+        }
       }
     }
 
@@ -1542,6 +1566,75 @@
 
   .hours-sub-label {
     @include font(14, 1, 700, $black);
+  }
+
+  .hours-hint {
+    @include font(12, 1.5, 400, $gray-78);
+    margin: 0;
+  }
+
+  .day-schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: rem(8);
+  }
+
+  .day-schedule-row {
+    display: grid;
+    grid-template-columns: rem(28) rem(56) 1fr;
+    align-items: center;
+    gap: rem(10);
+    padding: rem(10) rem(12);
+    background: $white;
+    border: 1px solid $gray-e4;
+    border-radius: rem(10);
+
+    &.is-closed {
+      background: #fafafa;
+    }
+  }
+
+  .day-schedule-label {
+    @include font(14, 1, 700, $black);
+    text-align: center;
+  }
+
+  .day-closed-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(4);
+    @include font(12, 1, 500, $gray-66);
+    cursor: pointer;
+    white-space: nowrap;
+
+    input {
+      accent-color: #dc2626;
+    }
+  }
+
+  .day-closed-text {
+    @include font(13, 1, 600, #dc2626);
+  }
+
+  .day-bulk-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+    margin-top: rem(4);
+  }
+
+  .time-range-group.is-compact {
+    gap: rem(8);
+
+    .time-picker-wrapper {
+      min-width: 0;
+    }
+
+    .time-picker-input {
+      width: 100%;
+      min-width: rem(108);
+      padding: rem(8) rem(10);
+    }
   }
 
   .flex-between {
