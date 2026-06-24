@@ -652,7 +652,7 @@ const reset = () => {
       .pointer-pin {
         width: rem(20);
         height: rem(44);
-        background: linear-gradient(180deg, #fff 0%, $primary-color 40%, darken($primary-color, 12%) 100%);
+        background: linear-gradient(180deg, $white 0%, $primary-color 40%, $primary-color-hover 100%);
         border-radius: rem(4) rem(4) 0 0;
         clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
         box-shadow: 0 rem(4) rem(12) rgba(0,0,0,0.25);

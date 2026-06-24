@@ -141,7 +141,16 @@
               <!-- 수정 전: 내 리뷰 표시 -->
               <div v-if="myReview && !editingReview" class="my-review-card">
                 <div class="my-review-header">
-                  <span class="my-review-label">내가 쓴 리뷰</span>
+                  <div class="my-review-label-group">
+                    <span class="my-review-label">내가 쓴 리뷰</span>
+                    <span v-if="myReview.images?.length" class="visit-badge is-earned">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                        <path d="M9 12l2 2 4-4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      방문 인증
+                    </span>
+                  </div>
                   <div class="my-review-actions">
                     <AppButton size="xs" variant="outline" @click="startEditReview">수정</AppButton>
                     <AppButton size="xs" variant="outline" color="red" @click="deleteMyReview">삭제</AppButton>
@@ -189,16 +198,33 @@
                     class="sr-only"
                     @change="handleReviewImages"
                   />
-                  <AppButton
-                    v-if="totalImageCount < 3"
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    @click="reviewImgInputRef?.click()"
-                  >
-                    <img src="/assets/images/icon/ic_upload.svg" width="16" height="16" alt="" aria-hidden="true" style="margin-right: 6px;" />
-                    사진 추가 ({{ totalImageCount }}/3)
-                  </AppButton>
+                  <div class="upload-row">
+                    <AppButton
+                      v-if="totalImageCount < 3"
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      @click="reviewImgInputRef?.click()"
+                    >
+                      <img src="/assets/images/icon/ic_upload.svg" width="16" height="16" alt="" aria-hidden="true" style="margin-right: 6px;" />
+                      사진 추가 ({{ totalImageCount }}/3)
+                    </AppButton>
+
+                    <!-- 방문 인증 뱃지 프리뷰 -->
+                    <div class="visit-badge-wrap">
+                      <span class="visit-badge" :class="{ 'is-earned': totalImageCount > 0 }">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                          <path d="M9 12l2 2 4-4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        방문 인증
+                      </span>
+                      <span class="visit-badge-hint">
+                        {{ totalImageCount > 0 ? '뱃지가 부여됩니다!' : '사진을 추가하면 방문 인증 뱃지가 부여됩니다' }}
+                      </span>
+                    </div>
+                  </div>
+
                   <div v-if="reviewForm.allImages.length" class="img-preview-list">
                     <div
                       v-for="(item, i) in reviewForm.allImages"
@@ -209,7 +235,6 @@
                       <button type="button" class="img-remove-btn" @click="removeReviewImage(i)" aria-label="이미지 삭제">×</button>
                     </div>
                   </div>
-
                 </div>
 
                 <div class="form-actions">
@@ -230,6 +255,13 @@
               <div v-for="review in otherReviews" :key="review.id" class="review-item">
                 <div class="review-header">
                   <span class="reviewer-name">{{ review.user.nickname || '사용자' }}</span>
+                  <span v-if="review.images?.length" class="visit-badge is-earned">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                      <path d="M9 12l2 2 4-4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    방문 인증
+                  </span>
                   <span class="review-date">{{ formatDate(review.createdAt) }}</span>
                   <AppButton v-if="user?.role === 'ADMIN'" size="xs" variant="outline" color="red" @click="deleteReviewById(review.id)">삭제</AppButton>
                 </div>

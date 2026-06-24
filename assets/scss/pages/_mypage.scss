@@ -1133,6 +1133,74 @@
   cursor: pointer;
 }
 
+.fav-col-delete-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: rem(28);
+  height: rem(28);
+  border: none;
+  background: transparent;
+  border-radius: rem(6);
+  cursor: pointer;
+  color: $gray-99;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: #dc2626;
+    background: #fff1f2;
+  }
+}
+
+.fav-col-confirm {
+  display: flex;
+  align-items: center;
+  gap: rem(6);
+  flex-shrink: 0;
+  animation: confirm-in 0.15s ease;
+
+  .confirm-label {
+    @include font(12, 1, 500, $gray-66);
+    white-space: nowrap;
+  }
+
+  .confirm-yes {
+    padding: rem(5) rem(10);
+    background: #dc2626;
+    color: $white;
+    border: none;
+    border-radius: rem(6);
+    @include font(12, 1, 600, $white);
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover { background: #b91c1c; }
+  }
+
+  .confirm-no {
+    padding: rem(5) rem(10);
+    background: $gray-f0;
+    border: none;
+    border-radius: rem(6);
+    @include font(12, 1, 500, $gray-66);
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover { background: $gray-e4; }
+  }
+}
+
+@keyframes confirm-in {
+  from { opacity: 0; transform: translateX(rem(6)); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.fav-col-row.is-confirming {
+  background: #fff8f8;
+  cursor: default;
+}
+
 .fav-empty {
   padding: rem(40) rem(20);
   text-align: center;

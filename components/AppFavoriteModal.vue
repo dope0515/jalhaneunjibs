@@ -16,10 +16,12 @@
 
             <div v-if="loading" class="fav-loading">불러오는 중…</div>
             <div v-else class="fav-collections-list">
-              <label
+              <div
                 v-for="col in collections"
                 :key="col.id"
                 class="fav-col-row"
+                :class="{ 'is-confirming': deleteTargetId === col.id }"
+                @click="toggleFavorite(col.id)"
               >
                 <div class="fav-col-thumb">
                   <img
@@ -35,13 +37,37 @@
                 </div>
                 <span class="fav-col-name">{{ col.name }}</span>
                 <span class="fav-col-count">{{ col._count?.favorites ?? 0 }}개</span>
-                <input
-                  type="checkbox"
-                  class="fav-col-check"
-                  :checked="savedCollectionIds.includes(col.id)"
-                  @change="toggleFavorite(col.id)"
-                />
-              </label>
+
+                <!-- 삭제 확인 UI -->
+                <template v-if="deleteTargetId === col.id">
+                  <div class="fav-col-confirm" @click.stop>
+                    <span class="confirm-label">삭제할까요?</span>
+                    <button class="confirm-yes" @click="confirmDelete(col.id)">삭제</button>
+                    <button class="confirm-no" @click="deleteTargetId = null">취소</button>
+                  </div>
+                </template>
+                <template v-else>
+                  <input
+                    type="checkbox"
+                    class="fav-col-check"
+                    :checked="savedCollectionIds.includes(col.id)"
+                    @click.stop
+                    @change.stop="toggleFavorite(col.id)"
+                  />
+                  <button
+                    class="fav-col-delete-btn"
+                    aria-label="목록 삭제"
+                    @click.stop="deleteTargetId = col.id"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                </template>
+              </div>
 
               <div v-if="collections.length === 0" class="fav-empty">
                 <p>저장 목록이 없어요</p>
@@ -71,7 +97,7 @@
             class="modal-input"
             placeholder="예: 데이트 코스"
             maxlength="30"
-            @keydown.enter="createAndFavorite"
+            @keydown.enter="(e) => { if (!e.isComposing) createAndFavorite() }"
           />
           <div class="modal-actions">
             <button class="btn-ghost" @click="createModalOpen = false">취소</button>
@@ -97,8 +123,12 @@ const collections = ref([])
 const savedCollectionIds = ref([])
 const createModalOpen = ref(false)
 const newColName = ref('')
+const deleteTargetId = ref(null)
 
-const close = () => emit('update:modelValue', false)
+const close = () => {
+  deleteTargetId.value = null
+  emit('update:modelValue', false)
+}
 
 const loadStatus = async () => {
   if (!props.modelValue || !props.restaurantId) return
@@ -149,6 +179,19 @@ const toggleFavorite = async (collectionId) => {
 
 const openCreateModal = () => {
   createModalOpen.value = true
+}
+
+const confirmDelete = async (collectionId) => {
+  try {
+    await $api(`/mypage/collections/${collectionId}`, { method: 'DELETE' })
+    collections.value = collections.value.filter(c => c.id !== collectionId)
+    savedCollectionIds.value = savedCollectionIds.value.filter(id => id !== collectionId)
+    deleteTargetId.value = null
+    emit('changed', { action: 'collection-deleted', restaurantId: props.restaurantId })
+  } catch (e) {
+    alert('목록 삭제에 실패했습니다.')
+    deleteTargetId.value = null
+  }
 }
 
 const createAndFavorite = async () => {
