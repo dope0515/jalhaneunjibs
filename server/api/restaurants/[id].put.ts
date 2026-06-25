@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 2. 신규 매장 이미지 업로드
-  const newRestaurantImageFiles = formData.getAll('restaurantImages') as File[]
+  const newRestaurantImageFiles = (formData.getAll('restaurantImages') as File[]).slice(0, 5)
   const uploadedImages: string[] = []
   for (const file of newRestaurantImageFiles) {
     if (file instanceof File && file.size > 0) {
