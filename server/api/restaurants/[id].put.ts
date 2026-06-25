@@ -1,5 +1,5 @@
+import { defineEventHandler, readFormData, createError, getRouterParam } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { uploadToCloudinary } from '~/server/utils/cloudinary'
 import { getUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const userId = getUserId(event)
   const user = await prisma.user.findUnique({ where: { id: userId } })
-  
+
   const isOwner = restaurant.registeredById === userId
   const isAdmin = user?.role === 'ADMIN'
 
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
 
   const formData = await readFormData(event)
 
-  // 1. 데이터 추출 및 파싱
+  // 1. 텍스트 필드
   const description = formData.get('description')?.toString() || null
   const phoneNumber = formData.get('phoneNumber')?.toString() || null
   const openingHours = formData.get('openingHours')?.toString() || null
@@ -43,6 +43,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // 2. 이미지: 유지할 기존 URL + pre-upload된 신규 URL 배열
   let existingImages: string[] = []
   const existingImagesString = formData.get('existingImages')?.toString()
   if (existingImagesString) {
@@ -54,32 +55,18 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  let menusPayload: any[] = []
-  const menusString = formData.get('menus')?.toString()
-  if (menusString) {
+  let newImageUrls: string[] = []
+  const newImageUrlsString = formData.get('newRestaurantImageUrls')?.toString()
+  if (newImageUrlsString) {
     try {
-      const parsed = JSON.parse(menusString)
-      if (Array.isArray(parsed)) menusPayload = parsed
+      const parsed = JSON.parse(newImageUrlsString)
+      if (Array.isArray(parsed)) newImageUrls = parsed.filter(Boolean)
     } catch (e) {
-      console.error('[Parser] Menus parsing failed:', e)
+      console.error('[Parser] newRestaurantImageUrls parsing failed:', e)
     }
   }
 
-  // 2. 신규 매장 이미지 업로드
-  const newRestaurantImageFiles = (formData.getAll('restaurantImages') as File[]).slice(0, 5)
-  const uploadedImages: string[] = []
-  for (const file of newRestaurantImageFiles) {
-    if (file instanceof File && file.size > 0) {
-      try {
-        uploadedImages.push(await uploadToCloudinary(file, 'restaurants'))
-      } catch (e) {
-        console.error('[Cloudinary] Restaurant image upload failed:', e)
-      }
-    }
-  }
-
-  // 최종 이미지 배열: 유지한 기존 URL + 새로 업로드된 URL (최대 5장)
-  const finalImages = [...existingImages, ...uploadedImages].slice(0, 5)
+  const finalImages = [...existingImages, ...newImageUrls].slice(0, 5)
   const finalThumbnail = finalImages[0] ?? null
 
   // 3. 식당 기본 정보 업데이트
@@ -97,12 +84,23 @@ export default defineEventHandler(async (event) => {
   })
 
   // 4. 메뉴 처리
+  let menusPayload: any[] = []
+  const menusString = formData.get('menus')?.toString()
+  if (menusString) {
+    try {
+      const parsed = JSON.parse(menusString)
+      if (Array.isArray(parsed)) menusPayload = parsed
+    } catch (e) {
+      console.error('[Parser] Menus parsing failed:', e)
+    }
+  }
+
   const existingMenus = await prisma.menu.findMany({
     where: { restaurantId: id },
     select: { id: true },
   })
-  const existingIds  = new Set(existingMenus.map((m) => m.id))
-  const incomingIds  = new Set(
+  const existingIds = new Set(existingMenus.map((m) => m.id))
+  const incomingIds = new Set(
     menusPayload.filter((m) => m.id).map((m) => Number(m.id))
   )
 
@@ -118,21 +116,11 @@ export default defineEventHandler(async (event) => {
         ? parseInt(String(menu.price).replace(/[^0-9]/g, ''), 10) || null
         : null
 
-    // 새 이미지 업로드
-    let imagePath: string | null = menu.existingImage ?? null
-    if (menu.hasNewImage) {
-      const file = formData.get(`menuImage_${menu.imageIndex}`) as File | null
-      if (file instanceof File && file.size > 0) {
-        try {
-          imagePath = await uploadToCloudinary(file, 'menus')
-        } catch (e) {
-          console.error(`[Cloudinary] Menu image upload failed (index ${menu.imageIndex}):`, e)
-        }
-      }
-    }
+    // 메뉴 이미지: pre-upload URL 또는 기존 URL
+    const menuImageUrl = formData.get(`menuImageUrl_${menu.imageIndex}`)?.toString() || null
+    const imagePath = menuImageUrl || (menu.removeImage ? null : (menu.existingImage ?? null))
 
     if (menu.id && existingIds.has(Number(menu.id))) {
-      // 기존 메뉴 업데이트
       await prisma.menu.update({
         where: { id: Number(menu.id) },
         data: {
@@ -144,7 +132,6 @@ export default defineEventHandler(async (event) => {
         },
       })
     } else if (!menu.id && menu.name?.trim()) {
-      // 신규 메뉴 생성
       await prisma.menu.create({
         data: {
           restaurantId: id,
