@@ -476,9 +476,7 @@
 <script setup>
 import { WEEKDAYS, parseOpeningHours, formatOpeningHours } from '~/utils/openingHours'
 import {
-  IMAGE_COMPRESSION_OPTIONS,
-  compressImageFile,
-  validateTotalUploadSize,
+  uploadImage,
   getUploadErrorMessage,
 } from '~/utils/imageUpload'
 
@@ -751,24 +749,24 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
-    const compressedRestaurantImages = await Promise.all(
-      form.value.newImageFiles.map((file) => compressImageFile(file, IMAGE_COMPRESSION_OPTIONS))
-    )
-    const compressedMenuImages = []
-
-    for (const menu of form.value.menus) {
-      if (menu.imageFile) {
-        compressedMenuImages.push(await compressImageFile(menu.imageFile, IMAGE_COMPRESSION_OPTIONS))
-      }
+    // ── 1. 신규 매장 이미지 순차 업로드 ─────────────────────────────
+    const newRestaurantImageUrls = []
+    const totalNew = form.value.newImageFiles.length
+    for (let i = 0; i < totalNew; i++) {
+      const url = await uploadImage(form.value.newImageFiles[i], 'restaurants', $api)
+      newRestaurantImageUrls.push(url)
     }
 
-    const uploadFiles = [...compressedRestaurantImages, ...compressedMenuImages]
-    const sizeCheck = validateTotalUploadSize(uploadFiles)
-    if (!sizeCheck.ok) {
-      alert(sizeCheck.message)
-      return
+    // ── 2. 신규 메뉴 이미지 순차 업로드 ─────────────────────────────
+    const menuImageUrls = {}
+    for (let i = 0; i < form.value.menus.length; i++) {
+      const menu = form.value.menus[i]
+      if (!menu.imageFile) continue
+      const url = await uploadImage(menu.imageFile, 'menus', $api)
+      menuImageUrls[i] = url
     }
 
+    // ── 3. 최종 수정 요청 (URL만 전송) ──────────────────────────────
     const fd = new FormData()
     fd.append('description', form.value.description)
     fd.append('phoneNumber', form.value.phoneNumber)
@@ -776,11 +774,9 @@ const handleSubmit = async () => {
     fd.append('parkingInfo', form.value.parkingInfo)
     fd.append('keywords', JSON.stringify(form.value.keywords))
 
-    // 매장 이미지: 유지할 기존 URL 목록 전달
     fd.append('existingImages', JSON.stringify(form.value.existingImages))
-    compressedRestaurantImages.forEach((file) => fd.append('restaurantImages', file))
+    fd.append('newRestaurantImageUrls', JSON.stringify(newRestaurantImageUrls))
 
-    // 메뉴 데이터
     const menusPayload = form.value.menus.map((m, idx) => ({
       id: m.id ?? undefined,
       name: m.name,
@@ -788,17 +784,12 @@ const handleSubmit = async () => {
       description: m.description,
       isRecommended: m.isRecommended,
       existingImage: m.removeImage ? null : (m.image ?? null),
-      hasNewImage: !!m.imageFile,
       imageIndex: idx,
     }))
     fd.append('menus', JSON.stringify(menusPayload))
 
-    let menuImageCursor = 0
-    form.value.menus.forEach((m, idx) => {
-      if (m.imageFile) {
-        fd.append(`menuImage_${idx}`, compressedMenuImages[menuImageCursor])
-        menuImageCursor++
-      }
+    Object.entries(menuImageUrls).forEach(([index, url]) => {
+      fd.append(`menuImageUrl_${index}`, url)
     })
 
     await $api(`/restaurants/${route.params.id}`, { method: 'PUT', body: fd })

@@ -1,30 +1,6 @@
 import { defineEventHandler, readFormData, createError } from 'h3'
-import { v2 as cloudinary } from 'cloudinary'
 import { prisma } from '~/server/utils/prisma'
 import { tryGetUserId } from '~/server/utils/auth'
-
-// Cloudinary 설정
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
-
-// 이미지 업로드 헬퍼 함수
-const uploadToCloudinary = async (file: File, folder: string) => {
-  const arrayBuffer = await file.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
-  
-  return new Promise<string>((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      { folder: `jalhaneunjib/${folder}` },
-      (error, result) => {
-        if (error) reject(error)
-        else resolve(result?.secure_url || '')
-      }
-    ).end(buffer)
-  })
-}
 
 // "서울특별시 강남구 역삼동 ..." → { region1, region2, region3 }
 const parseAddress = (address: string) => {
@@ -43,7 +19,7 @@ export default defineEventHandler(async (event) => {
     // 등록자 userId
     const registeredById = tryGetUserId(event)
 
-    // 데이터 추출
+    // 기본 필드
     const name = formData.get('name')?.toString()
     const description = formData.get('description')?.toString() || null
     const category = formData.get('category')?.toString()
@@ -56,13 +32,22 @@ export default defineEventHandler(async (event) => {
     const menuItemsString = formData.get('menuItems')?.toString()
     const openingHours = formData.get('openingHours')?.toString() || null
     const parkingInfo = formData.get('parkingInfo')?.toString() || null
-    const thumbnailFile = formData.get('thumbnail') // 레거시 지원용
-    const restaurantImages = formData.getAll('restaurantImages').slice(0, 5) // 새 이미지 배열
-    
-    // 상태 추출 (기본값 ACTIVE)
     const status = (formData.get('status')?.toString() as any) || 'ACTIVE'
-    
-    // 필수 필드 체크 (기미상궁일 경우 주소/좌표 필수 해제 가능)
+
+    // 이미지: pre-upload된 URL 배열을 받음
+    const restaurantImageUrlsString = formData.get('restaurantImageUrls')?.toString()
+    let uploadedImages: string[] = []
+    if (restaurantImageUrlsString) {
+      try {
+        const parsed = JSON.parse(restaurantImageUrlsString)
+        if (Array.isArray(parsed)) uploadedImages = parsed.filter(Boolean)
+      } catch (e) {
+        console.error('[Parser] restaurantImageUrls parsing failed:', e)
+      }
+    }
+
+    const thumbnailPath = uploadedImages[0] ?? null
+
     if (!name || (!address && status !== 'TASTER')) {
       throw createError({ statusCode: 400, statusMessage: '필수 정보(이름 등)가 누락되었습니다.' })
     }
@@ -70,34 +55,7 @@ export default defineEventHandler(async (event) => {
     const lat = latStr ? parseFloat(latStr) : null
     const lng = lngStr ? parseFloat(lngStr) : null
 
-    // 1. 식당 이미지 업로드 (Cloudinary)
-    let uploadedImages: string[] = []
-    
-    // 여러 이미지 처리
-    if (restaurantImages.length > 0) {
-      for (const file of restaurantImages) {
-        if (file instanceof File && file.size > 0) {
-          try {
-            const url = await uploadToCloudinary(file, 'restaurants')
-            uploadedImages.push(url)
-          } catch (e) {
-            console.error('[Cloudinary] Image upload failed:', e)
-          }
-        }
-      }
-    } else if (thumbnailFile && thumbnailFile instanceof File && thumbnailFile.size > 0) {
-      // 레거시 대응: 하나만 보낸 경우
-      try {
-        const url = await uploadToCloudinary(thumbnailFile, 'restaurants')
-        uploadedImages.push(url)
-      } catch (e) {
-        console.error('[Cloudinary] Thumbnail upload failed:', e)
-      }
-    }
-
-    let thumbnailPath = uploadedImages.length > 0 ? uploadedImages[0] : null
-
-    // 2. 키워드 파싱
+    // 키워드 파싱
     let keywords: string[] = []
     if (keywordsString) {
       try {
@@ -108,34 +66,19 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // 3. 메뉴 아이템 파싱 및 이미지 처리
+    // 메뉴 아이템 파싱 — 이미지도 pre-upload URL로 수신
     let menuItems: any[] = []
     if (menuItemsString) {
       try {
         const parsed = JSON.parse(menuItemsString)
         if (Array.isArray(parsed)) {
-          menuItems = await Promise.all(parsed.map(async (item: any, index: number) => {
-            let itemImagePath: string | null = null
-            
-            // 메뉴 이미지가 있는 경우 업로드
-            if (item.hasImage) {
-              const itemImageFile = formData.get(`menuImage_${index}`)
-              if (itemImageFile && itemImageFile instanceof File && itemImageFile.size > 0) {
-                try {
-                  itemImagePath = await uploadToCloudinary(itemImageFile, 'menus')
-                } catch (e) {
-                  console.error(`[Cloudinary] Menu image ${index} upload failed:`, e)
-                }
-              }
-            }
-
-            return {
-              name: item.name?.trim() || '',
-              price: item.price ? parseInt(item.price.toString().replace(/[^0-9]/g, ''), 10) : null,
-              description: item.description?.trim() || null,
-              isRecommended: item.isRecommended ?? false,
-              image: itemImagePath,
-            }
+          menuItems = parsed.map((item: any, index: number) => ({
+            name: item.name?.trim() || '',
+            price: item.price ? parseInt(item.price.toString().replace(/[^0-9]/g, ''), 10) : null,
+            description: item.description?.trim() || null,
+            isRecommended: item.isRecommended ?? false,
+            // pre-upload된 URL 사용
+            image: formData.get(`menuImageUrl_${index}`)?.toString() || null,
           }))
         }
       } catch (e) {
@@ -145,7 +88,7 @@ export default defineEventHandler(async (event) => {
 
     const { region1, region2, region3 } = parseAddress(address || '')
 
-    // 4. 중복 식당 체크 (placeId가 있을 때만)
+    // 중복 식당 체크
     if (placeId) {
       const existing = await prisma.restaurant.findUnique({ where: { placeId } })
       if (existing) {
@@ -153,7 +96,6 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // 5. DB 저장
     const restaurant = await prisma.restaurant.create({
       data: {
         placeId,
@@ -162,7 +104,7 @@ export default defineEventHandler(async (event) => {
         thumbnail: thumbnailPath,
         images: uploadedImages,
         foodCategory: category,
-        status: status,
+        status,
         address: address || '주소 미상',
         region1,
         region2,
@@ -175,9 +117,7 @@ export default defineEventHandler(async (event) => {
         keywords,
         registeredById,
         menus: menuItems.length > 0
-          ? {
-              create: menuItems.filter(item => item.name),
-            }
+          ? { create: menuItems.filter(item => item.name) }
           : undefined,
       },
     })

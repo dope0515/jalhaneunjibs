@@ -1,7 +1,5 @@
 import imageCompression from 'browser-image-compression'
 
-/** Vercel 등 서버리스 환경 요청 본문 제한에 맞춘 값 */
-export const MAX_TOTAL_UPLOAD_BYTES = 4 * 1024 * 1024
 export const MAX_RESTAURANT_IMAGES = 5
 export const MAX_MENU_BOARD_IMAGES = 5
 
@@ -12,13 +10,8 @@ export const IMAGE_COMPRESSION_OPTIONS = {
   initialQuality: 0.85,
 }
 
-export function getFilesTotalBytes(files) {
-  return files.reduce((sum, file) => sum + (file?.size || 0), 0)
-}
-
 export async function compressImageFile(file, options = IMAGE_COMPRESSION_OPTIONS) {
   if (!file?.type?.startsWith('image/')) return file
-
   try {
     return await imageCompression(file, options)
   } catch (error) {
@@ -27,33 +20,45 @@ export async function compressImageFile(file, options = IMAGE_COMPRESSION_OPTION
   }
 }
 
-export async function compressImageFiles(files, options = IMAGE_COMPRESSION_OPTIONS) {
-  const compressed = []
-  for (const file of files) {
-    compressed.push(await compressImageFile(file, options))
-  }
-  return compressed
+/**
+ * 이미지 파일 하나를 서버에 업로드하고 URL을 반환합니다.
+ * @param {File} file
+ * @param {string} folder - 'restaurants' | 'menus'
+ * @param {Function} $api - useApi()의 $api
+ * @returns {Promise<string>} Cloudinary URL
+ */
+export async function uploadImage(file, folder, $api) {
+  const compressed = await compressImageFile(file)
+  const fd = new FormData()
+  fd.append('file', compressed)
+  fd.append('folder', folder)
+  const { url } = await $api('/upload/image', { method: 'POST', body: fd })
+  return url
 }
 
-export function validateTotalUploadSize(files, maxBytes = MAX_TOTAL_UPLOAD_BYTES) {
-  const total = getFilesTotalBytes(files)
-  if (total <= maxBytes) return { ok: true }
-
-  const maxMB = (maxBytes / 1024 / 1024).toFixed(1)
-  const currentMB = (total / 1024 / 1024).toFixed(1)
-
-  return {
-    ok: false,
-    message: `업로드 이미지 용량이 ${currentMB}MB로 제한(${maxMB}MB)을 초과했습니다. 이미지 수를 줄이거나 용량이 작은 사진을 사용해주세요.`,
+/**
+ * 파일 배열을 순차적으로 하나씩 업로드합니다.
+ * @param {File[]} files
+ * @param {string} folder
+ * @param {Function} $api
+ * @param {Function} onProgress - (uploadedCount, totalCount) => void
+ * @returns {Promise<string[]>} URL 배열
+ */
+export async function uploadImagesSequentially(files, folder, $api, onProgress) {
+  const urls = []
+  for (let i = 0; i < files.length; i++) {
+    onProgress?.(i, files.length)
+    const url = await uploadImage(files[i], folder, $api)
+    urls.push(url)
   }
+  onProgress?.(files.length, files.length)
+  return urls
 }
 
-export function getUploadErrorMessage(error, fallback) {
+export function getUploadErrorMessage(error, fallback = '오류가 발생했습니다.') {
   const status = error?.status || error?.statusCode || error?.response?.status
-
   if (status === 413) {
-    return '업로드 용량이 너무 큽니다. 이미지 수를 줄이거나 용량이 작은 사진을 사용해주세요.'
+    return '업로드 용량이 너무 큽니다. 이미지 용량이 작은 사진을 사용해주세요.'
   }
-
   return error?.data?.statusMessage || error?.message || fallback
 }

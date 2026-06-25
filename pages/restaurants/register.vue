@@ -702,9 +702,9 @@
 import {
   MAX_MENU_BOARD_IMAGES,
   MAX_RESTAURANT_IMAGES,
-  IMAGE_COMPRESSION_OPTIONS,
   compressImageFile,
-  validateTotalUploadSize,
+  uploadImage,
+  uploadImagesSequentially,
   getUploadErrorMessage,
 } from '~/utils/imageUpload'
 import { WEEKDAYS, createDefaultOpData, formatOpeningHours } from '~/utils/openingHours'
@@ -1243,19 +1243,11 @@ const analyzeMenuBoard = async () => {
   if (menuBoardFiles.value.length === 0) return
   isAnalyzing.value = true
   try {
-    const compressedFiles = await Promise.all(
-      menuBoardFiles.value.map((file) => compressImageFile(file))
-    )
-    const sizeCheck = validateTotalUploadSize(compressedFiles)
-    if (!sizeCheck.ok) {
-      alert(sizeCheck.message)
-      return
-    }
-
     const data = new FormData()
-    compressedFiles.forEach(file => {
-      data.append('menuBoard', file)
-    })
+    for (const file of menuBoardFiles.value) {
+      const compressed = await compressImageFile(file)
+      data.append('menuBoard', compressed)
+    }
     const result = await $api('/menu/analyze', { method: 'POST', body: data })
     analyzedMenuItems.value = (result.menuItems || []).map(item => ({
       ...item,
@@ -1356,16 +1348,35 @@ const handleSubmit = async () => {
   }
 
   isSubmitting.value = true
-  submissionMessage.value = '이미지를 최적화하고 있습니다...'
 
   try {
-    const compressionOptions = IMAGE_COMPRESSION_OPTIONS
-    const compressedRestaurantImages = []
-    const compressedMenuImages = []
+    // ── 1. 매장 이미지 순차 업로드 ──────────────────────────────────
+    const restaurantImageUrls = []
+    const totalRestaurant = restaurantImages.value.length
+    for (let i = 0; i < totalRestaurant; i++) {
+      submissionMessage.value = `매장 이미지 업로드 중... (${i + 1}/${totalRestaurant})`
+      const url = await uploadImage(restaurantImages.value[i], 'restaurants', $api)
+      restaurantImageUrls.push(url)
+    }
+
+    // ── 2. 메뉴 이미지 순차 업로드 ──────────────────────────────────
+    const menuImageUrls = {}
+    const itemsWithImage = analyzedMenuItems.value.filter(item => item.imageFile)
+    let menuUploadCount = 0
+    for (let i = 0; i < analyzedMenuItems.value.length; i++) {
+      const item = analyzedMenuItems.value[i]
+      if (!item.imageFile) continue
+      menuUploadCount++
+      submissionMessage.value = `메뉴 이미지 업로드 중... (${menuUploadCount}/${itemsWithImage.length})`
+      const url = await uploadImage(item.imageFile, 'menus', $api)
+      menuImageUrls[i] = url
+    }
+
+    // ── 3. 최종 등록 요청 (URL만 전송, 바이너리 없음) ───────────────
+    submissionMessage.value = '식당 정보를 등록하고 있습니다...'
 
     const formData = new FormData()
-    
-    // 1. 기본 정보 추가
+
     Object.keys(form.value).forEach((key) => {
       if (key === 'keywords') {
         formData.append(key, JSON.stringify(form.value[key]))
@@ -1374,61 +1385,25 @@ const handleSubmit = async () => {
       }
     })
 
-    // 2. 식당 이미지 압축 및 추가
-    if (restaurantImages.value.length > 0) {
-      submissionMessage.value = `매장 이미지를 최적화 중입니다... (0/${restaurantImages.value.length})`
-      for (let i = 0; i < restaurantImages.value.length; i++) {
-        const file = restaurantImages.value[i]
-        const compressedFile = await compressImageFile(file, compressionOptions)
-        compressedRestaurantImages.push(compressedFile)
-        submissionMessage.value = `매장 이미지를 최적화 중입니다... (${i + 1}/${restaurantImages.value.length})`
-      }
-    }
+    formData.append('restaurantImageUrls', JSON.stringify(restaurantImageUrls))
 
-    // 3. 메뉴 아이템 압축 및 추가
-    if (analyzedMenuItems.value.length > 0) {
-      const menusWithImages = analyzedMenuItems.value.filter(item => item.imageFile)
-      let compressedCount = 0
-      
-      const itemsToSubmit = await Promise.all(analyzedMenuItems.value.map(async (item, index) => {
-        if (item.imageFile) {
-          submissionMessage.value = `메뉴 이미지를 최적화 중입니다... (${compressedCount + 1}/${menusWithImages.length})`
-          const compressedFile = await compressImageFile(item.imageFile, compressionOptions)
-          compressedMenuImages.push(compressedFile)
-          formData.append(`menuImage_${index}`, compressedFile)
-          compressedCount++
-        }
-        
-        return {
-          name: item.name,
-          price: item.price ? item.price.replace(/,/g, '') : '', 
-          description: item.description,
-          isRecommended: item.isRecommended,
-          hasImage: !!item.imageFile 
-        }
-      }))
-      
-      formData.append('menuItems', JSON.stringify(itemsToSubmit))
-    }
+    const itemsToSubmit = analyzedMenuItems.value.map((item, index) => ({
+      name: item.name,
+      price: item.price ? item.price.replace(/,/g, '') : '',
+      description: item.description,
+      isRecommended: item.isRecommended,
+    }))
+    formData.append('menuItems', JSON.stringify(itemsToSubmit))
 
-    const uploadFiles = [...compressedRestaurantImages, ...compressedMenuImages]
-    const sizeCheck = validateTotalUploadSize(uploadFiles)
-    if (!sizeCheck.ok) {
-      alert(sizeCheck.message)
-      return
-    }
-
-    compressedRestaurantImages.forEach((file) => {
-      formData.append('restaurantImages', file)
+    Object.entries(menuImageUrls).forEach(([index, url]) => {
+      formData.append(`menuImageUrl_${index}`, url)
     })
 
-    submissionMessage.value = '정보를 등록하고 있습니다...'
-    
     const data = await $api('/restaurants/register', {
       method: 'POST',
-      body: formData
+      body: formData,
     })
-    
+
     if (data.success) {
       localStorage.removeItem(STORAGE_KEY)
       registeredRestaurantId.value = data.restaurantId
