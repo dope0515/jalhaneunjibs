@@ -869,13 +869,28 @@ const parkingInfoParsed = computed(() => {
   if (!str) return null
   if (str === '주차 불가') return { available: false }
 
+  // JSON 형식 (신규)
+  if (str.trimStart().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(str)
+      return {
+        available: true,
+        type: parsed.type,
+        fee: parsed.isFree ? '무료' : (parsed.feeDesc || '유료'),
+        isFree: !!parsed.isFree,
+        memo: parsed.memo || null,
+      }
+    } catch {}
+  }
+
+  // 구형식 호환 ( · 구분자)
   const parts = str.split(' · ').map(p => p.trim())
   return {
     available: true,
     type: parts[0],
     fee: parts[1],
     isFree: parts[1] === '무료',
-    memo: parts[2] || null
+    memo: parts[2] || null,
   }
 })
 </script>

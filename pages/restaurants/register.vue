@@ -204,7 +204,7 @@
                 </div>
 
                 <div class="form-item">
-                  <label class="form-item-label">영업 정보</label>
+                  <span class="form-item-label">영업 정보</span>
                   <a
                     v-if="form.placeId"
                     :href="`https://place.map.kakao.com/${form.placeId}`"
@@ -223,7 +223,7 @@
                     <div class="hours-sub-item">
                       <div class="flex-between">
                         <span class="hours-sub-label" style="font-size: 16px;">영업 시간 정보 제공</span>
-                        <label class="switch-toggle">
+                        <label class="switch-toggle" aria-label="영업 시간 정보 제공 켜기/끄기">
                           <input type="checkbox" v-model="opData.hasOpeningHours" />
                           <span class="switch-slider"></span>
                         </label>
@@ -320,7 +320,7 @@
                       <div class="hours-sub-item has-divider">
                         <div class="flex-between">
                           <span class="hours-sub-label">브레이크 타임</span>
-                          <label class="switch-toggle">
+                          <label class="switch-toggle" aria-label="브레이크 타임 켜기/끄기">
                             <input type="checkbox" v-model="opData.hasBreakTime" />
                             <span class="switch-slider"></span>
                           </label>
@@ -340,7 +340,7 @@
                       <div class="hours-sub-item">
                         <div class="flex-between">
                           <span class="hours-sub-label">라스트 오더</span>
-                          <label class="switch-toggle">
+                          <label class="switch-toggle" aria-label="라스트 오더 켜기/끄기">
                             <input type="checkbox" v-model="opData.hasLastOrder" />
                             <span class="switch-slider"></span>
                           </label>
@@ -354,7 +354,7 @@
                       <div v-if="opData.scheduleMode === 'uniform'" class="hours-sub-item has-divider">
                         <div class="flex-between">
                           <span class="hours-sub-label">정기 휴무일</span>
-                          <label class="switch-toggle">
+                          <label class="switch-toggle" aria-label="정기 휴무일 켜기/끄기">
                             <input type="checkbox" v-model="opData.hasClosedDays" />
                             <span class="switch-slider"></span>
                           </label>
@@ -380,12 +380,12 @@
                 </div>
 
                 <div class="form-item">
-                  <label class="form-item-label">주차 정보</label>
+                  <span class="form-item-label">주차 정보</span>
                   <div class="opening-hours-form">
                     <div class="hours-sub-item">
                       <div class="flex-between">
                         <span class="hours-sub-label" style="font-size: 16px;">주차 정보 제공</span>
-                        <label class="switch-toggle">
+                        <label class="switch-toggle" aria-label="주차 정보 제공 켜기/끄기">
                           <input type="checkbox" v-model="parkingData.hasParking" />
                           <span class="switch-slider"></span>
                         </label>
@@ -418,18 +418,19 @@
                         <div class="hours-sub-item has-divider">
                           <div class="flex-between">
                             <span class="hours-sub-label">무료 주차</span>
-                            <label class="switch-toggle">
+                            <label class="switch-toggle" aria-label="무료 주차 켜기/끄기">
                               <input type="checkbox" v-model="parkingData.isFree" />
                               <span class="switch-slider"></span>
                             </label>
                           </div>
                           <div v-if="!parkingData.isFree" class="hours-sub-item" style="margin-top: 10px;">
-                            <span class="hours-sub-label">요금 정보</span>
-                            <input
+                            <label for="parking-fee-desc" class="hours-sub-label">요금 정보</label>
+                            <textarea
+                              id="parking-fee-desc"
                               v-model="parkingData.feeDesc"
                               class="edit-input"
-                              style="width:100%; margin-top:6px;"
-                              placeholder="예: 1시간 2,000원, 이후 30분당 1,000원"
+                              rows="2"
+                              placeholder="예: 1시간 2,000원&#10;이후 30분당 1,000원"
                             />
                           </div>
                         </div>
@@ -437,17 +438,19 @@
                         <!-- 추가 메모 -->
                         <div class="hours-sub-item">
                           <div class="flex-between">
-                            <span class="hours-sub-label">추가 메모</span>
-                            <label class="switch-toggle">
+                            <label for="parking-memo" class="hours-sub-label">추가 메모</label>
+                            <label class="switch-toggle" aria-label="추가 메모 입력 켜기/끄기">
                               <input type="checkbox" v-model="parkingData.hasMemo" />
                               <span class="switch-slider"></span>
                             </label>
                           </div>
-                          <input
+                          <textarea
                             v-if="parkingData.hasMemo"
+                            id="parking-memo"
                             v-model="parkingData.memo"
                             class="edit-input"
-                            style="width:100%; margin-top:10px;"
+                            rows="2"
+                            style="margin-top:10px;"
                             placeholder="예: 식당 입구 옆 주차장 이용"
                           />
                         </div>
@@ -747,10 +750,12 @@ const parkingData = ref({
 const computedParkingInfo = computed(() => {
   if (!parkingData.value.hasParking) return ''
   if (!parkingData.value.available) return '주차 불가'
-  const parts = [parkingData.value.type]
-  parts.push(parkingData.value.isFree ? '무료' : (parkingData.value.feeDesc || '유료'))
-  if (parkingData.value.hasMemo && parkingData.value.memo) parts.push(parkingData.value.memo)
-  return parts.join(' · ')
+  return JSON.stringify({
+    type: parkingData.value.type,
+    isFree: parkingData.value.isFree,
+    feeDesc: parkingData.value.isFree ? '' : parkingData.value.feeDesc.trim(),
+    memo: parkingData.value.hasMemo ? parkingData.value.memo.trim() : '',
+  })
 })
 
 watch(computedParkingInfo, (newVal) => {

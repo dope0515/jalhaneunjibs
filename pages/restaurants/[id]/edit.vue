@@ -608,6 +608,20 @@ const parseParkingInfo = (str) => {
     data.available = false
     return data
   }
+  // JSON 형식 (신규)
+  if (str.trimStart().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(str)
+      const types = ['자체주차장', '발렛파킹', '공영주차장', '건물주차장']
+      if (parsed.type && types.includes(parsed.type)) data.type = parsed.type
+      data.isFree = !!parsed.isFree
+      data.feeDesc = parsed.feeDesc || ''
+      data.hasMemo = !!(parsed.memo)
+      data.memo = parsed.memo || ''
+      return data
+    } catch {}
+  }
+  // 구형식 호환 ( · 구분자)
   const parts = str.split(' · ').map(p => p.trim())
   const types = ['자체주차장', '발렛파킹', '공영주차장', '건물주차장']
   if (parts[0] && types.includes(parts[0])) data.type = parts[0]
@@ -629,10 +643,12 @@ const parkingData = ref(parseParkingInfo(restaurant.value.parkingInfo))
 const computedParkingInfo = computed(() => {
   if (!parkingData.value.hasParking) return ''
   if (!parkingData.value.available) return '주차 불가'
-  const parts = [parkingData.value.type]
-  parts.push(parkingData.value.isFree ? '무료' : (parkingData.value.feeDesc || '유료'))
-  if (parkingData.value.hasMemo && parkingData.value.memo) parts.push(parkingData.value.memo)
-  return parts.join(' · ')
+  return JSON.stringify({
+    type: parkingData.value.type,
+    isFree: parkingData.value.isFree,
+    feeDesc: parkingData.value.isFree ? '' : parkingData.value.feeDesc.trim(),
+    memo: parkingData.value.hasMemo ? parkingData.value.memo.trim() : '',
+  })
 })
 
 watch(computedParkingInfo, (newVal) => {
