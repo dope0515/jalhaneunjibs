@@ -174,7 +174,7 @@
       </div>
 
       <!-- 결과 영역 -->
-      <div class="list-container">
+      <div ref="listContainerRef" class="list-container">
         <!-- 최초 로딩 스켈레톤 -->
         <div v-if="isFirstLoading" class="card-list">
           <AppSkeleton v-for="n in 6" :key="n" class="skeleton-item" />
@@ -525,9 +525,12 @@ const setSort = (sort) => {
   currentPage.value = 1
 }
 
-const goPage = (page) => {
+const listContainerRef = ref(null)
+
+const goPage = async (page) => {
   currentPage.value = page
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  await nextTick()
+  listContainerRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 const submitSearch = () => {
