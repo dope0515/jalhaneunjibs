@@ -534,7 +534,7 @@
                       <span class="drop-zone-content">
                         <img src="/assets/images/icon/ic_menu_board.svg" width="36" height="36" alt="" class="drop-zone-icon" aria-hidden="true" />
                         <span class="drop-zone-text">메뉴판 이미지를 올려주세요</span>
-                        <span class="drop-zone-sub">여러 장의 메뉴판 이미지를 분석할 수 있습니다</span>
+                        <span class="drop-zone-sub">최대 {{ MAX_MENU_BOARD_IMAGES }}장까지 분석할 수 있습니다</span>
                       </span>
                     </button>
                     
@@ -699,7 +699,14 @@
 </template>
 
 <script setup>
-import imageCompression from 'browser-image-compression'
+import {
+  MAX_MENU_BOARD_IMAGES,
+  MAX_RESTAURANT_IMAGES,
+  IMAGE_COMPRESSION_OPTIONS,
+  compressImageFile,
+  validateTotalUploadSize,
+  getUploadErrorMessage,
+} from '~/utils/imageUpload'
 import { WEEKDAYS, createDefaultOpData, formatOpeningHours } from '~/utils/openingHours'
 
 const { $api } = useApi()
@@ -1144,14 +1151,25 @@ const triggerFileInput = () => fileInputRef.value?.click()
 
 const processImageFiles = (files) => {
   if (!files || files.length === 0) return
-  
+
   const newFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
-  
-  newFiles.forEach(file => {
+  const remaining = MAX_RESTAURANT_IMAGES - restaurantImages.value.length
+
+  if (remaining <= 0) {
+    alert(`매장 이미지는 최대 ${MAX_RESTAURANT_IMAGES}장까지 등록할 수 있습니다.`)
+    return
+  }
+
+  const filesToAdd = newFiles.slice(0, remaining)
+  if (newFiles.length > remaining) {
+    alert(`매장 이미지는 최대 ${MAX_RESTAURANT_IMAGES}장까지 등록할 수 있습니다.`)
+  }
+
+  filesToAdd.forEach(file => {
     restaurantImages.value.push(file)
     const reader = new FileReader()
-    reader.onload = (e) => { 
-      restaurantPreviews.value.push(e.target.result) 
+    reader.onload = (e) => {
+      restaurantPreviews.value.push(e.target.result)
     }
     reader.readAsDataURL(file)
   })
@@ -1180,14 +1198,25 @@ const triggerMenuBoardInput = () => menuBoardInputRef.value?.click()
 
 const processMenuBoardFiles = (files) => {
   if (!files || files.length === 0) return
-  
+
   const newFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
-  
-  newFiles.forEach(file => {
+  const remaining = MAX_MENU_BOARD_IMAGES - menuBoardFiles.value.length
+
+  if (remaining <= 0) {
+    alert(`메뉴판 이미지는 최대 ${MAX_MENU_BOARD_IMAGES}장까지 분석할 수 있습니다.`)
+    return
+  }
+
+  const filesToAdd = newFiles.slice(0, remaining)
+  if (newFiles.length > remaining) {
+    alert(`메뉴판 이미지는 최대 ${MAX_MENU_BOARD_IMAGES}장까지 분석할 수 있습니다.`)
+  }
+
+  filesToAdd.forEach(file => {
     menuBoardFiles.value.push(file)
     const reader = new FileReader()
-    reader.onload = (e) => { 
-      menuBoardPreviews.value.push(e.target.result) 
+    reader.onload = (e) => {
+      menuBoardPreviews.value.push(e.target.result)
     }
     reader.readAsDataURL(file)
   })
@@ -1214,8 +1243,17 @@ const analyzeMenuBoard = async () => {
   if (menuBoardFiles.value.length === 0) return
   isAnalyzing.value = true
   try {
+    const compressedFiles = await Promise.all(
+      menuBoardFiles.value.map((file) => compressImageFile(file))
+    )
+    const sizeCheck = validateTotalUploadSize(compressedFiles)
+    if (!sizeCheck.ok) {
+      alert(sizeCheck.message)
+      return
+    }
+
     const data = new FormData()
-    menuBoardFiles.value.forEach(file => {
+    compressedFiles.forEach(file => {
       data.append('menuBoard', file)
     })
     const result = await $api('/menu/analyze', { method: 'POST', body: data })
@@ -1321,11 +1359,9 @@ const handleSubmit = async () => {
   submissionMessage.value = '이미지를 최적화하고 있습니다...'
 
   try {
-    const compressionOptions = {
-      maxSizeMB: 0.8,
-      maxWidthOrHeight: 1280,
-      useWebWorker: true,
-    }
+    const compressionOptions = IMAGE_COMPRESSION_OPTIONS
+    const compressedRestaurantImages = []
+    const compressedMenuImages = []
 
     const formData = new FormData()
     
@@ -1333,7 +1369,7 @@ const handleSubmit = async () => {
     Object.keys(form.value).forEach((key) => {
       if (key === 'keywords') {
         formData.append(key, JSON.stringify(form.value[key]))
-      } else {
+      } else if (form.value[key] != null) {
         formData.append(key, form.value[key])
       }
     })
@@ -1343,13 +1379,8 @@ const handleSubmit = async () => {
       submissionMessage.value = `매장 이미지를 최적화 중입니다... (0/${restaurantImages.value.length})`
       for (let i = 0; i < restaurantImages.value.length; i++) {
         const file = restaurantImages.value[i]
-        try {
-          const compressedFile = await imageCompression(file, compressionOptions)
-          formData.append('restaurantImages', compressedFile)
-        } catch (e) {
-          console.error('Restaurant image compression error:', e)
-          formData.append('restaurantImages', file) // 실패 시 원본 전송
-        }
+        const compressedFile = await compressImageFile(file, compressionOptions)
+        compressedRestaurantImages.push(compressedFile)
         submissionMessage.value = `매장 이미지를 최적화 중입니다... (${i + 1}/${restaurantImages.value.length})`
       }
     }
@@ -1362,13 +1393,9 @@ const handleSubmit = async () => {
       const itemsToSubmit = await Promise.all(analyzedMenuItems.value.map(async (item, index) => {
         if (item.imageFile) {
           submissionMessage.value = `메뉴 이미지를 최적화 중입니다... (${compressedCount + 1}/${menusWithImages.length})`
-          try {
-            const compressedFile = await imageCompression(item.imageFile, compressionOptions)
-            formData.append(`menuImage_${index}`, compressedFile)
-          } catch (e) {
-            console.error('Menu image compression error:', e)
-            formData.append(`menuImage_${index}`, item.imageFile)
-          }
+          const compressedFile = await compressImageFile(item.imageFile, compressionOptions)
+          compressedMenuImages.push(compressedFile)
+          formData.append(`menuImage_${index}`, compressedFile)
           compressedCount++
         }
         
@@ -1383,6 +1410,17 @@ const handleSubmit = async () => {
       
       formData.append('menuItems', JSON.stringify(itemsToSubmit))
     }
+
+    const uploadFiles = [...compressedRestaurantImages, ...compressedMenuImages]
+    const sizeCheck = validateTotalUploadSize(uploadFiles)
+    if (!sizeCheck.ok) {
+      alert(sizeCheck.message)
+      return
+    }
+
+    compressedRestaurantImages.forEach((file) => {
+      formData.append('restaurantImages', file)
+    })
 
     submissionMessage.value = '정보를 등록하고 있습니다...'
     
@@ -1399,7 +1437,7 @@ const handleSubmit = async () => {
       showSuccessModal.value = true
     }
   } catch (error) {
-    alert(error.data?.statusMessage || '등록 중 오류가 발생했습니다.')
+    alert(getUploadErrorMessage(error, '등록 중 오류가 발생했습니다.'))
   } finally {
     isSubmitting.value = false
     submissionMessage.value = '맛집을 등록하고 있습니다...'

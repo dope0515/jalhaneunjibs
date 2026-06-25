@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
     const openingHours = formData.get('openingHours')?.toString() || null
     const parkingInfo = formData.get('parkingInfo')?.toString() || null
     const thumbnailFile = formData.get('thumbnail') // 레거시 지원용
-    const restaurantImages = formData.getAll('restaurantImages') // 새 이미지 배열
+    const restaurantImages = formData.getAll('restaurantImages').slice(0, 5) // 새 이미지 배열
     
     // 상태 추출 (기본값 ACTIVE)
     const status = (formData.get('status')?.toString() as any) || 'ACTIVE'

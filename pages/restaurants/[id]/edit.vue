@@ -475,6 +475,12 @@
 
 <script setup>
 import { WEEKDAYS, parseOpeningHours, formatOpeningHours } from '~/utils/openingHours'
+import {
+  IMAGE_COMPRESSION_OPTIONS,
+  compressImageFile,
+  validateTotalUploadSize,
+  getUploadErrorMessage,
+} from '~/utils/imageUpload'
 
 const { $api } = useApi()
 const route = useRoute()
@@ -745,6 +751,24 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
+    const compressedRestaurantImages = await Promise.all(
+      form.value.newImageFiles.map((file) => compressImageFile(file, IMAGE_COMPRESSION_OPTIONS))
+    )
+    const compressedMenuImages = []
+
+    for (const menu of form.value.menus) {
+      if (menu.imageFile) {
+        compressedMenuImages.push(await compressImageFile(menu.imageFile, IMAGE_COMPRESSION_OPTIONS))
+      }
+    }
+
+    const uploadFiles = [...compressedRestaurantImages, ...compressedMenuImages]
+    const sizeCheck = validateTotalUploadSize(uploadFiles)
+    if (!sizeCheck.ok) {
+      alert(sizeCheck.message)
+      return
+    }
+
     const fd = new FormData()
     fd.append('description', form.value.description)
     fd.append('phoneNumber', form.value.phoneNumber)
@@ -754,8 +778,7 @@ const handleSubmit = async () => {
 
     // 매장 이미지: 유지할 기존 URL 목록 전달
     fd.append('existingImages', JSON.stringify(form.value.existingImages))
-    // 신규 이미지 파일 첨부
-    form.value.newImageFiles.forEach((file) => fd.append('restaurantImages', file))
+    compressedRestaurantImages.forEach((file) => fd.append('restaurantImages', file))
 
     // 메뉴 데이터
     const menusPayload = form.value.menus.map((m, idx) => ({
@@ -769,14 +792,19 @@ const handleSubmit = async () => {
       imageIndex: idx,
     }))
     fd.append('menus', JSON.stringify(menusPayload))
+
+    let menuImageCursor = 0
     form.value.menus.forEach((m, idx) => {
-      if (m.imageFile) fd.append(`menuImage_${idx}`, m.imageFile)
+      if (m.imageFile) {
+        fd.append(`menuImage_${idx}`, compressedMenuImages[menuImageCursor])
+        menuImageCursor++
+      }
     })
 
     await $api(`/restaurants/${route.params.id}`, { method: 'PUT', body: fd })
     navigateTo(`/restaurants/${route.params.id}`)
-  } catch {
-    alert('저장 중 오류가 발생했습니다.')
+  } catch (error) {
+    alert(getUploadErrorMessage(error, '저장 중 오류가 발생했습니다.'))
   } finally {
     isSubmitting.value = false
   }
