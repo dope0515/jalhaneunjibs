@@ -61,7 +61,7 @@
             <h3 class="filter-title">3. 예산은 어느 정도인가요?</h3>
             <div class="price-range-selector">
               <div class="price-display">
-                <span>{{ formatPrice(priceMax) }} 이하</span>
+                <span>{{ formatPrice(priceMax) }}</span>
               </div>
               <input 
                 type="range" 

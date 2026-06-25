@@ -840,6 +840,29 @@
     display: flex;
     justify-content: center;
   }
+
+  // 주차 정보 등 인라인 텍스트 입력 필드
+  .edit-input {
+    width: 100%;
+    padding: rem(10) rem(12);
+    border: 1px solid #d1d5db;
+    border-radius: rem(8);
+    @include font(14, 1.6, 400, $gray-44);
+    font-family: inherit;
+    background: $white;
+    resize: vertical;
+    transition: border-color 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $secondary-color;
+      background: $white;
+    }
+
+    &::placeholder {
+      color: $gray-e4;
+    }
+  }
 }
 
 // ─── 식당 정보 수정 페이지 ────────────────────────────────────────
