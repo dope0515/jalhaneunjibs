@@ -527,10 +527,20 @@ const setSort = (sort) => {
 
 const listContainerRef = ref(null)
 
+const scrollToListContainer = () => {
+  const el = listContainerRef.value
+  if (!el) return
+
+  const headerHeight = document.getElementById('header')?.offsetHeight ?? 0
+  const top = el.getBoundingClientRect().top + window.scrollY - headerHeight - 8
+
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+}
+
 const goPage = async (page) => {
   currentPage.value = page
   await nextTick()
-  listContainerRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  scrollToListContainer()
 }
 
 const submitSearch = () => {
