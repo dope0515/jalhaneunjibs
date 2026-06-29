@@ -1786,9 +1786,8 @@
     background: $bg-color;
     border: 1px solid $gray-e4;
     border-radius: rem(4);
-    @include font(11, 1.5, 500, $gray-78);
-    white-space: pre-wrap;
-    word-break: keep-all;
+    @include font(11, 1, 500, $gray-78);
+    white-space: nowrap;
   }
 
   .fee-tag.is-free {
@@ -1807,19 +1806,5 @@
     text-align: right;
     text-wrap: balance;
     white-space: pre-wrap;
-
-    &::before {
-      content: '';
-      display: inline-block;
-      flex-shrink: 0;
-      width: rem(14);
-      height: rem(14);
-      margin-top: rem(1);
-      background-color: $gray-99;
-      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E");
-      mask-repeat: no-repeat;
-      mask-size: contain;
-      mask-position: center;
-    }
   }
 }
