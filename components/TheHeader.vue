@@ -58,6 +58,15 @@
               건의·문의
             </NuxtLink>
           </li>
+          <li v-if="isAdmin" class="nav-item">
+            <NuxtLink
+              to="/admin"
+              class="nav-link"
+              title="관리자 페이지로 이동하기"
+            >
+              관리자 페이지
+            </NuxtLink>
+          </li>
           <li v-if="authStore.isLoggedIn" class="nav-item">
             <NuxtLink to="/mypage" class="user-profile" title="마이페이지로 이동">
               <div class="user-avatar">{{ userInitial }}</div>
@@ -152,6 +161,11 @@
               건의·문의
             </NuxtLink>
           </li>
+          <li v-if="isAdmin">
+            <NuxtLink to="/admin" class="nav-drawer__link" @click="menuOpen = false">
+              관리
+            </NuxtLink>
+          </li>
         </ul>
         <div class="nav-drawer__footer">
           <AppButton
@@ -181,7 +195,7 @@
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
-const { logout } = useAuth()
+const { logout, isAdmin } = useAuth()
 const menuOpen = ref(false)
 const route = useRoute()
 
