@@ -959,7 +959,7 @@
       text-align: center;
       background: $bg-color;
       border-radius: rem(16);
-      @include font(15, 1, 500, $gray-78);
+      @include font(15, 1.35, 500, $gray-78);
 
       a {
         color: $primary-color;
@@ -1802,7 +1802,7 @@
     align-items: flex-start;
     justify-content: flex-end;
     gap: rem(4);
-    @include font(12, 1.5, 400, $gray-78);
+    @include font(12, 1.5, 400, $black);
     margin: 0;
     text-align: right;
     text-wrap: balance;
