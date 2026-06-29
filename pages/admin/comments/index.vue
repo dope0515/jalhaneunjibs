@@ -22,7 +22,7 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <AdminSortableTh label="ID" field="id" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <th>번호</th>
             <AdminSortableTh label="매장" field="restaurant" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <AdminSortableTh label="작성자" field="user" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <th>유형</th>
@@ -33,8 +33,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="comment in comments" :key="comment.id">
-            <td>{{ comment.id }}</td>
+          <tr v-for="(comment, index) in comments" :key="comment.id">
+            <td>{{ rowNumber(index) }}</td>
             <td>
               <NuxtLink :to="`/restaurants/${comment.restaurant.id}`" class="admin-table__link">
                 {{ comment.restaurant.name }}
@@ -102,6 +102,7 @@ const { data, pending, refresh } = await useAsyncData(
 
 const comments = computed(() => data.value?.comments || [])
 const { total, totalPages, rangeStart, rangeEnd } = useAdminPaginationMeta(data, currentPage, pageSize)
+const { rowNumber } = useAdminRowNumber(total, rangeStart, sortBy, sortDir)
 
 const applySearch = () => {
   router.push({

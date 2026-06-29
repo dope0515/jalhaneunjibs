@@ -22,7 +22,7 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <AdminSortableTh label="ID" field="id" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <th>번호</th>
             <AdminSortableTh label="닉네임" field="nickname" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <AdminSortableTh label="이메일" field="email" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <AdminSortableTh label="역할" field="role" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
@@ -37,8 +37,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="u in users" :key="u.id">
-            <td>{{ u.id }}</td>
+          <tr v-for="(u, index) in users" :key="u.id">
+            <td>{{ rowNumber(index) }}</td>
             <td>{{ u.nickname }}</td>
             <td>{{ u.email }}</td>
             <td>
@@ -142,6 +142,7 @@ const { data, pending, refresh } = await useAsyncData(
 
 const users = computed(() => data.value?.users || [])
 const { total, totalPages, rangeStart, rangeEnd } = useAdminPaginationMeta(data, currentPage, pageSize)
+const { rowNumber } = useAdminRowNumber(total, rangeStart, sortBy, sortDir)
 
 const applySearch = () => {
   router.push({
