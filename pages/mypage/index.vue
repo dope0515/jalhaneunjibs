@@ -90,7 +90,7 @@
             <polyline points="9 22 9 12 15 12 15 22"/>
           </svg>
           <p>아직 등록한 맛집이 없어요</p>
-          <NuxtLink to="/restaurants/register" class="empty-link">맛집 등록하러 가기</NuxtLink>
+          <NuxtLink to="/restaurants/register" class="empty-link">잘하는 집 알려주기</NuxtLink>
         </div>
         <AppCardList :restaurants="myRestaurants" />
       </div>
@@ -106,7 +106,7 @@
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           <p>아직 작성한 리뷰가 없어요</p>
-          <NuxtLink to="/restaurants" class="empty-link">맛집 보러 가기</NuxtLink>
+          <NuxtLink to="/restaurants" class="empty-link">잘하는 집 보러 가기</NuxtLink>
         </div>
         <AppCardList :restaurants="reviewedRestaurants" />
       </div>

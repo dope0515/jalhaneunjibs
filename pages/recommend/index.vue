@@ -3,8 +3,8 @@
     <div class="inner">
       <AppTitle
         badge="Recommend"
-        title="잘하는 집 추천"
-        desc="내가 가고 싶은 곳들만 쏙쏙 골라 룰렛을 만들어보세요!"
+        title="오늘 뭐 먹지"
+        desc="조건을 고르고 룰렛을 돌려 오늘 갈 잘하는 집을 정해보세요!"
       />
 
       <div class="recommend-container">
