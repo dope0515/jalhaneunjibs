@@ -9,16 +9,16 @@
           <p class="service-title">Service</p>
           <ul class="service-list">
             <li class="service-item">
-              <NuxtLink to="/restaurants" title="맛집 찾기 페이지로 이동하기" class="service-link">맛집 찾기</NuxtLink>
+              <NuxtLink to="/restaurants" title="잘하는 집 보기 페이지로 이동하기" class="service-link">잘하는 집 보기</NuxtLink>
             </li>
             <li class="service-item">
-              <NuxtLink to="/restaurants/register" title="맛집 제보 페이지로 이동하기" class="service-link">맛집 제보</NuxtLink>
+              <NuxtLink to="/restaurants/register" title="잘하는 집 알려주기 페이지로 이동하기" class="service-link">잘하는 집 알려주기</NuxtLink>
             </li>
             <li class="service-item">
-              <NuxtLink to="/recommend" title="맛집 추천 페이지로 이동하기" class="service-link">맛집 추천</NuxtLink>
+              <NuxtLink to="/recommend" title="오늘 뭐 먹지 페이지로 이동하기" class="service-link">오늘 뭐 먹지</NuxtLink>
             </li>
             <li class="service-item">
-              <NuxtLink to="/board" title="문의하기 페이지로 이동하기" class="service-link">문의하기</NuxtLink>
+              <NuxtLink to="/board" title="건의·문의 페이지로 이동하기" class="service-link">건의·문의</NuxtLink>
             </li>
           </ul>
         </nav>

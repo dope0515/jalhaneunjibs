@@ -4,7 +4,7 @@
       <div class="page-header">
         <AppTitle
           badge="Places"
-          title="잘하는 집 모아보기"
+          title="잘하는 집 보기"
           desc="사람들이 추천하는 잘하는 집 구경하기"
         />
       </div>
@@ -189,7 +189,7 @@
           <template v-else>
             <p>아직 등록된 식당이 없습니다.</p>
             <NuxtLink to="/restaurants/register" class="empty-register-link">
-              첫 번째 맛집을 등록해보세요 →
+              첫 번째 잘하는 집을 알려주세요 →
             </NuxtLink>
           </template>
         </div>

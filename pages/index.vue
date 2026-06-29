@@ -16,10 +16,10 @@
             </p>
             <div class="main-header-btns">
               <AppButton to="/restaurants" color="green" size="lg" shape="round" arrow>
-                맛집 전체보기
+                잘하는 집 보기
               </AppButton>
               <AppButton to="/restaurants/register" variant="outline" color="black" size="lg" shape="round" arrow>
-                맛집 알려주기
+                잘하는 집 알려주기
               </AppButton>
             </div>
           </div>
@@ -80,7 +80,7 @@
                 <img src="~/assets/images/icon/ic_thumbs_up.svg" alt="Recommend">
               </div>
               <div class="text-bx">
-                <h3 class="title">잘하는 집 추천</h3>
+                <h3 class="title">오늘 뭐 먹지</h3>
                 <p class="desc">결정 장애가 올 때,<br>행운의 룰렛을 돌려보세요!</p>
               </div>
             </div>
@@ -97,7 +97,7 @@
                 <img src="~/assets/images/icon/ic_chat.svg" alt="Board">
               </div>
               <div class="text-bx">
-                <h3 class="title">운영진에게 한마디</h3>
+                <h3 class="title">건의·문의</h3>
                 <p class="desc">불편한 점이나<br>필요한 기능을 제안해주세요.</p>
               </div>
             </div>

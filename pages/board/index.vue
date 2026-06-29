@@ -3,7 +3,7 @@
     <div class="inner">
       <AppTitle
         badge="Board"
-        title="잘하는 집을 안 가봐서 그래"
+        title="건의·문의"
         desc="운영진에게 바라는 점이나 궁금한 점을 자유롭게 남겨주세요."
       />
 

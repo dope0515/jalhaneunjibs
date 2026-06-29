@@ -16,19 +16,19 @@
             <NuxtLink 
               to="/restaurants" 
               class="nav-link" 
-              title="맛집 찾기 페이지로 이동하기"
+              title="잘하는 집 보기 페이지로 이동하기"
             >
-              맛집 찾기
+              잘하는 집 보기
             </NuxtLink>
           </li>
           <li class="nav-item">
             <button 
               type="button"
               class="nav-link" 
-              title="맛집 제보 페이지로 이동하기"
+              title="잘하는 집 알려주기 페이지로 이동하기"
               @click="goToRegister"
             >
-              맛집 제보
+              잘하는 집 알려주기
             </button>
           </li>
           <!-- <li class="nav-item">
@@ -44,18 +44,18 @@
             <NuxtLink
               to="/recommend"
               class="nav-link"
-              title="맛집 추천 페이지로 이동하기"
+              title="오늘 뭐 먹지 페이지로 이동하기"
             >
-              맛집 추천
+              오늘 뭐 먹지
             </NuxtLink>
           </li>
           <li class="nav-item">
             <NuxtLink
               to="/board"
               class="nav-link"
-              title="문의하기 페이지로 이동하기"
+              title="건의·문의 페이지로 이동하기"
             >
-              문의하기
+              건의·문의
             </NuxtLink>
           </li>
           <li v-if="authStore.isLoggedIn" class="nav-item">
@@ -129,12 +129,12 @@
         <ul class="nav-drawer__list">
           <li>
             <NuxtLink to="/restaurants" class="nav-drawer__link" @click="menuOpen = false">
-              맛집 찾기
+              잘하는 집 보기
             </NuxtLink>
           </li>
           <li>
             <button type="button" class="nav-drawer__link" @click="goToRegisterMobile">
-              맛집 제보
+              잘하는 집 알려주기
             </button>
           </li>
           <li>
@@ -144,12 +144,12 @@
           </li>
           <li>
             <NuxtLink to="/recommend" class="nav-drawer__link" @click="menuOpen = false">
-              맛집 추천
+              오늘 뭐 먹지
             </NuxtLink>
           </li>
           <li>
             <NuxtLink to="/board" class="nav-drawer__link" @click="menuOpen = false">
-              문의하기
+              건의·문의
             </NuxtLink>
           </li>
         </ul>
