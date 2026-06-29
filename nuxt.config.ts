@@ -17,7 +17,8 @@ export default defineNuxtConfig({
         { name: 'description', content: '잘하는 집을 안 가봐서 그래 - 맛집 정보 공유 서비스' },
         { property: 'og:title', content: '잘하는 집을 안 가봐서 그래' },
         { property: 'og:description', content: '잘하는집에서 다양한 맛집 정보를 확인하세요.' },
-        { property: 'og:type', content: 'website' }
+        { property: 'og:type', content: 'website' },
+        { property: 'og:image', content: '/og-image.png' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }

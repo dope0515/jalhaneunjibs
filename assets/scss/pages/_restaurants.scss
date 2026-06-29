@@ -1786,8 +1786,9 @@
     background: $bg-color;
     border: 1px solid $gray-e4;
     border-radius: rem(4);
-    @include font(11, 1, 500, $gray-78);
-    white-space: nowrap;
+    @include font(11, 1.5, 500, $gray-78);
+    white-space: pre-wrap;
+    word-break: keep-all;
   }
 
   .fee-tag.is-free {
