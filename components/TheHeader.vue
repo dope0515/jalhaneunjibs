@@ -31,15 +31,6 @@
               잘하는 집 알려주기
             </button>
           </li>
-          <!-- <li class="nav-item">
-            <NuxtLink
-              to="/taster"
-              class="nav-link"
-              title="기미상궁 페이지로 이동하기"
-            >
-              기미상궁
-            </NuxtLink>
-          </li> -->
           <li class="nav-item">
             <NuxtLink
               to="/recommend"
@@ -145,11 +136,6 @@
             <button type="button" class="nav-drawer__link" @click="goToRegisterMobile">
               잘하는 집 알려주기
             </button>
-          </li>
-          <li>
-            <NuxtLink to="/taster" class="nav-drawer__link" @click="menuOpen = false">
-              기미상궁
-            </NuxtLink>
           </li>
           <li>
             <NuxtLink to="/recommend" class="nav-drawer__link" @click="menuOpen = false">

@@ -37,8 +37,8 @@
           <div class="admin-stats__sub">전체 {{ stats.postCount }}건</div>
         </div>
         <div class="admin-stats__card">
-          <div class="admin-stats__label">기미상궁 / 숨김</div>
-          <div class="admin-stats__value">{{ stats.tasterCount }} / {{ stats.hiddenCount }}</div>
+          <div class="admin-stats__label">숨김</div>
+          <div class="admin-stats__value">{{ stats.hiddenCount }}</div>
         </div>
       </div>
 
@@ -120,7 +120,7 @@ const stats = computed(() => data.value?.stats || {})
 const recent = computed(() => data.value?.recent || { restaurants: [], reviews: [], posts: [] })
 
 const statusLabel = (status) => {
-  const map = { ACTIVE: '운영중', CLOSED: '폐업', HIDDEN: '숨김', TASTER: '기미상궁' }
+  const map = { ACTIVE: '운영중', CLOSED: '폐업', HIDDEN: '숨김', TASTER: '숨김' }
   return map[status] || status
 }
 

@@ -56,24 +56,7 @@
 
         <!-- 하단 기능 카드 나열 -->
         <div class="sub-grid" data-aos="fade-up" data-aos-delay="100">
-          <!-- 2. 기미상궁 -->
-          <!-- <NuxtLink to="/taster" class="feature-card taster">
-            <div class="card-content">
-              <div class="icon-bx">
-                <img src="~/assets/images/icon/ic_cutlery.svg" alt="Taster">
-              </div>
-              <div class="text-bx">
-                <h3 class="title">기미상궁</h3>
-                <p class="desc">아직 가보지 못한 곳,<br>누가 먼저 가봐줬으면 하나요?</p>
-              </div>
-            </div>
-            <div class="card-footer">
-              <span class="label">가보기 전 확인하기</span>
-              <i class="icon-arrow"></i>
-            </div>
-          </NuxtLink> -->
-
-          <!-- 3. 잘하는 집 추천 -->
+          <!-- 2. 잘하는 집 추천 -->
           <NuxtLink to="/recommend" class="feature-card recommend">
             <div class="card-content">
               <div class="icon-bx">
@@ -90,7 +73,7 @@
             </div>
           </NuxtLink>
 
-          <!-- 4. 운영진 소통 게시판 -->
+          <!-- 3. 운영진 소통 게시판 -->
           <NuxtLink to="/board" class="feature-card board">
             <div class="card-content">
               <div class="icon-bx">

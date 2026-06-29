@@ -318,7 +318,6 @@
       flex-direction: row;
       gap: rem(16);
 
-      .feature-card.taster,
       .feature-card.recommend,
       .feature-card.board {
         flex: 1;
@@ -330,7 +329,6 @@
       gap: rem(24);
     }
 
-    .feature-card.taster,
     .feature-card.recommend,
     .feature-card.board {
       padding: rem(24) rem(24) rem(20);
@@ -417,7 +415,6 @@
       }
     }
 
-    .feature-card.taster:hover .icon-bx,
     .feature-card.recommend:hover .icon-bx,
     .feature-card.board:hover .icon-bx {
       background: linear-gradient(135deg, rgba($primary-color, 0.14) 0%, rgba($secondary-color, 0.1) 100%);
