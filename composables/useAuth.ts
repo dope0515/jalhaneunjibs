@@ -4,6 +4,7 @@ import { useAuthStore } from '~/stores/auth'
 export const useAuth = () => {
   const authStore = useAuthStore()
   const { user, accessToken, isLoggedIn } = storeToRefs(authStore)
+  const isAdmin = computed(() => user.value?.role === 'ADMIN')
 
   // 로그인 시도 함수
   const login = async (credentials: { login: string; password: string; rememberMe?: boolean }) => {
@@ -42,6 +43,7 @@ export const useAuth = () => {
     user,
     accessToken,
     isLoggedIn,
+    isAdmin,
     login,
     logout
   }
