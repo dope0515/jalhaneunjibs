@@ -1,9 +1,9 @@
 import { defineEventHandler } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { tryGetUserId } from '~/server/utils/auth'
+import { tryGetActiveUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const userId = tryGetUserId(event)
+  const userId = await tryGetActiveUserId(event)
 
   if (!userId) {
     return {

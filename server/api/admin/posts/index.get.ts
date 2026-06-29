@@ -1,12 +1,13 @@
 import { requireAdmin } from '~/server/utils/admin'
+import { parseAdminPagination, buildAdminPaginationMeta } from '~/server/utils/adminPagination'
+import { buildAdminOrderBy, POST_SORT_FIELDS } from '~/server/utils/adminSort'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
 
   const query = getQuery(event)
-  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10) || 1)
-  const pageSize = Math.min(50, Math.max(1, parseInt(String(query.pageSize ?? '20'), 10) || 20))
+  const { page, pageSize, skip } = parseAdminPagination(query as Record<string, unknown>)
   const q = String(query.q ?? '').trim()
   const pendingOnly = query.pending === 'true'
 
@@ -27,9 +28,9 @@ export default defineEventHandler(async (event) => {
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
       where,
-      skip: (page - 1) * pageSize,
+      skip,
       take: pageSize,
-      orderBy: { createdAt: 'desc' },
+      orderBy: buildAdminOrderBy(query as Record<string, unknown>, POST_SORT_FIELDS, 'createdAt', 'desc'),
       select: {
         id: true,
         title: true,
@@ -45,8 +46,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     posts,
-    total,
-    page,
-    totalPages: Math.ceil(total / pageSize),
+    ...buildAdminPaginationMeta(total, page, pageSize),
   }
 })

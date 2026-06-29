@@ -3,7 +3,7 @@ import { prisma } from '~/server/utils/prisma'
 import { getUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const userId = getUserId(event)
+  const userId = await getUserId(event)
   const body = await readBody(event)
   const { nickname, currentPassword, newPassword } = body
 
@@ -32,8 +32,8 @@ export default defineEventHandler(async (event) => {
     if (!currentPassword) {
       throw createError({ statusCode: 400, message: '현재 비밀번호를 입력해 주세요.' })
     }
-    const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (!user) throw createError({ statusCode: 404 })
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { password: true, status: true } })
+    if (!user || user.status === 'WITHDRAWN') throw createError({ statusCode: 404 })
 
     const isMatch = await bcrypt.compare(currentPassword, user.password)
     if (!isMatch) throw createError({ statusCode: 400, message: '현재 비밀번호가 일치하지 않습니다.' })

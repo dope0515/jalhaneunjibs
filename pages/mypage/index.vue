@@ -75,6 +75,28 @@
             </div>
           </div>
 
+          <!-- 회원 탈퇴 -->
+          <div class="mypage-card mypage-card--danger">
+            <h2 class="card-title">회원 탈퇴</h2>
+            <p class="card-desc">
+              탈퇴 시 계정 정보가 삭제되며, 작성한 리뷰·댓글은 익명 처리됩니다. 이 작업은 되돌릴 수 없습니다.
+            </p>
+            <div class="field-group">
+              <label class="field-label">비밀번호 확인</label>
+              <input
+                v-model="withdrawPassword"
+                type="password"
+                class="field-input"
+                placeholder="탈퇴를 위해 비밀번호를 입력하세요"
+              />
+            </div>
+            <div class="card-actions">
+              <button class="btn-ghost btn-danger" :disabled="withdrawing" @click="withdrawAccount">
+                {{ withdrawing ? '처리 중…' : '회원 탈퇴' }}
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -308,7 +330,7 @@
 definePageMeta({ middleware: 'auth' })
 
 const { $api } = useApi()
-const { user } = useAuth()
+const { user, logout } = useAuth()
 
 const tabs = [
   { id: 'profile', label: '계정 정보' },
@@ -377,6 +399,30 @@ const savePassword = async () => {
     alert(e.data?.message || '비밀번호 변경에 실패했습니다.')
   } finally {
     pwSaving.value = false
+  }
+}
+
+const withdrawPassword = ref('')
+const withdrawing = ref(false)
+
+const withdrawAccount = async () => {
+  if (!withdrawPassword.value.trim()) {
+    return alert('비밀번호를 입력해 주세요.')
+  }
+  if (!confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+
+  withdrawing.value = true
+  try {
+    await $api('/mypage/withdraw', {
+      method: 'POST',
+      body: { password: withdrawPassword.value },
+    })
+    alert('회원 탈퇴가 완료되었습니다.')
+    await logout()
+  } catch (e) {
+    alert(e.data?.statusMessage || e.data?.message || '탈퇴 처리에 실패했습니다.')
+  } finally {
+    withdrawing.value = false
   }
 }
 

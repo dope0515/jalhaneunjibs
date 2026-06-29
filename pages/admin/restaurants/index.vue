@@ -28,16 +28,16 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>매장명</th>
-            <th>카테고리</th>
-            <th>지역</th>
-            <th>상태</th>
-            <th>별점</th>
-            <th>리뷰</th>
-            <th>조회</th>
-            <th>등록자</th>
-            <th>등록일</th>
+            <AdminSortableTh label="ID" field="id" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="매장명" field="name" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="카테고리" field="foodCategory" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="지역" field="region2" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="상태" field="status" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="별점" field="averageRating" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="리뷰" field="reviewCount" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="조회" field="viewCount" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="등록자" field="registeredBy" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="등록일" field="createdAt" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <th>상태 변경</th>
           </tr>
         </thead>
@@ -59,6 +59,7 @@
             <td>{{ formatDate(r.createdAt) }}</td>
             <td>
               <select
+                :key="`restaurant-status-${r.id}-${r.status}`"
                 :value="r.status"
                 class="admin-table__select"
                 :disabled="updatingId === r.id"
@@ -74,13 +75,17 @@
       </table>
     </div>
 
-    <div v-if="totalPages > 1" class="admin-pagination">
-      <AppPagination
-        :current-page="currentPage"
-        :total-pages="totalPages"
-        @change="goPage"
-      />
-    </div>
+    <AdminPaginationBar
+      v-if="!pending && restaurants.length"
+      :total="total"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :page-size="pageSize"
+      :range-start="rangeStart"
+      :range-end="rangeEnd"
+      @change-page="goPage"
+      @change-page-size="changePageSize"
+    />
   </div>
 </template>
 
@@ -96,14 +101,15 @@ const { $api } = useApi()
 
 const searchQuery = ref(String(route.query.q || ''))
 const statusFilter = ref(String(route.query.status || ''))
-const currentPage = computed(() => Math.max(1, parseInt(String(route.query.page || '1'), 10) || 1))
 const updatingId = ref(null)
+
+const { currentPage, pageSize, sortBy, sortDir, listQuery, goPage, changePageSize, toggleSort } = useAdminListQuery()
 
 const { data, pending, refresh } = await useAsyncData(
   'admin-restaurants',
   () => $api('/admin/restaurants', {
     query: {
-      page: currentPage.value,
+      ...listQuery.value,
       q: route.query.q || undefined,
       status: route.query.status || undefined,
     },
@@ -112,7 +118,7 @@ const { data, pending, refresh } = await useAsyncData(
 )
 
 const restaurants = computed(() => data.value?.restaurants || [])
-const totalPages = computed(() => data.value?.totalPages || 1)
+const { total, totalPages, rangeStart, rangeEnd } = useAdminPaginationMeta(data, currentPage, pageSize)
 
 const statusLabel = (status) => {
   const map = { ACTIVE: '운영중', CLOSED: '폐업', HIDDEN: '숨김', TASTER: '숨김' }
@@ -133,17 +139,11 @@ const applyFilters = () => {
   router.push({
     path: '/admin/restaurants',
     query: {
+      ...route.query,
       q: searchQuery.value.trim() || undefined,
       status: statusFilter.value || undefined,
       page: 1,
     },
-  })
-}
-
-const goPage = (page) => {
-  router.push({
-    path: '/admin/restaurants',
-    query: { ...route.query, page },
   })
 }
 

@@ -334,6 +334,10 @@
   border-radius: rem(20);
   padding: rem(28) rem(24);
   box-shadow: 0 rem(4) rem(24) rgba(0, 0, 0, 0.05);
+
+  &--danger {
+    border: 1px solid #fecaca;
+  }
 }
 
 .card-title {
@@ -341,6 +345,11 @@
   margin-bottom: rem(20);
   padding-bottom: rem(16);
   border-bottom: 1px solid #f1f5f9;
+}
+
+.card-desc {
+  @include font(14, 1.6, 400, $gray-66);
+  margin-bottom: rem(16);
 }
 
 .field-group {

@@ -35,6 +35,25 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { status: true },
+    })
+
+    if (!user || user.status === 'WITHDRAWN') {
+      throw createError({
+        statusCode: 401,
+        statusMessage: '다시 로그인해주세요.',
+      })
+    }
+
+    if (user.status === 'SUSPENDED') {
+      throw createError({
+        statusCode: 403,
+        statusMessage: '정지된 계정입니다.',
+      })
+    }
+
     // 4. 새로운 액세스 토큰 생성
     const accessToken = jwt.sign(
       { userId: payload.userId },

@@ -1,12 +1,9 @@
 import { defineEventHandler, readFormData, createError } from 'h3'
 import { uploadToCloudinary } from '~/server/utils/cloudinary'
-import { tryGetUserId } from '~/server/utils/auth'
+import { getUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const userId = tryGetUserId(event)
-  if (!userId) {
-    throw createError({ statusCode: 401, statusMessage: '로그인이 필요합니다.' })
-  }
+  await getUserId(event)
 
   const formData = await readFormData(event)
   const file = formData.get('file')

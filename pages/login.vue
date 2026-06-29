@@ -10,6 +10,17 @@
           <div class="form-inner">
             <h2 class="title">환영합니다</h2>
             <p class="desc">서비스 이용을 위해 로그인해주세요.</p>
+
+            <div v-if="showSuspendedNotice" class="appeal-notice appeal-notice--warn">
+              <p>정지된 계정입니다. 해제가 필요하시면 아래에서 요청해 주세요.</p>
+              <NuxtLink
+                :to="`/account/appeal?email=${encodeURIComponent(email)}`"
+                class="appeal-notice__link"
+              >
+                계정 정지 해제 요청하기
+              </NuxtLink>
+            </div>
+
             <form @submit.prevent="handleLogin">
               <div class="form-item">
                 <label for="email" class="form-item-label">이메일</label>
@@ -205,6 +216,7 @@ const { withLoading } = useLoading()
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
+const showSuspendedNotice = ref(false)
 
 // 비밀번호 찾기 모달 관련 상태
 const showResetModal = ref(false)
@@ -360,13 +372,21 @@ const handleVerifyAndReset = async () => {
 }
 
 const handleLogin = async () => {
-  await withLoading(async () => {
-    await login({
-      login: email.value,
-      password: password.value,
-      rememberMe: rememberMe.value
+  showSuspendedNotice.value = false
+  try {
+    await withLoading(async () => {
+      await login({
+        login: email.value,
+        password: password.value,
+        rememberMe: rememberMe.value
+      })
     })
-  })
+  } catch (error) {
+    if (error?.status === 403) {
+      showSuspendedNotice.value = true
+      alert(error.data?.statusMessage || '정지된 계정입니다. 운영팀에 문의해 주세요.')
+    }
+  }
 }
 
 onUnmounted(() => {

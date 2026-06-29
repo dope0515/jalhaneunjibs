@@ -26,11 +26,11 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>제목</th>
-            <th>작성자</th>
-            <th>상태</th>
-            <th>작성일</th>
+            <AdminSortableTh label="ID" field="id" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="제목" field="title" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="작성자" field="user" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="상태" field="reply" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="작성일" field="createdAt" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <th>관리</th>
           </tr>
         </thead>
@@ -40,6 +40,7 @@
             <td>{{ post.title }}</td>
             <td>{{ post.user?.nickname }}</td>
             <td>
+              <span v-if="isAppealPost(post.title)" class="admin-badge admin-badge--appeal">해제요청</span>
               <span :class="post.reply ? 'admin-badge admin-badge--answered' : 'admin-badge admin-badge--pending'">
                 {{ post.reply ? '답변완료' : '미답변' }}
               </span>
@@ -60,13 +61,17 @@
       </table>
     </div>
 
-    <div v-if="totalPages > 1" class="admin-pagination">
-      <AppPagination
-        :current-page="currentPage"
-        :total-pages="totalPages"
-        @change="goPage"
-      />
-    </div>
+    <AdminPaginationBar
+      v-if="!pending && posts.length"
+      :total="total"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :page-size="pageSize"
+      :range-start="rangeStart"
+      :range-end="rangeEnd"
+      @change-page="goPage"
+      @change-page-size="changePageSize"
+    />
 
     <div v-if="replyModalOpen" class="admin-reply-modal">
       <div class="admin-reply-modal__backdrop" @click="closeReply" />
@@ -102,18 +107,19 @@ const { $api } = useApi()
 
 const searchQuery = ref(String(route.query.q || ''))
 const pendingOnly = ref(route.query.pending === 'true')
-const currentPage = computed(() => Math.max(1, parseInt(String(route.query.page || '1'), 10) || 1))
 
 const replyModalOpen = ref(false)
 const selectedPost = ref(null)
 const replyContent = ref('')
 const submitting = ref(false)
 
+const { currentPage, pageSize, sortBy, sortDir, listQuery, goPage, changePageSize, toggleSort } = useAdminListQuery()
+
 const { data, pending, refresh } = await useAsyncData(
   'admin-posts',
   () => $api('/admin/posts', {
     query: {
-      page: currentPage.value,
+      ...listQuery.value,
       q: route.query.q || undefined,
       pending: route.query.pending === 'true' ? 'true' : undefined,
     },
@@ -122,23 +128,17 @@ const { data, pending, refresh } = await useAsyncData(
 )
 
 const posts = computed(() => data.value?.posts || [])
-const totalPages = computed(() => data.value?.totalPages || 1)
+const { total, totalPages, rangeStart, rangeEnd } = useAdminPaginationMeta(data, currentPage, pageSize)
 
 const applyFilters = () => {
   router.push({
     path: '/admin/posts',
     query: {
+      ...route.query,
       q: searchQuery.value.trim() || undefined,
       pending: pendingOnly.value ? 'true' : undefined,
       page: 1,
     },
-  })
-}
-
-const goPage = (page) => {
-  router.push({
-    path: '/admin/posts',
-    query: { ...route.query, page },
   })
 }
 
@@ -153,6 +153,8 @@ const closeReply = () => {
   selectedPost.value = null
   replyContent.value = ''
 }
+
+const isAppealPost = (title) => String(title || '').startsWith('[계정정지 해제 요청]')
 
 const submitReply = async () => {
   if (!replyContent.value.trim()) {
