@@ -105,6 +105,106 @@
   }
 
   // 카테고리 버튼 그룹
+  .category-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: rem(12);
+    margin-bottom: rem(10);
+
+    .form-item-label {
+      margin-block-end: 0;
+    }
+  }
+
+  .category-edit-link {
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    @include font(13, 1, 500, $gray-78);
+    text-decoration: underline;
+    text-underline-offset: rem(2);
+
+    &:hover {
+      color: $primary-color;
+    }
+  }
+
+  .category-auto {
+    display: flex;
+    flex-direction: column;
+    gap: rem(8);
+    padding: rem(14) rem(16);
+    border: 1px solid $gray-e4;
+    border-radius: rem(12);
+    background: $white;
+  }
+
+  .category-auto-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: rem(8);
+  }
+
+  .category-auto-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: rem(6) rem(12);
+    border-radius: rem(100);
+    background: $primary-color;
+    @include font(13, 1, 600, $white);
+  }
+
+  .category-auto-detail {
+    @include font(14, 1.4, 500, $gray-44);
+  }
+
+  .category-auto-source {
+    margin: 0;
+    @include font(12, 1.5, 400, $gray-78);
+    word-break: keep-all;
+  }
+
+  .category-hint {
+    margin: 0 0 rem(10);
+    @include font(13, 1.5, 400, $gray-78);
+  }
+
+  .category-select {
+    width: 100%;
+    padding: rem(12) rem(16);
+    border: 1px solid #d1d5db;
+    border-radius: rem(10);
+    @include font(14, 1.4, 500, $gray-44);
+    font-family: inherit;
+    background: $white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $secondary-color;
+    }
+  }
+
+  .category-cancel-link {
+    display: inline-block;
+    margin-top: rem(10);
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    @include font(13, 1, 500, $gray-78);
+    text-decoration: underline;
+    text-underline-offset: rem(2);
+
+    &:hover {
+      color: $primary-color;
+    }
+  }
+
   .category-group {
     display: flex;
     flex-wrap: wrap;
