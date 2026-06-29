@@ -16,7 +16,6 @@ export default defineEventHandler(async (event) => {
     commentCount,
     postCount,
     pendingPosts,
-    tasterCount,
     hiddenCount,
     recentRestaurants,
     recentReviews,
@@ -30,7 +29,6 @@ export default defineEventHandler(async (event) => {
     prisma.comment.count(),
     prisma.post.count(),
     prisma.post.count({ where: { reply: null } }),
-    prisma.restaurant.count({ where: { status: 'TASTER' } }),
     prisma.restaurant.count({ where: { status: 'HIDDEN' } }),
     prisma.restaurant.findMany({
       take: 5,
@@ -79,7 +77,6 @@ export default defineEventHandler(async (event) => {
       commentCount,
       postCount,
       pendingPosts,
-      tasterCount,
       hiddenCount,
     },
     recent: {

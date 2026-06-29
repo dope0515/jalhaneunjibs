@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
 
     const thumbnailPath = uploadedImages[0] ?? null
 
-    if (!name || (!address && status !== 'TASTER')) {
+    if (!name || !address) {
       throw createError({ statusCode: 400, statusMessage: '필수 정보(이름 등)가 누락되었습니다.' })
     }
 

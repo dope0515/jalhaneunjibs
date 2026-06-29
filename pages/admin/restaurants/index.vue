@@ -2,7 +2,7 @@
   <div class="admin-page">
     <div class="admin-page__header">
       <h1 class="admin-page__title">매장 관리</h1>
-      <p class="admin-page__desc">매장 상태(운영중, 폐업, 숨김, 기미상궁)를 변경합니다.</p>
+      <p class="admin-page__desc">매장 상태(운영중, 폐업, 숨김)를 변경합니다.</p>
     </div>
 
     <div class="admin-page__toolbar">
@@ -18,7 +18,6 @@
         <option value="ACTIVE">운영중</option>
         <option value="CLOSED">폐업</option>
         <option value="HIDDEN">숨김</option>
-        <option value="TASTER">기미상궁</option>
       </select>
       <button type="button" class="admin-page__btn" @click="applyFilters">검색</button>
     </div>
@@ -68,7 +67,6 @@
                 <option value="ACTIVE">운영중</option>
                 <option value="CLOSED">폐업</option>
                 <option value="HIDDEN">숨김</option>
-                <option value="TASTER">기미상궁</option>
               </select>
             </td>
           </tr>
@@ -117,7 +115,7 @@ const restaurants = computed(() => data.value?.restaurants || [])
 const totalPages = computed(() => data.value?.totalPages || 1)
 
 const statusLabel = (status) => {
-  const map = { ACTIVE: '운영중', CLOSED: '폐업', HIDDEN: '숨김', TASTER: '기미상궁' }
+  const map = { ACTIVE: '운영중', CLOSED: '폐업', HIDDEN: '숨김', TASTER: '숨김' }
   return map[status] || status
 }
 
@@ -126,7 +124,7 @@ const statusBadgeClass = (status) => {
     ACTIVE: 'admin-badge admin-badge--active',
     CLOSED: 'admin-badge admin-badge--closed',
     HIDDEN: 'admin-badge admin-badge--hidden',
-    TASTER: 'admin-badge admin-badge--taster',
+    TASTER: 'admin-badge admin-badge--hidden',
   }
   return map[status] || 'admin-badge'
 }

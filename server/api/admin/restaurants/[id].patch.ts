@@ -1,7 +1,7 @@
 import { requireAdmin } from '~/server/utils/admin'
 import { prisma } from '~/server/utils/prisma'
 
-const VALID_STATUSES = ['ACTIVE', 'CLOSED', 'HIDDEN', 'TASTER'] as const
+const VALID_STATUSES = ['ACTIVE', 'CLOSED', 'HIDDEN'] as const
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)

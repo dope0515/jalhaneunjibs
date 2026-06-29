@@ -58,7 +58,7 @@ enum RestaurantStatus {
   ACTIVE    // 영업 중
   CLOSED    // 폐업
   HIDDEN    // 숨김 (관리자용)
-  TASTER    // 기미상궁 (등록 전 후보)
+  TASTER    // deprecated (legacy data)
 }
 
 model Restaurant {

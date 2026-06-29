@@ -36,7 +36,7 @@
                 :class="{ 'is-active': useCurrentLocation }"
                 @click="toggleLocation"
               >
-                <img src="~/assets/images/icon/ic_marker.svg" width="16" alt="">
+                <img :src="useCurrentLocation ? '/assets/images/icon/ic_marker_active.svg' : '/assets/images/icon/ic_marker.svg'" width="16" height="16" alt="marker">
                 {{ useCurrentLocation ? '내 위치 사용 중' : '내 위치 사용하기' }}
               </AppButton>
               <div class="region-selects" v-if="!useCurrentLocation">
@@ -586,9 +586,20 @@ const reset = () => {
     :deep(.app-button) {
       width: 100%;
       justify-content: center;
+      gap: rem(6);
+      transition: all 0.2s ease;
 
       @include tablet {
         width: auto;
+      }
+
+      &.is-active {
+        background-color: $primary-color;
+        border-color: $primary-color;
+        color: $white;
+        font-weight: 700;
+        box-shadow: 0 rem(4) rem(12) rgba($primary-color, 0.25);
+
       }
     }
 
