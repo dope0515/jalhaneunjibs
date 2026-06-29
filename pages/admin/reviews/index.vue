@@ -22,12 +22,12 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>매장</th>
-            <th>작성자</th>
-            <th class="admin-table__col--rating">별점</th>
+            <AdminSortableTh label="ID" field="id" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="매장" field="restaurant" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="작성자" field="user" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="별점" field="rating" th-class="admin-table__col--rating" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <th>내용</th>
-            <th class="admin-table__col--date">작성일</th>
+            <AdminSortableTh label="작성일" field="createdAt" th-class="admin-table__col--date" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <th class="admin-table__col--action">관리</th>
           </tr>
         </thead>
@@ -58,13 +58,17 @@
       </table>
     </div>
 
-    <div v-if="totalPages > 1" class="admin-pagination">
-      <AppPagination
-        :current-page="currentPage"
-        :total-pages="totalPages"
-        @change="goPage"
-      />
-    </div>
+    <AdminPaginationBar
+      v-if="!pending && reviews.length"
+      :total="total"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :page-size="pageSize"
+      :range-start="rangeStart"
+      :range-end="rangeEnd"
+      @change-page="goPage"
+      @change-page-size="changePageSize"
+    />
   </div>
 </template>
 
@@ -79,14 +83,15 @@ const router = useRouter()
 const { $api } = useApi()
 
 const searchQuery = ref(String(route.query.q || ''))
-const currentPage = computed(() => Math.max(1, parseInt(String(route.query.page || '1'), 10) || 1))
 const deletingId = ref(null)
+
+const { currentPage, pageSize, sortBy, sortDir, listQuery, goPage, changePageSize, toggleSort } = useAdminListQuery()
 
 const { data, pending, refresh } = await useAsyncData(
   'admin-reviews',
   () => $api('/admin/reviews', {
     query: {
-      page: currentPage.value,
+      ...listQuery.value,
       q: route.query.q || undefined,
     },
   }),
@@ -94,22 +99,16 @@ const { data, pending, refresh } = await useAsyncData(
 )
 
 const reviews = computed(() => data.value?.reviews || [])
-const totalPages = computed(() => data.value?.totalPages || 1)
+const { total, totalPages, rangeStart, rangeEnd } = useAdminPaginationMeta(data, currentPage, pageSize)
 
 const applySearch = () => {
   router.push({
     path: '/admin/reviews',
     query: {
+      ...route.query,
       q: searchQuery.value.trim() || undefined,
       page: 1,
     },
-  })
-}
-
-const goPage = (page) => {
-  router.push({
-    path: '/admin/reviews',
-    query: { ...route.query, page },
   })
 }
 

@@ -22,13 +22,13 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>매장</th>
-            <th>작성자</th>
+            <AdminSortableTh label="ID" field="id" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="매장" field="restaurant" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="작성자" field="user" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <th>유형</th>
             <th>내용</th>
-            <th>대댓글</th>
-            <th>작성일</th>
+            <AdminSortableTh label="대댓글" field="replies" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <AdminSortableTh label="작성일" field="createdAt" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <th>관리</th>
           </tr>
         </thead>
@@ -60,13 +60,17 @@
       </table>
     </div>
 
-    <div v-if="totalPages > 1" class="admin-pagination">
-      <AppPagination
-        :current-page="currentPage"
-        :total-pages="totalPages"
-        @change="goPage"
-      />
-    </div>
+    <AdminPaginationBar
+      v-if="!pending && comments.length"
+      :total="total"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :page-size="pageSize"
+      :range-start="rangeStart"
+      :range-end="rangeEnd"
+      @change-page="goPage"
+      @change-page-size="changePageSize"
+    />
   </div>
 </template>
 
@@ -81,14 +85,15 @@ const router = useRouter()
 const { $api } = useApi()
 
 const searchQuery = ref(String(route.query.q || ''))
-const currentPage = computed(() => Math.max(1, parseInt(String(route.query.page || '1'), 10) || 1))
 const deletingId = ref(null)
+
+const { currentPage, pageSize, sortBy, sortDir, listQuery, goPage, changePageSize, toggleSort } = useAdminListQuery()
 
 const { data, pending, refresh } = await useAsyncData(
   'admin-comments',
   () => $api('/admin/comments', {
     query: {
-      page: currentPage.value,
+      ...listQuery.value,
       q: route.query.q || undefined,
     },
   }),
@@ -96,22 +101,16 @@ const { data, pending, refresh } = await useAsyncData(
 )
 
 const comments = computed(() => data.value?.comments || [])
-const totalPages = computed(() => data.value?.totalPages || 1)
+const { total, totalPages, rangeStart, rangeEnd } = useAdminPaginationMeta(data, currentPage, pageSize)
 
 const applySearch = () => {
   router.push({
     path: '/admin/comments',
     query: {
+      ...route.query,
       q: searchQuery.value.trim() || undefined,
       page: 1,
     },
-  })
-}
-
-const goPage = (page) => {
-  router.push({
-    path: '/admin/comments',
-    query: { ...route.query, page },
   })
 }
 

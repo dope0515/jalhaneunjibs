@@ -1,12 +1,9 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { tryGetUserId } from '~/server/utils/auth'
+import { getUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const userId = tryGetUserId(event)
-  if (!userId) {
-    throw createError({ statusCode: 401, statusMessage: '로그인이 필요합니다.' })
-  }
+  const userId = await getUserId(event)
 
   const body = await readBody(event)
   const { title, content } = body

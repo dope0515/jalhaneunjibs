@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN "status" TEXT NOT NULL DEFAULT 'ACTIVE';
+ALTER TABLE "User" ADD COLUMN "suspendedReason" TEXT;
+ALTER TABLE "User" ADD COLUMN "withdrawnAt" TIMESTAMP(3);

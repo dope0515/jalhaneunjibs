@@ -32,6 +32,20 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  if (user.status === 'WITHDRAWN') {
+    throw createError({
+      statusCode: 401,
+      statusMessage: '탈퇴한 계정입니다.',
+    })
+  }
+
+  if (user.status === 'SUSPENDED') {
+    throw createError({
+      statusCode: 403,
+      statusMessage: '정지된 계정입니다. 계정 정지 해제 요청 페이지에서 문의해 주세요.',
+    })
+  }
+
   console.log(`[Login Info]: Found user, storedPasswordHashLength=${user.password?.length}`)
 
   // 2. 비밀번호 일치 여부 확인

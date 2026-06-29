@@ -1,6 +1,6 @@
 import { defineEventHandler, readFormData, createError } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { tryGetUserId } from '~/server/utils/auth'
+import { getUserId } from '~/server/utils/auth'
 
 // "서울특별시 강남구 역삼동 ..." → { region1, region2, region3 }
 const parseAddress = (address: string) => {
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     const formData = await readFormData(event)
 
     // 등록자 userId
-    const registeredById = tryGetUserId(event)
+    const registeredById = await getUserId(event)
 
     // 기본 필드
     const name = formData.get('name')?.toString()

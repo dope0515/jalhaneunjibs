@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 권한 체크
-  const userId = getUserId(event)
+  const userId = await getUserId(event)
   const user = await prisma.user.findUnique({ where: { id: userId } })
   
   const isOwner = restaurant.registeredById === userId

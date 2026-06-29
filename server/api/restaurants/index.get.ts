@@ -1,6 +1,6 @@
 import { defineEventHandler, getQuery } from 'h3'
 import { prisma } from '~/server/utils/prisma'
-import { tryGetUserId } from '~/server/utils/auth'
+import { tryGetActiveUserId } from '~/server/utils/auth'
 
 const REGION_VARIATIONS: Record<string, string[]> = {
   '서울': ['서울', '서울특별시'],
@@ -24,7 +24,7 @@ const REGION_VARIATIONS: Record<string, string[]> = {
 
 export default defineEventHandler(async (event) => {
   const { category, region1, region2, keyword, priceMin, priceMax, page = '1', sort = 'latest' } = getQuery(event)
-  const userId = tryGetUserId(event)
+  const userId = await tryGetActiveUserId(event)
 
   const pageNum = Math.max(1, parseInt(page as string))
   const pageSize = 6

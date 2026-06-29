@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: '식당을 찾을 수 없습니다.' })
   }
 
-  const userId = getUserId(event)
+  const userId = await getUserId(event)
   const user = await prisma.user.findUnique({ where: { id: userId } })
 
   const isOwner = restaurant.registeredById === userId

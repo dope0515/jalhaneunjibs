@@ -277,6 +277,45 @@
     white-space: nowrap;
   }
 
+  &__th-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(4);
+  }
+
+  &__th-label {
+    line-height: 1.2;
+  }
+
+  &__sort-icon {
+    @include font(11, 1, 600, $gray-99);
+    flex-shrink: 0;
+  }
+
+  &__th--sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: $primary-color;
+      background-color: rgba($primary-color, 0.04);
+
+      .admin-table__sort-icon {
+        color: $primary-color;
+      }
+    }
+  }
+
+  &__th--active {
+    color: $primary-color;
+    background-color: rgba($primary-color, 0.06);
+
+    .admin-table__sort-icon {
+      color: $primary-color;
+    }
+  }
+
   tr:last-child td {
     border-bottom: none;
   }
@@ -304,11 +343,43 @@
   }
 
   &__select {
-    padding: rem(6) rem(10);
+    min-width: rem(88);
+    padding: rem(8) rem(32) rem(8) rem(12);
     border: 1px solid $gray-e4;
-    border-radius: rem(6);
-    @include font(13, 1, 400, $black);
-    background: $white;
+    border-radius: rem(8);
+    @include font(13, 1, 500, $gray-44);
+    background-color: $white;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23666666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right rem(10) center;
+    background-size: rem(12) rem(8);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: $gray-99;
+    }
+
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &--suspended {
+      border-color: rgba($tertiary-color, 0.45);
+      background-color: rgba($tertiary-color, 0.04);
+      color: $tertiary-color;
+      font-weight: 600;
+    }
   }
 
   &__col--rating {
@@ -358,6 +429,12 @@
     color: $secondary-color;
   }
 
+  &--appeal {
+    margin-right: rem(6);
+    background: rgba(220, 38, 38, 0.1);
+    color: #b91c1c;
+  }
+
   &--active {
     background: rgba(5, 150, 105, 0.12);
     color: $secondary-color;
@@ -371,6 +448,16 @@
   &--hidden {
     background: rgba(220, 38, 38, 0.1);
     color: #dc2626;
+  }
+
+  &--suspended {
+    background: rgba(217, 119, 6, 0.12);
+    color: $tertiary-color;
+  }
+
+  &--withdrawn {
+    background: rgba(120, 113, 108, 0.12);
+    color: $gray-78;
   }
 
 }
@@ -419,6 +506,56 @@
   margin-top: rem(24);
   display: flex;
   justify-content: center;
+}
+
+.admin-pagination-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: rem(12) rem(16);
+  margin-top: rem(20);
+  padding-top: rem(16);
+  border-top: 1px solid $gray-e4;
+
+  &__meta {
+    @include font(14, 1.4, 500, $gray-66);
+    white-space: nowrap;
+  }
+
+  &__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: rem(12) rem(16);
+    margin-left: auto;
+  }
+
+  &__size {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(8);
+  }
+
+  &__size-label {
+    @include font(13, 1, 500, $gray-99);
+    white-space: nowrap;
+  }
+
+  &__select {
+    padding: rem(6) rem(28) rem(6) rem(10);
+    border: 1px solid $gray-e4;
+    border-radius: rem(8);
+    background-color: $white;
+    @include font(13, 1, 500, $gray-66);
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+    }
+  }
 }
 
 .admin-reply-modal {

@@ -1,34 +1,40 @@
 import { requireAdmin } from '~/server/utils/admin'
+import { parseAdminPagination, buildAdminPaginationMeta } from '~/server/utils/adminPagination'
+import { buildAdminOrderBy, USER_SORT_FIELDS } from '~/server/utils/adminSort'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
 
   const query = getQuery(event)
-  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10) || 1)
-  const pageSize = Math.min(50, Math.max(1, parseInt(String(query.pageSize ?? '20'), 10) || 20))
+  const { page, pageSize, skip } = parseAdminPagination(query as Record<string, unknown>)
   const q = String(query.q ?? '').trim()
 
-  const where = q
-    ? {
-        OR: [
-          { email: { contains: q, mode: 'insensitive' as const } },
-          { nickname: { contains: q, mode: 'insensitive' as const } },
-        ],
-      }
-    : {}
+  const where = {
+    ...(q
+      ? {
+          OR: [
+            { email: { contains: q, mode: 'insensitive' as const } },
+            { nickname: { contains: q, mode: 'insensitive' as const } },
+          ],
+        }
+      : {}),
+  }
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where,
-      skip: (page - 1) * pageSize,
+      skip,
       take: pageSize,
-      orderBy: { createdAt: 'desc' },
+      orderBy: buildAdminOrderBy(query as Record<string, unknown>, USER_SORT_FIELDS, 'createdAt', 'desc'),
       select: {
         id: true,
         email: true,
         nickname: true,
         role: true,
+        status: true,
+        suspendedReason: true,
+        withdrawnAt: true,
         emailVerified: true,
         createdAt: true,
         _count: {
@@ -46,8 +52,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     users,
-    total,
-    page,
-    totalPages: Math.ceil(total / pageSize),
+    ...buildAdminPaginationMeta(total, page, pageSize),
   }
 })

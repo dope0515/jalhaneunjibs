@@ -20,6 +20,9 @@ export const useAuth = () => {
 
       navigateTo('/')
     } catch (error: any) {
+      if (error?.status === 403) {
+        throw error
+      }
       alert(error.data?.statusMessage || '로그인에 실패했습니다.')
     }
   }

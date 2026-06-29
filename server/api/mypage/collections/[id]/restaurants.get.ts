@@ -2,7 +2,7 @@ import { prisma } from '~/server/utils/prisma'
 import { getUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const userId = getUserId(event)
+  const userId = await getUserId(event)
   const id = parseInt(getRouterParam(event, 'id') ?? '')
 
   const collection = await prisma.collection.findUnique({
