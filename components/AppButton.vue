@@ -174,8 +174,30 @@ const mergedProps = computed(() => ({ ...dynamicProps.value, ...attrs }))
   }
 
   &.btn-size-lg {
-    padding: rem(20) rem(40);
-    @include font(18);
+    padding: rem(12) rem(20);
+    @include font(14);
+
+    &.btn-shape-round {
+      padding: rem(14) rem(24);
+    }
+
+    @include tablet {
+      padding: rem(16) rem(32);
+      @include font(16);
+
+      &.btn-shape-round {
+        padding: rem(16) rem(36);
+      }
+    }
+
+    @media (min-width: rem(1024)) {
+      padding: rem(20) rem(40);
+      @include font(18);
+
+      &.btn-shape-round {
+        padding: rem(20) rem(44);
+      }
+    }
   }
 
   // Arrow

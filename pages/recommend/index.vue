@@ -114,8 +114,11 @@
               @click="toggleCandidate(item)"
             >
               <div class="item-img">
-                <img v-if="item.thumbnail" :src="item.thumbnail" alt="">
-                <div v-else class="no-img"></div>
+                <img
+                  :src="item.thumbnail || '/assets/images/common/default.jpg'"
+                  :alt="item.name"
+                  @error="(e) => { e.target.src = '/assets/images/common/default.jpg' }"
+                >
               </div>
               <div class="item-info">
                 <span class="cat">{{ item.foodCategory }}</span>
@@ -796,7 +799,6 @@ const reset = () => {
       }
 
       img { width: 100%; height: 100%; object-fit: cover; }
-      .no-img { width: 100%; height: 100%; background-color: $gray-f0; }
     }
 
     .item-info {

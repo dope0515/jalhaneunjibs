@@ -296,7 +296,7 @@
                     </div>
                   </div>
 
-                  <!-- 요금 -->
+                  <!-- 무료 주차 & 주차 안내 -->
                   <div class="hours-sub-item has-divider">
                     <div class="flex-between">
                       <span class="hours-sub-label">무료 주차</span>
@@ -305,33 +305,16 @@
                         <span class="switch-slider"></span>
                       </label>
                     </div>
-                    <div v-if="!parkingData.isFree" class="hours-sub-item" style="margin-top: 10px;">
-                      <span class="hours-sub-label">요금 정보</span>
-                      <input
-                        v-model="parkingData.feeDesc"
+                    <div class="hours-sub-item" style="margin-top: 10px;">
+                      <span class="hours-sub-label">주차 안내</span>
+                      <textarea
+                        v-model="parkingData.memo"
                         class="edit-input"
                         style="width:100%; margin-top:6px;"
-                        placeholder="예: 1시간 2,000원, 이후 30분당 1,000원"
+                        rows="3"
+                        placeholder="예: 1시간 2,000원&#10;건물 B1 주차장 이용"
                       />
                     </div>
-                  </div>
-
-                  <!-- 추가 메모 -->
-                  <div class="hours-sub-item">
-                    <div class="flex-between">
-                      <span class="hours-sub-label">추가 메모</span>
-                      <label class="switch-toggle">
-                        <input type="checkbox" v-model="parkingData.hasMemo" />
-                        <span class="switch-slider"></span>
-                      </label>
-                    </div>
-                    <input
-                      v-if="parkingData.hasMemo"
-                      v-model="parkingData.memo"
-                      class="edit-input"
-                      style="width:100%; margin-top:10px;"
-                      placeholder="예: 식당 입구 옆 주차장 이용"
-                    />
                   </div>
                 </template>
               </template>
@@ -475,6 +458,7 @@
 
 <script setup>
 import { WEEKDAYS, parseOpeningHours, formatOpeningHours } from '~/utils/openingHours'
+import { parseParkingInfo, formatParkingInfo } from '~/utils/parkingInfo'
 import {
   uploadImage,
   getUploadErrorMessage,
@@ -592,64 +576,9 @@ watch(computedOpeningHours, (newVal) => {
   form.value.openingHours = newVal
 }, { immediate: true })
 
-// ── 주차 정보 데이터 및 헬퍼 ──────────────────────────────────────
-const parseParkingInfo = (str) => {
-  const data = {
-    hasParking: !!str,
-    available: true,
-    type: '자체주차장',
-    isFree: true,
-    feeDesc: '',
-    hasMemo: false,
-    memo: '',
-  }
-  if (!str) return data
-  if (str === '주차 불가') {
-    data.available = false
-    return data
-  }
-  // JSON 형식 (신규)
-  if (str.trimStart().startsWith('{')) {
-    try {
-      const parsed = JSON.parse(str)
-      const types = ['자체주차장', '발렛파킹', '공영주차장', '건물주차장']
-      if (parsed.type && types.includes(parsed.type)) data.type = parsed.type
-      data.isFree = !!parsed.isFree
-      data.feeDesc = parsed.feeDesc || ''
-      data.hasMemo = !!(parsed.memo)
-      data.memo = parsed.memo || ''
-      return data
-    } catch {}
-  }
-  // 구형식 호환 ( · 구분자)
-  const parts = str.split(' · ').map(p => p.trim())
-  const types = ['자체주차장', '발렛파킹', '공영주차장', '건물주차장']
-  if (parts[0] && types.includes(parts[0])) data.type = parts[0]
-  if (parts[1] === '무료') {
-    data.isFree = true
-  } else if (parts[1]) {
-    data.isFree = false
-    data.feeDesc = parts[1]
-  }
-  if (parts[2]) {
-    data.hasMemo = true
-    data.memo = parts[2]
-  }
-  return data
-}
-
 const parkingData = ref(parseParkingInfo(restaurant.value.parkingInfo))
 
-const computedParkingInfo = computed(() => {
-  if (!parkingData.value.hasParking) return ''
-  if (!parkingData.value.available) return '주차 불가'
-  return JSON.stringify({
-    type: parkingData.value.type,
-    isFree: parkingData.value.isFree,
-    feeDesc: parkingData.value.isFree ? '' : parkingData.value.feeDesc.trim(),
-    memo: parkingData.value.hasMemo ? parkingData.value.memo.trim() : '',
-  })
-})
+const computedParkingInfo = computed(() => formatParkingInfo(parkingData.value))
 
 watch(computedParkingInfo, (newVal) => {
   form.value.parkingInfo = newVal

@@ -243,7 +243,7 @@
                     class="kakao-place-link"
                     style="margin-bottom: 8px; display: inline-flex;"
                   >
-                    카카오맵에서 영업시간 확인하기
+                    카카오맵에서 영업 정보 확인하기
                     <img src="/assets/images/icon/ic_external.svg" width="14" height="14" alt="" aria-hidden="true" />
                   </a>
                   <p v-else class="kakao-place-empty" style="margin-bottom: 8px;">식당을 검색해서 선택하면 카카오맵 링크가 연결됩니다</p>
@@ -444,7 +444,7 @@
                           </div>
                         </div>
 
-                        <!-- 요금 -->
+                        <!-- 주차 안내 -->
                         <div class="hours-sub-item has-divider">
                           <div class="flex-between">
                             <span class="hours-sub-label">무료 주차</span>
@@ -453,36 +453,17 @@
                               <span class="switch-slider"></span>
                             </label>
                           </div>
-                          <div v-if="!parkingData.isFree" class="hours-sub-item" style="margin-top: 10px;">
-                            <label for="parking-fee-desc" class="hours-sub-label">요금 정보</label>
+                          <div class="hours-sub-item" style="margin-top: 10px;">
+                            <label for="parking-memo" class="hours-sub-label">주차 안내</label>
                             <textarea
-                              id="parking-fee-desc"
-                              v-model="parkingData.feeDesc"
+                              id="parking-memo"
+                              v-model="parkingData.memo"
                               class="edit-input"
-                              rows="2"
-                              placeholder="예: 1시간 2,000원&#10;이후 30분당 1,000원"
+                              rows="3"
+                              style="margin-top:10px;"
+                              placeholder="예: 1시간 2,000원&#10;건물 B1 주차장 이용"
                             />
                           </div>
-                        </div>
-
-                        <!-- 추가 메모 -->
-                        <div class="hours-sub-item">
-                          <div class="flex-between">
-                            <label for="parking-memo" class="hours-sub-label">추가 메모</label>
-                            <label class="switch-toggle" aria-label="추가 메모 입력 켜기/끄기">
-                              <input type="checkbox" v-model="parkingData.hasMemo" />
-                              <span class="switch-slider"></span>
-                            </label>
-                          </div>
-                          <textarea
-                            v-if="parkingData.hasMemo"
-                            id="parking-memo"
-                            v-model="parkingData.memo"
-                            class="edit-input"
-                            rows="2"
-                            style="margin-top:10px;"
-                            placeholder="예: 식당 입구 옆 주차장 이용"
-                          />
                         </div>
                       </template>
                     </template>
@@ -741,6 +722,7 @@ import {
   getUploadErrorMessage,
 } from '~/utils/imageUpload'
 import { WEEKDAYS, createDefaultOpData, formatOpeningHours } from '~/utils/openingHours'
+import { createDefaultParkingData, formatParkingInfo } from '~/utils/parkingInfo'
 
 const { $api } = useApi()
 const { loadSDK } = useKakaoMap()
@@ -899,26 +881,9 @@ const form = ref({
 const opData = ref(createDefaultOpData())
 
 // ── 주차 정보 데이터 및 헬퍼 ──────────────────────────────────────
-const parkingData = ref({
-  hasParking: false,
-  available: true,
-  type: '자체주차장',
-  isFree: true,
-  feeDesc: '',
-  hasMemo: false,
-  memo: '',
-})
+const parkingData = ref(createDefaultParkingData())
 
-const computedParkingInfo = computed(() => {
-  if (!parkingData.value.hasParking) return ''
-  if (!parkingData.value.available) return '주차 불가'
-  return JSON.stringify({
-    type: parkingData.value.type,
-    isFree: parkingData.value.isFree,
-    feeDesc: parkingData.value.isFree ? '' : parkingData.value.feeDesc.trim(),
-    memo: parkingData.value.hasMemo ? parkingData.value.memo.trim() : '',
-  })
-})
+const computedParkingInfo = computed(() => formatParkingInfo(parkingData.value))
 
 watch(computedParkingInfo, (newVal) => {
   form.value.parkingInfo = newVal
@@ -1470,15 +1435,7 @@ const resetForm = () => {
     keywords: []
   }
   opData.value = createDefaultOpData()
-  parkingData.value = {
-    hasParking: false,
-    available: true,
-    type: '자체주차장',
-    isFree: true,
-    feeDesc: '',
-    hasMemo: false,
-    memo: '',
-  }
+  parkingData.value = createDefaultParkingData()
   analyzedMenuItems.value = []
   restaurantImages.value = []
   restaurantPreviews.value = []
