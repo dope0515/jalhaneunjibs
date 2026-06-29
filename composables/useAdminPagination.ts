@@ -97,3 +97,58 @@ export function useAdminPaginationMeta(
 
   return { total, totalPages, rangeStart, rangeEnd }
 }
+
+/** 목록 번호 또는 가입일(createdAt) 정렬 시 등록 순번 */
+export function getAdminRowNumber(options: {
+  index: number
+  total: number
+  rangeStart: number
+  sortBy: string
+  sortDir: AdminSortDir
+  defaultSortField?: string
+  defaultSortDir?: AdminSortDir
+}) {
+  const {
+    index,
+    total,
+    rangeStart,
+    sortBy,
+    sortDir,
+    defaultSortField = 'createdAt',
+    defaultSortDir = 'desc',
+  } = options
+
+  const listNo = rangeStart + index
+  const effectiveSortBy = sortBy || defaultSortField
+  const effectiveSortDir = sortBy ? sortDir : defaultSortDir
+
+  // 가입일/등록일 내림차순(기본): 최신 항목 = 전체 N번째
+  if (effectiveSortBy === 'createdAt' && effectiveSortDir === 'desc') {
+    return total - listNo + 1
+  }
+
+  // 가입일 오름차순 또는 그 외 정렬: 현재 목록 순번
+  return listNo
+}
+
+export function useAdminRowNumber(
+  total: Ref<number>,
+  rangeStart: Ref<number>,
+  sortBy: Ref<string>,
+  sortDir: Ref<AdminSortDir>,
+  defaultSortField = 'createdAt',
+  defaultSortDir: AdminSortDir = 'desc',
+) {
+  const rowNumber = (index: number) =>
+    getAdminRowNumber({
+      index,
+      total: total.value,
+      rangeStart: rangeStart.value,
+      sortBy: sortBy.value,
+      sortDir: sortDir.value,
+      defaultSortField,
+      defaultSortDir,
+    })
+
+  return { rowNumber }
+}

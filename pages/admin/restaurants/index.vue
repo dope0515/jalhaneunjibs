@@ -28,7 +28,7 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <AdminSortableTh label="ID" field="id" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
+            <th>번호</th>
             <AdminSortableTh label="매장명" field="name" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <AdminSortableTh label="카테고리" field="foodCategory" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
             <AdminSortableTh label="지역" field="region2" :sort-by="sortBy" :sort-dir="sortDir" @sort="toggleSort" />
@@ -42,8 +42,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in restaurants" :key="r.id">
-            <td>{{ r.id }}</td>
+          <tr v-for="(r, index) in restaurants" :key="r.id">
+            <td>{{ rowNumber(index) }}</td>
             <td>
               <NuxtLink :to="`/restaurants/${r.id}`" class="admin-table__link">{{ r.name }}</NuxtLink>
             </td>
@@ -119,6 +119,7 @@ const { data, pending, refresh } = await useAsyncData(
 
 const restaurants = computed(() => data.value?.restaurants || [])
 const { total, totalPages, rangeStart, rangeEnd } = useAdminPaginationMeta(data, currentPage, pageSize)
+const { rowNumber } = useAdminRowNumber(total, rangeStart, sortBy, sortDir)
 
 const statusLabel = (status) => {
   const map = { ACTIVE: '운영중', CLOSED: '폐업', HIDDEN: '숨김', TASTER: '숨김' }
