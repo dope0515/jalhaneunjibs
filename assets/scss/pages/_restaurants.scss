@@ -1769,7 +1769,7 @@
   .status-badge {
     padding: rem(2) rem(8);
     border-radius: rem(4);
-    @include font(11, 1, 700, $white);
+    @include font(11, 1.5, 700, $white);
 
     &.is-available {
       background-color: #10b981; // emerald-500

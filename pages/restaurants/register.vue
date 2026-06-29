@@ -138,22 +138,52 @@
                 </div>
 
                 <div class="form-item">
-                  <label class="form-item-label" id="category-label">카테고리</label>
-                  <div class="category-group" role="group" aria-labelledby="category-label">
-                    <AppButton 
-                      v-for="cat in categories" 
-                      :key="cat"
+                  <div class="category-label-row">
+                    <span class="form-item-label" id="category-label">카테고리</span>
+                    <button
+                      v-if="showCategoryReadonly"
                       type="button"
-                      :variant="form.category === cat ? 'fill' : 'outline'"
-                      :color="form.category === cat ? 'green' : 'black'"
-                      shape="round"
-                      size="sm"
-                      :aria-pressed="form.category === cat"
-                      @click="form.category = cat"
+                      class="category-edit-link"
+                      @click="openCategoryPicker"
                     >
-                      {{ cat }}
-                    </AppButton>
+                      카테고리 변경
+                    </button>
                   </div>
+
+                  <div v-if="showCategoryReadonly" class="category-auto">
+                    <div class="category-auto-main">
+                      <span class="category-auto-badge">{{ form.category }}</span>
+                      <span v-if="kakaoCategoryDetail" class="category-auto-detail">{{ kakaoCategoryDetail }}</span>
+                    </div>
+                    <p v-if="kakaoCategoryPath" class="category-auto-source">카카오맵 · {{ kakaoCategoryPath }}</p>
+                  </div>
+
+                  <template v-else-if="showCategoryPicker">
+                    <p v-if="!autoMappedCategory" class="category-hint">
+                      카카오 정보로 카테고리를 자동 분류하지 못했습니다. 아래에서 선택해 주세요.
+                    </p>
+                    <label for="category-select" class="sr-only">카테고리 선택</label>
+                    <select
+                      id="category-select"
+                      v-model="form.category"
+                      class="category-select"
+                      aria-labelledby="category-label"
+                      @change="onCategorySelect"
+                    >
+                      <option value="" disabled>카테고리를 선택해 주세요</option>
+                      <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                    </select>
+                    <button
+                      v-if="canCancelCategoryPicker"
+                      type="button"
+                      class="category-cancel-link"
+                      @click="closeCategoryPicker"
+                    >
+                      자동 적용으로 돌아가기
+                    </button>
+                  </template>
+
+                  <p v-else class="category-hint">식당 이름을 검색해 선택하면 카테고리가 자동으로 적용됩니다.</p>
                 </div>
 
                 <div class="form-item">
@@ -719,6 +749,138 @@ const categories = [
   '한식', '중식', '일식', '양식', '카페', '주점', '분식', '아시아음식'
 ]
 
+// 카카오 Places category_group_code — FD6: 음식점, CE7: 카페
+const KAKAO_FOOD_CATEGORY_CODES = ['FD6', 'CE7']
+const KAKAO_FOOD_CATEGORY_SET = new Set(KAKAO_FOOD_CATEGORY_CODES)
+
+const filterFoodPlaces = (places) =>
+  places.filter((place) => KAKAO_FOOD_CATEGORY_SET.has(place.category_group_code))
+
+const keywordSearchByCategory = (ps, keyword, categoryCode, baseOptions) =>
+  new Promise((resolve) => {
+    ps.keywordSearch(
+      keyword,
+      (data, status) => {
+        if (status === window.kakao.maps.services.Status.OK) {
+          resolve(data)
+        } else {
+          resolve([])
+        }
+      },
+      { ...baseOptions, category_group_code: categoryCode }
+    )
+  })
+
+const mergePlacesById = (placeLists) => {
+  const seen = new Map()
+  for (const places of placeLists) {
+    for (const place of places) {
+      if (place.id && !seen.has(place.id)) {
+        seen.set(place.id, place)
+      }
+    }
+  }
+  return [...seen.values()]
+}
+
+const CATEGORY_KEYWORD_MAP = {
+  '한식': ['육류', '고기', '족발', '보쌈', '백반', '한정식', '찌개', '전골', '국밥', '치킨', '닭요리', '게장', '냉면', '칼국수', '수제비', '곰탕', '해장국', '아구찜', '해물탕', '찜닭', '전', '부침개', '구이'],
+  '중식': ['중화요리', '짜장', '짬뽕', '마라탕', '양꼬치', '딤섬', '훠궈', '꿔바로우', '양갈비'],
+  '일식': ['초밥', '스시', '회', '라멘', '우동', '소바', '돈까스', '참치', '가츠동', '덮밥', '텐동', '오마카세', '꼬치구이', '야키토리'],
+  '양식': ['이탈리안', '파스타', '피자', '스테이크', '패밀리레스토랑', '햄버거', '샌드위치', '샐러드', '레스토랑', '브런치', '프랑스', '멕시칸', '타코', '바베큐'],
+  '카페': ['커피', '카페', '디저트', '베이커리', '찻집', '빵집', '도넛', '마카롱', '빙수', '케이크', '와플', '아이스크림'],
+  '주점': ['술집', '포차', '호프', '바', '와인바', '이자카야', '맥주', '와인', '칵테일', '위스키', '실내포차', '민속주점'],
+  '분식': ['떡볶이', '김밥', '라면', '만두', '튀김', '순대', '어묵', '토스트', '도시락'],
+  '아시아음식': ['베트남', '태국', '인도', '쌀국수', '샤브샤브', '커리', '퓨전', '동남아'],
+}
+
+const parseKakaoCategoryParts = (categoryName) =>
+  (categoryName || '').split(' > ').map((part) => part.trim()).filter(Boolean)
+
+const getMajorCategoryFromText = (text) => {
+  if (!text) return ''
+  if (categories.includes(text)) return text
+
+  for (const [major, keywords] of Object.entries(CATEGORY_KEYWORD_MAP)) {
+    if (keywords.some((keyword) => text.includes(keyword))) {
+      return major
+    }
+  }
+
+  return ''
+}
+
+const mapKakaoPlaceToCategory = (place) => {
+  const parts = parseKakaoCategoryParts(place.category_name)
+  const fullPath = parts.join(' ')
+
+  if (place.category_group_code === 'CE7') return '카페'
+
+  if (parts[1] && categories.includes(parts[1])) return parts[1]
+
+  for (const part of parts) {
+    if (categories.includes(part)) return part
+  }
+
+  const fromLast = getMajorCategoryFromText(parts[parts.length - 1] || '')
+  if (fromLast) return fromLast
+
+  for (const [major, keywords] of Object.entries(CATEGORY_KEYWORD_MAP)) {
+    if (keywords.some((keyword) => fullPath.includes(keyword))) {
+      return major
+    }
+  }
+
+  return ''
+}
+
+const kakaoCategoryPath = ref('')
+const kakaoCategoryDetail = ref('')
+const isCategoryFromKakao = ref(false)
+const showCategoryPicker = ref(false)
+const autoMappedCategory = ref('')
+
+const showCategoryReadonly = computed(
+  () => isCategoryFromKakao.value && !!form.value.category && !!form.value.placeId && !showCategoryPicker.value
+)
+
+const canCancelCategoryPicker = computed(
+  () => showCategoryPicker.value && !!autoMappedCategory.value
+)
+
+const openCategoryPicker = () => {
+  showCategoryPicker.value = true
+}
+
+const closeCategoryPicker = () => {
+  form.value.category = autoMappedCategory.value
+  showCategoryPicker.value = false
+}
+
+const onCategorySelect = () => {
+  if (form.value.category) {
+    showCategoryPicker.value = false
+  }
+}
+
+const clearKakaoCategoryState = () => {
+  kakaoCategoryPath.value = ''
+  kakaoCategoryDetail.value = ''
+  isCategoryFromKakao.value = false
+  showCategoryPicker.value = false
+  autoMappedCategory.value = ''
+}
+
+const clearSelectedPlaceFields = () => {
+  form.value.placeId = ''
+  form.value.address = ''
+  form.value.phoneNumber = ''
+  form.value.lat = null
+  form.value.lng = null
+  form.value.category = ''
+  clearKakaoCategoryState()
+}
+
 const form = ref({
   name: '',
   description: '',
@@ -977,8 +1139,14 @@ const mapInitialLng = ref(126.9786567)
 const userLocation = ref(null)
 
 let searchTimeout = null
+let searchRequestId = 0
 const handleNameInput = (e) => {
   const value = e.target.value
+
+  if (form.value.placeId) {
+    clearSelectedPlaceFields()
+  }
+
   form.value.name = value
   isSearchFocused.value = true
 
@@ -990,36 +1158,41 @@ const handleNameInput = (e) => {
     return
   }
 
-  searchTimeout = setTimeout(() => {
+  searchTimeout = setTimeout(async () => {
     if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) return
 
+    const requestId = ++searchRequestId
     const ps = new window.kakao.maps.services.Places()
-    const options = userLocation.value ? { location: userLocation.value } : {}
-    
-    ps.keywordSearch(value, async (data, status) => {
-      if (status === window.kakao.maps.services.Status.OK) {
-        searchResults.value = data
-        focusedIndex.value = -1
+    const baseOptions = userLocation.value ? { location: userLocation.value } : {}
 
-        const ids = data.map((p) => p.id).filter(Boolean)
-        if (ids.length > 0) {
-          try {
-            const { registeredIds } = await $fetch(
-              '/api/restaurants/check-places',
-              { method: 'POST', body: { placeIds: ids } }
-            )
-            registeredPlaceIds.value = new Set(registeredIds)
-          } catch {
-            registeredPlaceIds.value = new Set()
-          }
-        } else {
-          registeredPlaceIds.value = new Set()
-        }
-      } else {
-        searchResults.value = []
+    const results = await Promise.all(
+      KAKAO_FOOD_CATEGORY_CODES.map((code) =>
+        keywordSearchByCategory(ps, value, code, baseOptions)
+      )
+    )
+
+    if (requestId !== searchRequestId) return
+
+    const filtered = filterFoodPlaces(mergePlacesById(results))
+    searchResults.value = filtered
+    focusedIndex.value = -1
+
+    const ids = filtered.map((p) => p.id).filter(Boolean)
+    if (ids.length > 0) {
+      try {
+        const { registeredIds } = await $fetch(
+          '/api/restaurants/check-places',
+          { method: 'POST', body: { placeIds: ids } }
+        )
+        if (requestId !== searchRequestId) return
+        registeredPlaceIds.value = new Set(registeredIds)
+      } catch {
+        if (requestId !== searchRequestId) return
         registeredPlaceIds.value = new Set()
       }
-    }, options)
+    } else {
+      registeredPlaceIds.value = new Set()
+    }
   }, 400)
 }
 
@@ -1070,49 +1243,26 @@ const handleKeydown = (e) => {
   }
 }
 
-// 카테고리 매핑 헬퍼
-const getMajorCategory = (rawCategory) => {
-  if (!rawCategory) return ''
-  
-  // 1. 이미 대분류 리스트에 포함된 경우 그대로 반환
-  if (categories.includes(rawCategory)) return rawCategory
-
-  // 2. 키워드 기반 매핑
-  const mapping = {
-    '한식': ['육류', '고기', '족발', '보쌈', '백반', '한정식', '찌개', '전골', '국밥', '치킨', '닭요리', '게장', '냉면', '칼국수', '수제비', '곰탕', '해장국', '아구찜', '해물탕', '찜닭', '전', '부침개', '구이'],
-    '중식': ['중화요리', '짜장', '짬뽕', '마라탕', '양꼬치', '딤섬', '훠궈', '꿔바로우', '양갈비'],
-    '일식': ['초밥', '스시', '회', '라멘', '우동', '소바', '돈까스', '참치', '가츠동', '덮밥', '텐동', '오마카세', '꼬치구이', '야키토리'],
-    '양식': ['이탈리안', '파스타', '피자', '스테이크', '패밀리레스토랑', '햄버거', '샌드위치', '샐러드', '레스토랑', '브런치', '프랑스', '멕시칸', '타코', '바베큐'],
-    '카페': ['커피', '카페', '디저트', '베이커리', '찻집', '빵집', '도넛', '마카롱', '빙수', '샌드위치', '케이크', '와플', '아이스크림'],
-    '주점': ['술집', '포차', '호프', '바', '와인바', '이자카야', '맥주', '와인', '칵테일', '위스키', '실내포차', '민속주점'],
-    '분식': ['떡볶이', '김밥', '라면', '만두', '튀김', '순대', '어묵', '토스트', '도시락'],
-    '아시아음식': ['베트남', '태국', '인도', '멕시칸', '쌀국수', '샤브샤브', '커리', '돈까스', '퓨전', '동남아']
-  }
-
-  for (const [major, keywords] of Object.entries(mapping)) {
-    if (keywords.some(keyword => rawCategory.includes(keyword))) {
-      return major
-    }
-  }
-
-  // 3. 매핑 실패 시 '한식'을 기본값으로 하거나 빈 문자열 유지 (여기서는 빈 문자열)
-  return ''
-}
-
 const selectPlace = (place) => {
   if (registeredPlaceIds.value.has(place.id)) return
   if (searchTimeout) clearTimeout(searchTimeout)
 
-  const rawCat = place.category_name?.split(' > ').pop() || ''
+  const parts = parseKakaoCategoryParts(place.category_name)
 
   form.value.name = place.place_name
   form.value.address = place.road_address_name || place.address_name
   form.value.phoneNumber = place.phone
-  form.value.category = getMajorCategory(rawCat)
   form.value.lat = place.y
   form.value.lng = place.x
   form.value.placeId = place.id
-  
+
+  kakaoCategoryPath.value = place.category_name || ''
+  kakaoCategoryDetail.value = parts[parts.length - 1] || ''
+  isCategoryFromKakao.value = true
+  form.value.category = mapKakaoPlaceToCategory(place)
+  autoMappedCategory.value = form.value.category
+  showCategoryPicker.value = !form.value.category
+
   form.value.openingHours = '' 
 
   if (mapRef.value) {
@@ -1337,6 +1487,7 @@ const resetForm = () => {
   keywordInput.value = ''
   searchResults.value = []
   isDirty.value = false
+  clearKakaoCategoryState()
   if (fileInputRef.value) fileInputRef.value.value = ''
   if (menuBoardInputRef.value) menuBoardInputRef.value.value = ''
 }
@@ -1344,6 +1495,11 @@ const resetForm = () => {
 const handleSubmit = async () => {
   if (!form.value.name.trim()) {
     alert('식당 이름을 입력하고 검색 결과에서 선택해주세요.')
+    return
+  }
+
+  if (!form.value.category) {
+    alert('카테고리를 선택해 주세요.')
     return
   }
 
