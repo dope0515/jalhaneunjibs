@@ -24,7 +24,7 @@ const REGION_VARIATIONS: Record<string, string[]> = {
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const { category, region1, region2, keyword, priceMin, priceMax, page = '1', sort = 'latest', limit } = query
+  const { category, region1, region2, keyword, priceMin, priceMax, page = '1', sort = 'latest', limit, parkingOnly } = query
   const userId = await tryGetActiveUserId(event)
 
   const pageNum = Math.max(1, parseInt(page as string))
@@ -66,6 +66,24 @@ export default defineEventHandler(async (event) => {
         price: priceFilter,
       },
     }
+  }
+
+  if (parkingOnly === 'true' || parkingOnly === '1') {
+    const parkingCondition = {
+      OR: [
+        {
+          AND: [
+            { parkingInfo: { not: null } },
+            { parkingInfo: { not: '' } },
+            { parkingInfo: { not: '주차 불가' } },
+          ],
+        },
+        { keywords: { has: '주차가능' } },
+      ],
+    }
+    where.AND = Array.isArray(where.AND)
+      ? [...where.AND, parkingCondition]
+      : [parkingCondition]
   }
 
   const [restaurants, total] = await Promise.all([

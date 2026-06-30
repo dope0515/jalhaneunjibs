@@ -56,6 +56,26 @@
           </div>
         </div>
 
+        <!-- 편의 필터 -->
+        <div class="filter-group">
+          <span class="filter-label">편의</span>
+          <div class="filter-chips">
+            <button
+              type="button"
+              class="filter-btn filter-btn--parking"
+              :class="{ 'is-active': parkingOnly }"
+              @click="toggleParkingOnly"
+            >
+              <svg class="parking-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <path d="M9 8h3.5a2.5 2.5 0 0 1 0 5H9V8z"/>
+                <path d="M9 8v8"/>
+              </svg>
+              주차 가능
+            </button>
+          </div>
+        </div>
+
         <!-- 시/도 필터 -->
         <div v-if="regionKeys.length > 0" class="filter-group">
           <span class="filter-label">지역</span>
@@ -250,6 +270,7 @@ const priceTicks = [
 ]
 
 const selectedCategory = ref(null)
+const parkingOnly = ref(false)
 const selectedRegion1 = ref(null)
 const selectedRegion2 = ref(null)
 const priceMin = ref(PRICE_MIN)
@@ -289,12 +310,13 @@ const { data, status } = await useAsyncData(
       ...(priceMin.value > PRICE_MIN ? { priceMin: priceMin.value } : {}),
       ...(priceMax.value < PRICE_MAX ? { priceMax: priceMax.value } : {}),
       ...(searchKeyword.value ? { keyword: searchKeyword.value } : {}),
+      ...(parkingOnly.value ? { parkingOnly: 'true' } : {}),
       sort: selectedSort.value,
       page: currentPage.value,
     },
   }),
   {
-    watch: [selectedCategory, selectedRegion1, selectedRegion2, selectedSort, currentPage, searchKeyword],
+    watch: [selectedCategory, parkingOnly, selectedRegion1, selectedRegion2, selectedSort, currentPage, searchKeyword],
   }
 )
 
@@ -465,6 +487,11 @@ const setLocationBasedRegion = () => {
 
 const setCategory = (cat) => {
   selectedCategory.value = cat
+  currentPage.value = 1
+}
+
+const toggleParkingOnly = () => {
+  parkingOnly.value = !parkingOnly.value
   currentPage.value = 1
 }
 
