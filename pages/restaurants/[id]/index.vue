@@ -692,13 +692,17 @@ const onFavoriteChanged = async ({ action }) => {
 }
 
 // ── 리뷰 관련 상태 ───────────────────────────────────────────────
-const myReview = computed(() =>
-  restaurant.value?.reviews?.find((r) => r.userId === user.value?.id) ?? null
-)
+const myReview = computed(() => {
+  const currentUserId = Number(user.value?.id)
+  if (!currentUserId) return null
+  return restaurant.value?.reviews?.find((r) => Number(r.userId) === currentUserId) ?? null
+})
 
-const otherReviews = computed(() =>
-  restaurant.value?.reviews?.filter((r) => r.userId !== user.value?.id) ?? []
-)
+const otherReviews = computed(() => {
+  const currentUserId = Number(user.value?.id)
+  if (!currentUserId) return restaurant.value?.reviews ?? []
+  return restaurant.value?.reviews?.filter((r) => Number(r.userId) !== currentUserId) ?? []
+})
 
 const ratingDistribution = computed(() => {
   const reviews = restaurant.value?.reviews ?? []
@@ -717,19 +721,34 @@ const reviewSubmitting = ref(false)
 
 const totalImageCount = computed(() => reviewForm.value.allImages.length)
 
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (ev) => resolve(ev.target.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
 const handleReviewImages = async (e) => {
   const files = Array.from(e.target.files)
   const remaining = 3 - totalImageCount.value
   const filesToAdd = files.slice(0, remaining)
-
-  const processedFiles = await enqueuePrivacyFiles(filesToAdd)
-  for (const processed of processedFiles) {
-    const reader = new FileReader()
-    reader.onload = (ev) =>
-      reviewForm.value.allImages.push({ type: 'new', file: processed, preview: ev.target.result })
-    reader.readAsDataURL(processed)
+  if (!filesToAdd.length) {
+    e.target.value = ''
+    return
   }
-  e.target.value = ''
+
+  try {
+    const processedFiles = await enqueuePrivacyFiles(filesToAdd)
+    for (const processed of processedFiles) {
+      const preview = await readFileAsDataUrl(processed)
+      reviewForm.value.allImages.push({ type: 'new', file: processed, preview })
+    }
+  } catch {
+    alert('이미지 처리 중 오류가 발생했습니다.')
+  } finally {
+    e.target.value = ''
+  }
 }
 
 const removeReviewImage = (index) => {
@@ -753,32 +772,34 @@ const cancelEditReview = () => {
 }
 
 const submitReview = async () => {
-  if (!reviewForm.value.rating || reviewSubmitting.value) return
+  if (!reviewForm.value.rating || reviewSubmitting.value || !user.value?.id) return
   reviewSubmitting.value = true
   try {
     const fd = new FormData()
-    fd.append('restaurantId', restaurant.value.id)
-    fd.append('userId', user.value.id)
-    fd.append('rating', reviewForm.value.rating)
+    fd.append('restaurantId', String(restaurant.value.id))
+    fd.append('rating', String(reviewForm.value.rating))
     fd.append('content', reviewForm.value.content)
 
-    // 기존 이미지 URL 목록 (유지)
     const existingUrls = reviewForm.value.allImages
       .filter((i) => i.type === 'existing')
       .map((i) => i.url)
     fd.append('existingImages', JSON.stringify(existingUrls))
 
-    // 새로 추가한 파일들
     reviewForm.value.allImages
-      .filter((i) => i.type === 'new')
+      .filter((i) => i.type === 'new' && i.file)
       .forEach((i) => fd.append('reviewImages', i.file))
 
     await $api('/reviews', { method: 'POST', body: fd })
     editingReview.value = false
     reviewForm.value = { rating: 0, content: '', allImages: [] }
     await refresh()
-  } catch {
-    alert('리뷰 등록에 실패했습니다.')
+  } catch (error) {
+    const message =
+      error?.data?.statusMessage
+      || error?.data?.message
+      || error?.message
+      || '리뷰 등록에 실패했습니다.'
+    alert(message)
   } finally {
     reviewSubmitting.value = false
   }
