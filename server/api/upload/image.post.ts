@@ -19,8 +19,8 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const { url, faceCount } = await processAndUploadImage(file, folder)
-    return { url, faceCount }
+    const { url } = await processAndUploadImage(file, folder)
+    return { url }
   } catch (error: any) {
     console.error('[Image Upload Error]:', error)
     throw createError({ statusCode: 500, statusMessage: '이미지 업로드 중 오류가 발생했습니다.' })
