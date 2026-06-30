@@ -549,6 +549,7 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import { parseParkingInfoForDisplay } from '~/utils/parkingInfo'
+import { uploadImage, getUploadErrorMessage } from '~/utils/imageUpload'
 
 const { $api } = useApi()
 const route = useRoute()
@@ -775,31 +776,33 @@ const submitReview = async () => {
   if (!reviewForm.value.rating || reviewSubmitting.value || !user.value?.id) return
   reviewSubmitting.value = true
   try {
+    const existingUrls = reviewForm.value.allImages
+      .filter((i) => i.type === 'existing')
+      .map((i) => i.url)
+
+    const newFiles = reviewForm.value.allImages
+      .filter((i) => i.type === 'new' && i.file)
+      .map((i) => i.file)
+    const remaining = Math.max(0, 3 - existingUrls.length)
+
+    const uploadedUrls = []
+    for (const file of newFiles.slice(0, remaining)) {
+      const url = await uploadImage(file, 'reviews', $api)
+      uploadedUrls.push(url)
+    }
+
     const fd = new FormData()
     fd.append('restaurantId', String(restaurant.value.id))
     fd.append('rating', String(reviewForm.value.rating))
     fd.append('content', reviewForm.value.content)
-
-    const existingUrls = reviewForm.value.allImages
-      .filter((i) => i.type === 'existing')
-      .map((i) => i.url)
-    fd.append('existingImages', JSON.stringify(existingUrls))
-
-    reviewForm.value.allImages
-      .filter((i) => i.type === 'new' && i.file)
-      .forEach((i) => fd.append('reviewImages', i.file))
+    fd.append('existingImages', JSON.stringify([...existingUrls, ...uploadedUrls].slice(0, 3)))
 
     await $api('/reviews', { method: 'POST', body: fd })
     editingReview.value = false
     reviewForm.value = { rating: 0, content: '', allImages: [] }
     await refresh()
   } catch (error) {
-    const message =
-      error?.data?.statusMessage
-      || error?.data?.message
-      || error?.message
-      || '리뷰 등록에 실패했습니다.'
-    alert(message)
+    alert(getUploadErrorMessage(error, '리뷰 등록에 실패했습니다.'))
   } finally {
     reviewSubmitting.value = false
   }

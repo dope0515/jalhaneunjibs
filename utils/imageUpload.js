@@ -23,7 +23,7 @@ export async function compressImageFile(file, options = IMAGE_COMPRESSION_OPTION
 /**
  * 이미지 파일 하나를 서버에 업로드하고 URL을 반환합니다.
  * @param {File} file
- * @param {string} folder - 'restaurants' | 'menus'
+ * @param {string} folder - 'restaurants' | 'menus' | 'reviews'
  * @param {Function} $api - useApi()의 $api
  * @returns {Promise<string>} Cloudinary URL
  */

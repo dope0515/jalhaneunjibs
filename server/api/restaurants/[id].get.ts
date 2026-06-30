@@ -1,5 +1,45 @@
 import { prisma } from '~/server/utils/prisma'
 
+const restaurantInclude = {
+  menus: {
+    orderBy: { id: 'asc' as const },
+  },
+  reviews: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' as const },
+  },
+  comments: {
+    where: { parentId: null },
+    include: {
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+        },
+      },
+      replies: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              nickname: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'asc' as const },
+      },
+    },
+    orderBy: { createdAt: 'desc' as const },
+  },
+}
+
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
 
@@ -10,56 +50,27 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const restaurantId = parseInt(id)
+
   try {
-    const restaurant = await prisma.restaurant.update({
-      where: { id: parseInt(id) },
+    await prisma.restaurant.update({
+      where: { id: restaurantId },
       data: { viewCount: { increment: 1 } },
-      include: {
-        menus: {
-          orderBy: { id: 'asc' }
-        },
-        reviews: {
-          include: { 
-            user: {
-              select: {
-                id: true,
-                nickname: true
-              }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
-        },
-        comments: {
-          where: { parentId: null },
-          include: {
-            user: {
-              select: {
-                id: true,
-                nickname: true
-              }
-            },
-            replies: {
-              include: { 
-                user: {
-                  select: {
-                    id: true,
-                    nickname: true
-                  }
-                }
-              },
-              orderBy: { createdAt: 'asc' }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
-        }
-      }
     })
+
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      include: restaurantInclude,
+    })
+
+    if (!restaurant) {
+      throw createError({ statusCode: 404, message: '식당을 찾을 수 없습니다.' })
+    }
 
     return restaurant
   } catch (error: any) {
     if (error.statusCode) throw error
 
-    // Prisma P2025: 레코드 없음
     if (error.code === 'P2025') {
       throw createError({ statusCode: 404, message: '식당을 찾을 수 없습니다.' })
     }
