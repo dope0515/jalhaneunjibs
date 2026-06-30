@@ -33,12 +33,16 @@
                 variant="outline" 
                 size="sm" 
                 shape="round"
-                :class="{ 'is-active': useCurrentLocation }"
+                :class="{ 'is-active': useCurrentLocation, 'is-loading': isLocating }"
+                :disabled="isLocating"
                 @click="toggleLocation"
               >
                 <img :src="useCurrentLocation ? '/assets/images/icon/ic_marker_active.svg' : '/assets/images/icon/ic_marker.svg'" width="16" height="16" alt="marker">
-                {{ useCurrentLocation ? '내 위치 사용 중' : '내 위치 사용하기' }}
+                {{ locationButtonLabel }}
               </AppButton>
+              <p v-if="useCurrentLocation && detectedRegionLabel" class="location-detected">
+                {{ detectedRegionLabel }} 주변
+              </p>
               <div class="region-selects" v-if="!useCurrentLocation">
                 <select v-model="selectedRegion1" class="custom-select">
                   <option :value="null">시/도 선택</option>
@@ -55,6 +59,7 @@
               </div>
             </div>
             <p v-if="!useCurrentLocation && !selectedRegion1" class="validation-msg">위치 정보를 활성화하거나 지역을 선택해주세요.</p>
+            <p v-else-if="useCurrentLocation && !selectedRegion1 && !isLocating" class="validation-msg">위치를 확인할 수 없습니다. 다시 시도해 주세요.</p>
           </div>
 
           <div class="filter-section">
@@ -84,7 +89,7 @@
               size="md" 
               shape="round" 
               color="green" 
-              :disabled="selectedCategories.length === 0 || (!useCurrentLocation && !selectedRegion1)"
+              :disabled="selectedCategories.length === 0 || isLocating || (!useCurrentLocation && !selectedRegion1) || (useCurrentLocation && !selectedRegion1)"
               @click="fetchCandidates"
             >
               식당 찾아보기
@@ -263,12 +268,27 @@ const wheelRotation = ref(0)
 const resultRestaurant = ref(null)
 
 const { data: regionsData } = await useAsyncData('regions', () => $api('/restaurants/regions'))
-const regionKeys = computed(() => regionsData.value ? Object.keys(regionsData.value) : [])
+const regionsMap = computed(() => regionsData.value ?? {})
+const regionKeys = computed(() => Object.keys(regionsMap.value))
 
 const selectedRegion2 = ref(null)
 const region2Keys = computed(() => {
-  if (!selectedRegion1.value || !regionsData.value) return []
-  return regionsData.value[selectedRegion1.value] ?? []
+  if (!selectedRegion1.value || !regionsMap.value) return []
+  return regionsMap.value[selectedRegion1.value] ?? []
+})
+
+const { isLocating, resolveCurrentLocation, alertLocationError } = useLocationRegion(regionsMap, regionKeys)
+
+const locationButtonLabel = computed(() => {
+  if (isLocating.value) return '위치 확인 중…'
+  if (useCurrentLocation.value) return '내 위치 사용 중'
+  return '내 위치 사용하기'
+})
+
+const detectedRegionLabel = computed(() => {
+  if (!selectedRegion1.value) return ''
+  if (selectedRegion2.value) return `${selectedRegion1.value} ${selectedRegion2.value}`
+  return selectedRegion1.value
 })
 
 watch(selectedRegion1, () => { selectedRegion2.value = null })
@@ -283,11 +303,27 @@ const toggleCategory = (cat) => {
   }
 }
 
-const toggleLocation = () => {
-  useCurrentLocation.value = !useCurrentLocation.value
+const toggleLocation = async () => {
   if (useCurrentLocation.value) {
+    useCurrentLocation.value = false
     selectedRegion1.value = null
     selectedRegion2.value = null
+    return
+  }
+
+  useCurrentLocation.value = true
+  selectedRegion1.value = null
+  selectedRegion2.value = null
+
+  try {
+    const { region1, region2 } = await resolveCurrentLocation()
+    selectedRegion1.value = region1
+    selectedRegion2.value = region2
+  } catch (error) {
+    useCurrentLocation.value = false
+    selectedRegion1.value = null
+    selectedRegion2.value = null
+    alertLocationError(error)
   }
 }
 
@@ -601,6 +637,18 @@ const reset = () => {
         box-shadow: 0 rem(4) rem(12) rgba($primary-color, 0.25);
 
       }
+
+      &.is-loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+    }
+
+    .location-detected {
+      margin: 0;
+      font-size: rem(14);
+      color: $gray-66;
+      font-weight: 500;
     }
 
     .region-selects {
