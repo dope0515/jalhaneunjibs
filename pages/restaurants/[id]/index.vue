@@ -525,6 +525,21 @@
       </div>
     </Transition>
   </Teleport>
+
+  <AppImagePrivacyEditor
+    v-if="privacyEditorOpen && privacyPendingFile"
+    :key="`${privacyPendingFile.name}-${privacyPendingFile.size}-${privacyBatchCurrent}`"
+    :file="privacyPendingFile"
+    :current-index="privacyBatchCurrent"
+    :total-count="privacyBatchTotal"
+    :remaining-after-current="privacyBatchRemaining"
+    :is-last-in-batch="privacyIsLastInBatch"
+    @confirm="onPrivacyEditorConfirm"
+    @cancel-all="onPrivacyEditorCancelAll"
+    @skip="onPrivacyEditorSkip"
+    @auto-blur="onPrivacyEditorAutoBlur"
+    @auto-blur-remaining="onPrivacyEditorAutoBlurRemaining"
+  />
 </template>
 
 <script setup>
@@ -539,6 +554,20 @@ const { $api } = useApi()
 const route = useRoute()
 const { user } = useAuth()
 const mapRef = ref(null)
+const {
+  editorOpen: privacyEditorOpen,
+  pendingFile: privacyPendingFile,
+  batchCurrentIndex: privacyBatchCurrent,
+  batchTotal: privacyBatchTotal,
+  batchRemainingAfterCurrent: privacyBatchRemaining,
+  isLastInBatch: privacyIsLastInBatch,
+  enqueueFiles: enqueuePrivacyFiles,
+  onEditorConfirm: onPrivacyEditorConfirm,
+  onEditorSkip: onPrivacyEditorSkip,
+  onEditorAutoBlur: onPrivacyEditorAutoBlur,
+  onEditorAutoBlurRemaining: onPrivacyEditorAutoBlurRemaining,
+  onEditorCancelAll: onPrivacyEditorCancelAll,
+} = useImagePrivacyEditor()
 
 const { data: restaurant, refresh, error } = await useAsyncData(
   `restaurant-${route.params.id}`,
@@ -688,15 +717,18 @@ const reviewSubmitting = ref(false)
 
 const totalImageCount = computed(() => reviewForm.value.allImages.length)
 
-const handleReviewImages = (e) => {
+const handleReviewImages = async (e) => {
   const files = Array.from(e.target.files)
   const remaining = 3 - totalImageCount.value
-  files.slice(0, remaining).forEach((file) => {
+  const filesToAdd = files.slice(0, remaining)
+
+  const processedFiles = await enqueuePrivacyFiles(filesToAdd)
+  for (const processed of processedFiles) {
     const reader = new FileReader()
     reader.onload = (ev) =>
-      reviewForm.value.allImages.push({ type: 'new', file, preview: ev.target.result })
-    reader.readAsDataURL(file)
-  })
+      reviewForm.value.allImages.push({ type: 'new', file: processed, preview: ev.target.result })
+    reader.readAsDataURL(processed)
+  }
   e.target.value = ''
 }
 

@@ -239,6 +239,11 @@
     position: relative;
   }
 
+  .image-upload-hint {
+    margin: rem(4) 0 rem(10);
+    @include font(12, 1.5, 400, $gray-78);
+  }
+
   .search-hint {
     margin: rem(8) 0 0;
     @include font(12, 1.5, 400, $gray-78);
@@ -1786,8 +1791,56 @@
   .day-bulk-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: rem(8);
-    margin-top: rem(4);
+    gap: rem(6);
+    margin-top: rem(12);
+    padding-top: rem(12);
+    border-top: 1px solid #E7E5E4;
+
+    .preset-btn {
+      padding: rem(6) rem(12);
+      background: $white;
+      border: 1px solid $gray-e4;
+      border-radius: rem(6);
+      @include font(13, 1.2, 500, $gray-78);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+
+      &:hover {
+        background: #f4f4f3;
+        border-color: #d6d3d1;
+        color: $gray-44;
+      }
+
+      &:active {
+        transform: translateY(1px);
+      }
+
+      &:focus-visible {
+        outline: rem(2) solid rgba($primary-color, 0.35);
+        outline-offset: rem(2);
+      }
+    }
+
+    .app-button.btn-size-sm.btn-variant-outline {
+      padding: rem(6) rem(12);
+      min-height: rem(34);
+      border-radius: rem(6);
+      font-weight: 500;
+      white-space: nowrap;
+
+      &.btn-color-black {
+        border-color: $gray-e4;
+        color: $gray-78;
+        background: $white;
+
+        &:hover {
+          background: #f4f4f3;
+          border-color: #d6d3d1;
+          color: $gray-44;
+        }
+      }
+    }
   }
 
   .time-range-group.is-compact {

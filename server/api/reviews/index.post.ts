@@ -1,5 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
-import { uploadToCloudinary } from '~/server/utils/cloudinary'
+import { processAndUploadImage } from '~/server/utils/processUploadImage'
 
 export default defineEventHandler(async (event) => {
   const formData = await readFormData(event)
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   for (const file of imageFiles.slice(0, remaining)) {
     if (file instanceof File && file.size > 0) {
       try {
-        const url = await uploadToCloudinary(file, 'reviews')
+        const { url } = await processAndUploadImage(file, 'reviews')
         uploadedImages.push(url)
       } catch (e) {
         console.error('[Cloudinary] Review image upload failed:', e)

@@ -30,7 +30,7 @@
 
         <!-- ① 매장 이미지 -->
         <div class="edit-card">
-          <h2 class="edit-section-title">매장 이미지 <span class="edit-hint">(최대 5장 · 첫 번째가 대표 이미지)</span></h2>
+          <h2 class="edit-section-title">매장 이미지 <span class="edit-hint">(최대 5장 · 얼굴 가림 편집 · 첫 번째가 대표)</span></h2>
           <div class="restaurant-img-grid">
             <!-- 기존 이미지 -->
             <div
@@ -454,6 +454,21 @@
       </div>
     </div>
   </section>
+
+  <AppImagePrivacyEditor
+    v-if="privacyEditorOpen && privacyPendingFile"
+    :key="`${privacyPendingFile.name}-${privacyPendingFile.size}-${privacyBatchCurrent}`"
+    :file="privacyPendingFile"
+    :current-index="privacyBatchCurrent"
+    :total-count="privacyBatchTotal"
+    :remaining-after-current="privacyBatchRemaining"
+    :is-last-in-batch="privacyIsLastInBatch"
+    @confirm="onPrivacyEditorConfirm"
+    @cancel-all="onPrivacyEditorCancelAll"
+    @skip="onPrivacyEditorSkip"
+    @auto-blur="onPrivacyEditorAutoBlur"
+    @auto-blur-remaining="onPrivacyEditorAutoBlurRemaining"
+  />
 </template>
 
 <script setup>
@@ -467,6 +482,20 @@ import {
 const { $api } = useApi()
 const route = useRoute()
 const { user } = useAuth()
+const {
+  editorOpen: privacyEditorOpen,
+  pendingFile: privacyPendingFile,
+  batchCurrentIndex: privacyBatchCurrent,
+  batchTotal: privacyBatchTotal,
+  batchRemainingAfterCurrent: privacyBatchRemaining,
+  isLastInBatch: privacyIsLastInBatch,
+  enqueueFiles: enqueuePrivacyFiles,
+  onEditorConfirm: onPrivacyEditorConfirm,
+  onEditorSkip: onPrivacyEditorSkip,
+  onEditorAutoBlur: onPrivacyEditorAutoBlur,
+  onEditorAutoBlurRemaining: onPrivacyEditorAutoBlurRemaining,
+  onEditorCancelAll: onPrivacyEditorCancelAll,
+} = useImagePrivacyEditor()
 
 const { data: restaurant, error } = await useAsyncData(
   `restaurant-${route.params.id}`,
@@ -597,15 +626,18 @@ let _menuKey = Date.now()
 let _currentMenuImgIndex = -1
 
 // ── 매장 이미지 ───────────────────────────────────────────────────
-const handleRestaurantImages = (e) => {
+const handleRestaurantImages = async (e) => {
   const files = Array.from(e.target.files ?? [])
   const remaining = 5 - totalImageCount.value
-  files.slice(0, remaining).forEach((file) => {
-    form.value.newImageFiles.push(file)
+  const filesToAdd = files.slice(0, remaining)
+
+  const processedFiles = await enqueuePrivacyFiles(filesToAdd)
+  for (const processed of processedFiles) {
+    form.value.newImageFiles.push(processed)
     const reader = new FileReader()
     reader.onload = (ev) => form.value.newImagePreviews.push(ev.target.result)
-    reader.readAsDataURL(file)
-  })
+    reader.readAsDataURL(processed)
+  }
   e.target.value = ''
 }
 

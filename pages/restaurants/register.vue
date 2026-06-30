@@ -366,8 +366,8 @@
                             </div>
                           </div>
                           <div class="day-bulk-actions">
-                            <AppButton type="button" size="sm" variant="outline" @click="applyWeekdayBulk">평일에 월요일 시간 적용</AppButton>
-                            <AppButton type="button" size="sm" variant="outline" @click="applyWeekendBulk">주말에 토요일 시간 적용</AppButton>
+                            <button type="button" class="preset-btn" @click="applyWeekdayBulk">평일에 월요일 시간 적용</button>
+                            <button type="button" class="preset-btn" @click="applyWeekendBulk">주말에 토요일 시간 적용</button>
                           </div>
                         </div>
                       </template>
@@ -498,6 +498,7 @@
 
                 <div class="form-item">
                   <label for="restaurant-images" class="form-item-label">매장 이미지 (최대 5장)</label>
+                  <p class="image-upload-hint">사진 추가 시 얼굴 가림 편집 화면이 열립니다. 업로드 시 서버에서도 자동 처리됩니다.</p>
                   <input
                     ref="fileInputRef"
                     type="file"
@@ -736,6 +737,21 @@
       </div>
     </div>
   </section>
+
+  <AppImagePrivacyEditor
+    v-if="privacyEditorOpen && privacyPendingFile"
+    :key="`${privacyPendingFile.name}-${privacyPendingFile.size}-${privacyBatchCurrent}`"
+    :file="privacyPendingFile"
+    :current-index="privacyBatchCurrent"
+    :total-count="privacyBatchTotal"
+    :remaining-after-current="privacyBatchRemaining"
+    :is-last-in-batch="privacyIsLastInBatch"
+    @confirm="onPrivacyEditorConfirm"
+    @cancel-all="onPrivacyEditorCancelAll"
+    @skip="onPrivacyEditorSkip"
+    @auto-blur="onPrivacyEditorAutoBlur"
+    @auto-blur-remaining="onPrivacyEditorAutoBlurRemaining"
+  />
 </template>
 
 <script setup>
@@ -752,6 +768,20 @@ import { createDefaultParkingData, formatParkingInfo } from '~/utils/parkingInfo
 
 const { $api } = useApi()
 const { loadSDK } = useKakaoMap()
+const {
+  editorOpen: privacyEditorOpen,
+  pendingFile: privacyPendingFile,
+  batchCurrentIndex: privacyBatchCurrent,
+  batchTotal: privacyBatchTotal,
+  batchRemainingAfterCurrent: privacyBatchRemaining,
+  isLastInBatch: privacyIsLastInBatch,
+  enqueueFiles: enqueuePrivacyFiles,
+  onEditorConfirm: onPrivacyEditorConfirm,
+  onEditorSkip: onPrivacyEditorSkip,
+  onEditorAutoBlur: onPrivacyEditorAutoBlur,
+  onEditorAutoBlurRemaining: onPrivacyEditorAutoBlurRemaining,
+  onEditorCancelAll: onPrivacyEditorCancelAll,
+} = useImagePrivacyEditor()
 
 const categories = [
   '한식', '중식', '일식', '양식', '카페', '주점', '분식', '아시아음식'
@@ -1395,7 +1425,16 @@ const removeKeyword = (index) => {
 
 const triggerFileInput = () => fileInputRef.value?.click()
 
-const processImageFiles = (files) => {
+const addRestaurantImageFile = (file) => {
+  restaurantImages.value.push(file)
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    restaurantPreviews.value.push(e.target.result)
+  }
+  reader.readAsDataURL(file)
+}
+
+const processImageFiles = async (files) => {
   if (!files || files.length === 0) return
 
   const newFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
@@ -1411,21 +1450,18 @@ const processImageFiles = (files) => {
     alert(`매장 이미지는 최대 ${MAX_RESTAURANT_IMAGES}장까지 등록할 수 있습니다.`)
   }
 
-  filesToAdd.forEach(file => {
-    restaurantImages.value.push(file)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      restaurantPreviews.value.push(e.target.result)
-    }
-    reader.readAsDataURL(file)
-  })
+  const processedFiles = await enqueuePrivacyFiles(filesToAdd)
+  processedFiles.forEach((file) => addRestaurantImageFile(file))
 }
 
-const handleFileUpload = (e) => processImageFiles(e.target.files)
+const handleFileUpload = async (e) => {
+  await processImageFiles(e.target.files)
+  e.target.value = ''
+}
 
-const handleDrop = (e) => {
+const handleDrop = async (e) => {
   isDragOver.value = false
-  processImageFiles(e.dataTransfer.files)
+  await processImageFiles(e.dataTransfer.files)
 }
 
 const removeRestaurantImage = (index) => {
