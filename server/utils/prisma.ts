@@ -4,26 +4,37 @@ import { PrismaClient } from '@prisma/client'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 
-const prismaClientSingleton = () => {
-  const connectionString = `${process.env.DATABASE_URL}`
-  const pool = new Pool({
-    connectionString,
-    max: 20,
-    min: 1,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-    maxUses: 1000,
-  })
-  const adapter = new PrismaPg(pool)
-  return new PrismaClient({ adapter })
-}
-
-type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>
+type PrismaClientSingleton = ReturnType<typeof createPrismaClient>
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClientSingleton | undefined
+  pgPool: Pool | undefined
 }
 
-export const prisma = globalForPrisma.prisma ?? prismaClientSingleton()
+function createPgPool() {
+  if (globalForPrisma.pgPool) return globalForPrisma.pgPool
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  })
+
+  if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.pgPool = pool
+  }
+
+  return pool
+}
+
+function createPrismaClient() {
+  const adapter = new PrismaPg(createPgPool())
+  return new PrismaClient({ adapter })
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+}

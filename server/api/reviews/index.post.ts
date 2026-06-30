@@ -1,15 +1,16 @@
 import { prisma } from '~/server/utils/prisma'
+import { getUserId } from '~/server/utils/auth'
 import { processAndUploadImage } from '~/server/utils/processUploadImage'
 
 export default defineEventHandler(async (event) => {
+  const userId = await getUserId(event)
   const formData = await readFormData(event)
 
   const restaurantId = parseInt(formData.get('restaurantId')?.toString() ?? '')
-  const userId       = parseInt(formData.get('userId')?.toString() ?? '')
-  const rating       = parseInt(formData.get('rating')?.toString() ?? '')
-  const content      = formData.get('content')?.toString()?.trim() || null
+  const rating = parseInt(formData.get('rating')?.toString() ?? '')
+  const content = formData.get('content')?.toString()?.trim() || null
 
-  if (isNaN(restaurantId) || isNaN(userId) || isNaN(rating)) {
+  if (isNaN(restaurantId) || isNaN(rating)) {
     throw createError({ statusCode: 400, statusMessage: '필수 정보가 누락되었습니다.' })
   }
 
@@ -17,11 +18,25 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: '별점은 1~5 사이여야 합니다.' })
   }
 
-  // 유지할 기존 이미지 URL (프론트에서 명시적으로 전달)
-  const existingImagesRaw = formData.get('existingImages')?.toString()
-  const existingImages: string[] = existingImagesRaw ? JSON.parse(existingImagesRaw) : []
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { id: true },
+  })
+  if (!restaurant) {
+    throw createError({ statusCode: 404, statusMessage: '식당을 찾을 수 없습니다.' })
+  }
 
-  // 새로 추가한 이미지 업로드 (최대 3장 - 기존 이미지 수 고려)
+  let existingImages: string[] = []
+  const existingImagesRaw = formData.get('existingImages')?.toString()
+  if (existingImagesRaw) {
+    try {
+      existingImages = JSON.parse(existingImagesRaw)
+      if (!Array.isArray(existingImages)) existingImages = []
+    } catch {
+      throw createError({ statusCode: 400, statusMessage: '기존 이미지 정보 형식이 올바르지 않습니다.' })
+    }
+  }
+
   const imageFiles = formData.getAll('reviewImages') as File[]
   const uploadedImages: string[] = []
   const remaining = 3 - existingImages.length
@@ -30,40 +45,49 @@ export default defineEventHandler(async (event) => {
     if (file instanceof File && file.size > 0) {
       try {
         const { url } = await processAndUploadImage(file, 'reviews')
-        uploadedImages.push(url)
+        if (url) uploadedImages.push(url)
       } catch (e) {
         console.error('[Cloudinary] Review image upload failed:', e)
       }
     }
   }
 
-  // 최종 이미지 = 유지한 기존 URL + 새로 업로드한 URL
   const finalImages = [...existingImages, ...uploadedImages].slice(0, 3)
 
-  // 1인 1리뷰 upsert
-  const review = await prisma.review.upsert({
-    where: { userId_restaurantId: { userId, restaurantId } },
-    create: { userId, restaurantId, rating, content, images: finalImages },
-    update: { rating, content, images: finalImages },
-    include: {
-      user: { select: { id: true, nickname: true } },
-    },
-  })
+  try {
+    const review = await prisma.$transaction(async (tx) => {
+      const saved = await tx.review.upsert({
+        where: { userId_restaurantId: { userId, restaurantId } },
+        create: { userId, restaurantId, rating, content, images: finalImages },
+        update: { rating, content, images: finalImages },
+        include: {
+          user: { select: { id: true, nickname: true } },
+        },
+      })
 
-  // 평균 별점 & 리뷰 수 갱신
-  const stats = await prisma.review.aggregate({
-    where: { restaurantId },
-    _avg: { rating: true },
-    _count: { id: true },
-  })
+      const stats = await tx.review.aggregate({
+        where: { restaurantId },
+        _avg: { rating: true },
+        _count: { id: true },
+      })
 
-  await prisma.restaurant.update({
-    where: { id: restaurantId },
-    data: {
-      averageRating: Math.round((stats._avg.rating ?? 0) * 10) / 10,
-      reviewCount: stats._count.id,
-    },
-  })
+      await tx.restaurant.update({
+        where: { id: restaurantId },
+        data: {
+          averageRating: Math.round((stats._avg.rating ?? 0) * 10) / 10,
+          reviewCount: stats._count.id,
+        },
+      })
 
-  return { success: true, review }
+      return saved
+    })
+
+    return { success: true, review }
+  } catch (error: any) {
+    console.error('[Review POST Error]:', error)
+    throw createError({
+      statusCode: 500,
+      statusMessage: '리뷰 저장 중 오류가 발생했습니다.',
+    })
+  }
 })
