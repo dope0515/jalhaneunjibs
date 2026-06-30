@@ -1,5 +1,5 @@
 import { defineEventHandler, readFormData, createError } from 'h3'
-import { uploadToCloudinary } from '~/server/utils/cloudinary'
+import { processAndUploadImage } from '~/server/utils/processUploadImage'
 import { getUserId } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
@@ -19,8 +19,8 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const url = await uploadToCloudinary(file, folder)
-    return { url }
+    const { url, faceCount } = await processAndUploadImage(file, folder)
+    return { url, faceCount }
   } catch (error: any) {
     console.error('[Image Upload Error]:', error)
     throw createError({ statusCode: 500, statusMessage: '이미지 업로드 중 오류가 발생했습니다.' })
