@@ -23,15 +23,20 @@ const REGION_VARIATIONS: Record<string, string[]> = {
 }
 
 export default defineEventHandler(async (event) => {
-  const { category, region1, region2, keyword, priceMin, priceMax, page = '1', sort = 'latest' } = getQuery(event)
+  const query = getQuery(event)
+  const { category, region1, region2, keyword, priceMin, priceMax, page = '1', sort = 'latest', limit } = query
   const userId = await tryGetActiveUserId(event)
 
   const pageNum = Math.max(1, parseInt(page as string))
-  const pageSize = 6
+  const defaultPageSize = 6
+  const requestedLimit = limit ? parseInt(limit as string, 10) : defaultPageSize
+  const pageSize = Number.isFinite(requestedLimit)
+    ? Math.min(50, Math.max(1, requestedLimit))
+    : defaultPageSize
   const skip = (pageNum - 1) * pageSize
 
   const where: Record<string, any> = {
-    status: (getQuery(event).status as any) || 'ACTIVE'
+    status: (query.status as any) || 'ACTIVE'
   }
   if (category) {
     const categories = (category as string).split(',')
