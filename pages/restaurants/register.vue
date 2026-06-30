@@ -57,59 +57,85 @@
                   @focusout="handleSearchBlur"
                 >
                   <label for="name" class="form-item-label">식당 이름</label>
-                  <AppInput 
-                    ref="nameInputRef"
-                    v-model="form.name"
-                    id="name"
-                    name="name"
-                    placeholder="식당 이름을 입력하면 추천 목록이 나옵니다"
-                    required
-                    autocomplete="off"
-                    role="combobox"
-                    aria-autocomplete="list"
-                    :aria-expanded="isSearchFocused && searchResults.length > 0"
-                    aria-haspopup="listbox"
-                    aria-controls="search-results-list"
-                    @input="handleNameInput"
-                    @keydown="handleKeydown"
-                  />
-                  
-                  <!-- 검색 추천 결과 목록 (웹 접근성 강화) -->
-                  <ul 
-                    v-if="isSearchFocused && searchResults.length > 0" 
-                    id="search-results-list"
-                    class="search-results"
-                    role="listbox"
-                    aria-label="식당 검색 결과"
-                  >
-                    <li 
-                      v-for="(place, index) in searchResults" 
-                      :key="place.id"
-                      role="none"
+                  <div class="search-input-wrap">
+                    <AppInput 
+                      ref="nameInputRef"
+                      v-model="form.name"
+                      id="name"
+                      name="name"
+                      placeholder="식당 이름 (예: 역삼 ○○식당)"
+                      required
+                      autocomplete="off"
+                      role="combobox"
+                      aria-autocomplete="list"
+                      :aria-expanded="isSearchFocused && (flatSearchResults.length > 0 || searchHasNoResults)"
+                      aria-haspopup="listbox"
+                      aria-controls="search-results-list"
+                      @input="handleNameInput"
+                      @keydown="handleKeydown"
+                    />
+                    <p class="search-hint">내 주변부터 검색합니다. 안 나오면 지역과 이름을 함께 입력해 보세요.</p>
+
+                    <div
+                      v-if="isSearchFocused && form.name.trim() && (isSearchingPlaces || flatSearchResults.length > 0 || searchHasNoResults)"
+                      class="search-dropdown"
                     >
-                      <button
-                        type="button"
-                        class="result-item"
-                        :class="{
-                          'is-focused': focusedIndex === index,
-                          'is-registered': registeredPlaceIds.has(place.id)
-                        }"
-                        :disabled="registeredPlaceIds.has(place.id)"
-                        role="option"
-                        :aria-selected="focusedIndex === index"
-                        :aria-disabled="registeredPlaceIds.has(place.id)"
-                        @click="selectPlace(place)"
-                        @mouseenter="!registeredPlaceIds.has(place.id) && (focusedIndex = index)"
-                        @focus="!registeredPlaceIds.has(place.id) && (focusedIndex = index)"
-                        @keydown.enter.stop="selectPlace(place)"
+                      <p v-if="isSearchingPlaces" class="search-status" role="status">식당을 검색하는 중…</p>
+
+                      <ul 
+                        v-else-if="flatSearchResults.length > 0" 
+                        id="search-results-list"
+                        class="search-results"
+                        role="listbox"
+                        aria-label="식당 검색 결과"
                       >
-                        <span class="place-name">{{ place.place_name }}</span>
-                        <span class="place-address">{{ place.road_address_name || place.address_name }}</span>
-                        <span class="place-category" v-if="place.category_name">{{ place.category_name.split(' > ').pop() }}</span>
-                        <span v-if="registeredPlaceIds.has(place.id)" class="place-registered-badge">이미 등록된 식당입니다</span>
-                      </button>
-                    </li>
-                  </ul>
+                        <template v-for="section in searchResultSections" :key="section.key">
+                          <li
+                            v-if="section.places.length"
+                            class="search-section-label"
+                            role="presentation"
+                          >
+                            {{ section.label }}
+                          </li>
+                          <li 
+                            v-for="place in section.places" 
+                            :key="place.id"
+                            role="none"
+                          >
+                            <button
+                              type="button"
+                              class="result-item"
+                              :class="{
+                                'is-focused': focusedIndex === place._searchIndex,
+                                'is-registered': registeredPlaceIds.has(place.id)
+                              }"
+                              :disabled="registeredPlaceIds.has(place.id)"
+                              role="option"
+                              :aria-selected="focusedIndex === place._searchIndex"
+                              :aria-disabled="registeredPlaceIds.has(place.id)"
+                              @click="selectPlace(place)"
+                              @mouseenter="!registeredPlaceIds.has(place.id) && (focusedIndex = place._searchIndex)"
+                              @focus="!registeredPlaceIds.has(place.id) && (focusedIndex = place._searchIndex)"
+                              @keydown.enter.stop="selectPlace(place)"
+                            >
+                              <span class="place-name">{{ place.place_name }}</span>
+                              <span class="place-address">{{ place.road_address_name || place.address_name }}</span>
+                              <span class="place-category" v-if="place.category_name">{{ place.category_name.split(' > ').pop() }}</span>
+                              <span v-if="registeredPlaceIds.has(place.id)" class="place-registered-badge">이미 등록된 식당입니다</span>
+                            </button>
+                          </li>
+                        </template>
+                      </ul>
+
+                      <p
+                        v-else-if="searchHasNoResults"
+                        class="search-empty"
+                        role="status"
+                      >
+                        검색 결과가 없습니다. '지역 + 식당 이름'으로 다시 검색해 보세요.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-item">
@@ -765,6 +791,89 @@ const mergePlacesById = (placeLists) => {
   return [...seen.values()]
 }
 
+const runFoodCategorySearch = (ps, keyword, options = {}) =>
+  Promise.all(
+    KAKAO_FOOD_CATEGORY_CODES.map((code) =>
+      keywordSearchByCategory(ps, keyword, code, options)
+    )
+  ).then((results) => filterFoodPlaces(mergePlacesById(results)))
+
+const geocodeRegion = (query) =>
+  new Promise((resolve) => {
+    const trimmed = query?.trim()
+    if (!trimmed || !window.kakao?.maps?.services) {
+      resolve(null)
+      return
+    }
+
+    const geocoder = new window.kakao.maps.services.Geocoder()
+    geocoder.addressSearch(trimmed, (result, status) => {
+      if (status === window.kakao.maps.services.Status.OK && result?.[0]) {
+        resolve(new window.kakao.maps.LatLng(result[0].y, result[0].x))
+      } else {
+        resolve(null)
+      }
+    })
+  })
+
+const parseSearchQuery = (query) => {
+  const trimmed = query.trim()
+  if (!trimmed) return { keyword: '', regionHint: '' }
+
+  const parts = trimmed.split(/\s+/).filter(Boolean)
+  if (parts.length <= 1) {
+    return { keyword: trimmed, regionHint: '' }
+  }
+
+  return { keyword: trimmed, regionHint: parts[0] }
+}
+
+const performPlaceSearch = async (query) => {
+  const trimmed = query.trim()
+  if (!trimmed || !window.kakao?.maps?.services) {
+    return { sections: [], flat: [] }
+  }
+
+  const { regionHint } = parseSearchQuery(trimmed)
+  const ps = new window.kakao.maps.services.Places()
+  const regionLocation = regionHint ? await geocodeRegion(regionHint) : null
+
+  const sections = []
+  const seenIds = new Set()
+
+  const addSection = (key, label, places) => {
+    const unique = places.filter((place) => place.id && !seenIds.has(place.id))
+    if (!unique.length) return
+
+    unique.forEach((place) => seenIds.add(place.id))
+    sections.push({ key, label, places: unique })
+  }
+
+  if (userLocation.value) {
+    const nearby = await runFoodCategorySearch(ps, trimmed, { location: userLocation.value })
+    addSection('nearby', '내 주변', nearby)
+  }
+
+  if (regionLocation) {
+    const regionNearby = await runFoodCategorySearch(ps, trimmed, { location: regionLocation })
+    addSection('region', `${regionHint} 주변`, regionNearby)
+  }
+
+  const nationwide = await runFoodCategorySearch(ps, trimmed, {})
+  addSection('other', sections.length > 0 ? '다른 지역' : '검색 결과', nationwide)
+
+  let flatIndex = 0
+  const flat = []
+  for (const section of sections) {
+    for (const place of section.places) {
+      place._searchIndex = flatIndex++
+      flat.push(place)
+    }
+  }
+
+  return { sections, flat }
+}
+
 const CATEGORY_KEYWORD_MAP = {
   '한식': ['육류', '고기', '족발', '보쌈', '백반', '한정식', '찌개', '전골', '국밥', '치킨', '닭요리', '게장', '냉면', '칼국수', '수제비', '곰탕', '해장국', '아구찜', '해물탕', '찜닭', '전', '부침개', '구이'],
   '중식': ['중화요리', '짜장', '짬뽕', '마라탕', '양꼬치', '딤섬', '훠궈', '꿔바로우', '양갈비'],
@@ -943,7 +1052,10 @@ watch(computedOpeningHours, (newVal) => {
   form.value.openingHours = newVal
 }, { immediate: true })
 
-const searchResults = ref([])
+const searchResultSections = ref([])
+const flatSearchResults = ref([])
+const isSearchingPlaces = ref(false)
+const searchHasNoResults = ref(false)
 const registeredPlaceIds = ref(new Set())
 const focusedIndex = ref(-1)
 const isSearchFocused = ref(false)
@@ -1105,6 +1217,67 @@ const userLocation = ref(null)
 
 let searchTimeout = null
 let searchRequestId = 0
+
+const clearSearchResults = () => {
+  searchResultSections.value = []
+  flatSearchResults.value = []
+  searchHasNoResults.value = false
+  focusedIndex.value = -1
+  registeredPlaceIds.value = new Set()
+}
+
+const triggerPlaceSearch = () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+
+  const name = form.value.name.trim()
+  if (!name) {
+    isSearchingPlaces.value = false
+    clearSearchResults()
+    return
+  }
+
+  isSearchFocused.value = true
+  searchTimeout = setTimeout(async () => {
+    if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) return
+
+    const requestId = ++searchRequestId
+    isSearchingPlaces.value = true
+    searchHasNoResults.value = false
+
+    try {
+      const { sections, flat } = await performPlaceSearch(form.value.name)
+
+      if (requestId !== searchRequestId) return
+
+      searchResultSections.value = sections
+      flatSearchResults.value = flat
+      searchHasNoResults.value = flat.length === 0
+      focusedIndex.value = -1
+
+      const ids = flat.map((p) => p.id).filter(Boolean)
+      if (ids.length > 0) {
+        try {
+          const { registeredIds } = await $fetch(
+            '/api/restaurants/check-places',
+            { method: 'POST', body: { placeIds: ids } }
+          )
+          if (requestId !== searchRequestId) return
+          registeredPlaceIds.value = new Set(registeredIds)
+        } catch {
+          if (requestId !== searchRequestId) return
+          registeredPlaceIds.value = new Set()
+        }
+      } else {
+        registeredPlaceIds.value = new Set()
+      }
+    } finally {
+      if (requestId === searchRequestId) {
+        isSearchingPlaces.value = false
+      }
+    }
+  }, 400)
+}
+
 const handleNameInput = (e) => {
   const value = e.target.value
 
@@ -1113,68 +1286,23 @@ const handleNameInput = (e) => {
   }
 
   form.value.name = value
-  isSearchFocused.value = true
-
-  if (searchTimeout) clearTimeout(searchTimeout)
-  
-  if (!value.trim()) {
-    searchResults.value = []
-    focusedIndex.value = -1
-    return
-  }
-
-  searchTimeout = setTimeout(async () => {
-    if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) return
-
-    const requestId = ++searchRequestId
-    const ps = new window.kakao.maps.services.Places()
-    const baseOptions = userLocation.value ? { location: userLocation.value } : {}
-
-    const results = await Promise.all(
-      KAKAO_FOOD_CATEGORY_CODES.map((code) =>
-        keywordSearchByCategory(ps, value, code, baseOptions)
-      )
-    )
-
-    if (requestId !== searchRequestId) return
-
-    const filtered = filterFoodPlaces(mergePlacesById(results))
-    searchResults.value = filtered
-    focusedIndex.value = -1
-
-    const ids = filtered.map((p) => p.id).filter(Boolean)
-    if (ids.length > 0) {
-      try {
-        const { registeredIds } = await $fetch(
-          '/api/restaurants/check-places',
-          { method: 'POST', body: { placeIds: ids } }
-        )
-        if (requestId !== searchRequestId) return
-        registeredPlaceIds.value = new Set(registeredIds)
-      } catch {
-        if (requestId !== searchRequestId) return
-        registeredPlaceIds.value = new Set()
-      }
-    } else {
-      registeredPlaceIds.value = new Set()
-    }
-  }, 400)
+  triggerPlaceSearch()
 }
 
 const handleKeydown = (e) => {
-  if (searchResults.value.length === 0) return
+  if (flatSearchResults.value.length === 0) return
   if (e.isComposing) return
 
   const isRegistered = (idx) =>
-    registeredPlaceIds.value.has(searchResults.value[idx]?.id)
+    registeredPlaceIds.value.has(flatSearchResults.value[idx]?.id)
 
   switch (e.key) {
     case 'ArrowDown': {
       e.preventDefault()
-      let next = (focusedIndex.value + 1) % searchResults.value.length
+      let next = (focusedIndex.value + 1) % flatSearchResults.value.length
       const start = next
       while (isRegistered(next)) {
-        next = (next + 1) % searchResults.value.length
+        next = (next + 1) % flatSearchResults.value.length
         if (next === start) break
       }
       focusedIndex.value = next
@@ -1182,10 +1310,10 @@ const handleKeydown = (e) => {
     }
     case 'ArrowUp': {
       e.preventDefault()
-      let prev = (focusedIndex.value - 1 + searchResults.value.length) % searchResults.value.length
+      let prev = (focusedIndex.value - 1 + flatSearchResults.value.length) % flatSearchResults.value.length
       const start = prev
       while (isRegistered(prev)) {
-        prev = (prev - 1 + searchResults.value.length) % searchResults.value.length
+        prev = (prev - 1 + flatSearchResults.value.length) % flatSearchResults.value.length
         if (prev === start) break
       }
       focusedIndex.value = prev
@@ -1193,16 +1321,15 @@ const handleKeydown = (e) => {
     }
     case 'Enter':
       e.preventDefault()
-      if (searchResults.value.length > 0) {
+      if (flatSearchResults.value.length > 0) {
         const targetIndex = focusedIndex.value >= 0 ? focusedIndex.value : 0
         if (!isRegistered(targetIndex)) {
-          selectPlace(searchResults.value[targetIndex])
+          selectPlace(flatSearchResults.value[targetIndex])
         }
       }
       break
     case 'Escape':
-      searchResults.value = []
-      focusedIndex.value = -1
+      clearSearchResults()
       isSearchFocused.value = false
       break
   }
@@ -1234,8 +1361,7 @@ const selectPlace = (place) => {
     mapRef.value.setCenter(place.y, place.x)
   }
   
-  searchResults.value = [] 
-  focusedIndex.value = -1
+  clearSearchResults()
   isSearchFocused.value = false
 }
 
@@ -1442,7 +1568,7 @@ const resetForm = () => {
   menuBoardFiles.value = []
   menuBoardPreviews.value = []
   keywordInput.value = ''
-  searchResults.value = []
+  clearSearchResults()
   isDirty.value = false
   clearKakaoCategoryState()
   if (fileInputRef.value) fileInputRef.value.value = ''
