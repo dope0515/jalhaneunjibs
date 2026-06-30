@@ -211,6 +211,16 @@
       font-size: rem(13);
     }
 
+    &--parking {
+      display: inline-flex;
+      align-items: center;
+      gap: rem(6);
+
+      .parking-icon {
+        flex-shrink: 0;
+      }
+    }
+
     &--location {
       display: inline-flex;
       align-items: center;
@@ -1341,7 +1351,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: rem(12);
+      height: 100%;
 
       @include tablet {
         gap: rem(20);
