@@ -260,6 +260,110 @@
             </div>
           </div>
 
+          <!-- 운영 방식 -->
+          <div class="edit-field-row">
+            <label class="edit-field-label">운영 방식</label>
+            <p class="edit-field-hint">시즌에만 여는 식당이면 기간을 입력해 주세요.</p>
+            <div class="opening-hours-form">
+              <div class="hours-sub-item">
+                <div class="flex-between">
+                  <span class="hours-sub-label" style="font-size: 16px;">운영 정보 제공</span>
+                  <label class="switch-toggle">
+                    <input type="checkbox" v-model="seasonData.hasOperationInfo" />
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <template v-if="seasonData.hasOperationInfo">
+                <div class="hours-sub-item has-divider">
+                  <span class="hours-sub-label">운영 유형</span>
+                  <div class="preset-group">
+                    <button type="button" class="preset-btn" :class="{ 'is-active': seasonData.type === 'yearRound' }" @click="seasonData.type = 'yearRound'">연중 영업</button>
+                    <button type="button" class="preset-btn" :class="{ 'is-active': seasonData.type === 'seasonal' }" @click="seasonData.type = 'seasonal'">시즌 운영</button>
+                    <button type="button" class="preset-btn" :class="{ 'is-active': seasonData.type === 'irregular' }" @click="seasonData.type = 'irregular'">수시 운영</button>
+                  </div>
+                </div>
+
+                <template v-if="seasonData.type === 'seasonal'">
+                  <div class="hours-sub-item">
+                    <span class="hours-sub-label">시즌 기간</span>
+                    <div class="season-period-row">
+                      <label class="season-period-field">
+                        <span>시작</span>
+                        <input v-model.number="seasonData.startMonth" type="number" min="1" max="12" class="season-number-input" />월
+                        <input v-model.number="seasonData.startDay" type="number" min="1" max="31" class="season-number-input" />일
+                      </label>
+                      <span class="time-separator">~</span>
+                      <label class="season-period-field">
+                        <span>종료</span>
+                        <input v-model.number="seasonData.endMonth" type="number" min="1" max="12" class="season-number-input" />월
+                        <input v-model.number="seasonData.endDay" type="number" min="1" max="31" class="season-number-input" />일
+                      </label>
+                    </div>
+                    <label class="season-repeat-check">
+                      <input v-model="seasonData.repeatYearly" type="checkbox" />
+                      매년 반복
+                    </label>
+                  </div>
+                  <div class="hours-sub-item">
+                    <span class="hours-sub-label">시즌 외</span>
+                    <div class="preset-group">
+                      <button type="button" class="preset-btn" :class="{ 'is-active': seasonData.offSeasonAction === 'closed' }" @click="seasonData.offSeasonAction = 'closed'">휴업</button>
+                      <button type="button" class="preset-btn" :class="{ 'is-active': seasonData.offSeasonAction === 'call' }" @click="seasonData.offSeasonAction = 'call'">전화 문의</button>
+                    </div>
+                  </div>
+                </template>
+
+                <div class="hours-sub-item" :class="{ 'has-divider': seasonData.type === 'seasonal' }">
+                  <span class="hours-sub-label">운영 안내</span>
+                  <textarea
+                    v-model="seasonData.memo"
+                    class="edit-input"
+                    style="width:100%; margin-top:6px;"
+                    rows="2"
+                    placeholder="예: 9~11월 대하철 시즌에만 운영"
+                  />
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- 공식 링크 -->
+          <div class="edit-field-row">
+            <label class="edit-field-label">공식 링크</label>
+            <p class="edit-field-hint">영업·휴무 공지가 올라오는 채널을 연결해 주세요.</p>
+            <div class="opening-hours-form">
+              <div class="hours-sub-item">
+                <div class="flex-between">
+                  <span class="hours-sub-label" style="font-size: 16px;">링크 제공</span>
+                  <label class="switch-toggle">
+                    <input type="checkbox" v-model="externalLinksData.hasLinks" />
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <template v-if="externalLinksData.hasLinks">
+                <div
+                  v-for="field in externalLinkFields"
+                  :key="field.key"
+                  class="hours-sub-item has-divider"
+                >
+                  <label :for="`edit-link-${field.key}`" class="hours-sub-label">{{ field.label }}</label>
+                  <input
+                    :id="`edit-link-${field.key}`"
+                    v-model="externalLinksData[field.key]"
+                    type="url"
+                    class="edit-input"
+                    style="width:100%; margin-top:6px;"
+                    :placeholder="field.placeholder"
+                  />
+                </div>
+              </template>
+            </div>
+          </div>
+
           <!-- 주차 정보 -->
           <div class="edit-field-row">
             <label class="edit-field-label">주차 정보</label>
@@ -474,6 +578,8 @@
 <script setup>
 import { WEEKDAYS, parseOpeningHours, formatOpeningHours } from '~/utils/openingHours'
 import { parseParkingInfo, formatParkingInfo } from '~/utils/parkingInfo'
+import { parseSeasonInfo, formatSeasonInfo } from '~/utils/seasonInfo'
+import { parseExternalLinks, formatExternalLinks } from '~/utils/externalLinks'
 import {
   uploadImage,
   getUploadErrorMessage,
@@ -522,6 +628,8 @@ const form = ref({
   description: restaurant.value.description ?? '',
   phoneNumber: restaurant.value.phoneNumber ?? '',
   openingHours: restaurant.value.openingHours ?? '',
+  seasonInfo: restaurant.value.seasonInfo ?? '',
+  externalLinks: restaurant.value.externalLinks ?? '',
   parkingInfo: restaurant.value.parkingInfo ?? '',
   keywords: [...(restaurant.value.keywords ?? [])],
   // 매장 이미지: images[] 우선, 비어있으면 thumbnail 폴백
@@ -603,6 +711,29 @@ const computedOpeningHours = computed(() => formatOpeningHours(opData.value))
 
 watch(computedOpeningHours, (newVal) => {
   form.value.openingHours = newVal
+}, { immediate: true })
+
+const externalLinkFields = [
+  { key: 'instagram', label: '인스타그램', placeholder: 'https://instagram.com/...' },
+  { key: 'naver', label: '네이버', placeholder: 'https://naver.me/... 또는 블로그 URL' },
+  { key: 'website', label: '홈페이지', placeholder: 'https://...' },
+  { key: 'kakaoChannel', label: '카카오채널', placeholder: 'https://pf.kakao.com/...' },
+]
+
+const seasonData = ref(parseSeasonInfo(restaurant.value.seasonInfo))
+
+const computedSeasonInfo = computed(() => formatSeasonInfo(seasonData.value))
+
+watch(computedSeasonInfo, (newVal) => {
+  form.value.seasonInfo = newVal
+}, { immediate: true })
+
+const externalLinksData = ref(parseExternalLinks(restaurant.value.externalLinks))
+
+const computedExternalLinks = computed(() => formatExternalLinks(externalLinksData.value))
+
+watch(computedExternalLinks, (newVal) => {
+  form.value.externalLinks = newVal
 }, { immediate: true })
 
 const parkingData = ref(parseParkingInfo(restaurant.value.parkingInfo))
@@ -748,6 +879,8 @@ const handleSubmit = async () => {
     fd.append('description', form.value.description)
     fd.append('phoneNumber', form.value.phoneNumber)
     fd.append('openingHours', form.value.openingHours)
+    fd.append('seasonInfo', form.value.seasonInfo)
+    fd.append('externalLinks', form.value.externalLinks)
     fd.append('parkingInfo', form.value.parkingInfo)
     fd.append('keywords', JSON.stringify(form.value.keywords))
 

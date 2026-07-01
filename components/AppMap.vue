@@ -9,6 +9,8 @@ const props = defineProps({
   draggable: { type: Boolean, default: false }
 })
 
+const emit = defineEmits(['position-change'])
+
 const mapContainer = ref(null)
 const { loadSDK } = useKakaoMap()
 
@@ -38,6 +40,13 @@ const initMap = () => {
     draggable: props.draggable
   })
   marker.setMap(map)
+
+  if (props.draggable) {
+    window.kakao.maps.event.addListener(marker, 'dragend', () => {
+      const pos = marker.getPosition()
+      emit('position-change', { lat: pos.getLat(), lng: pos.getLng() })
+    })
+  }
 }
 
 onMounted(() => {

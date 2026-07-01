@@ -30,6 +30,8 @@ export default defineEventHandler(async (event) => {
   const description = formData.get('description')?.toString() || null
   const phoneNumber = formData.get('phoneNumber')?.toString() || null
   const openingHours = formData.get('openingHours')?.toString() || null
+  const seasonInfo = formData.get('seasonInfo')?.toString() || null
+  const externalLinks = formData.get('externalLinks')?.toString() || null
   const parkingInfo = formData.get('parkingInfo')?.toString() || null
 
   let keywords: string[] = []
@@ -76,6 +78,8 @@ export default defineEventHandler(async (event) => {
       description,
       phoneNumber,
       openingHours,
+      seasonInfo,
+      externalLinks,
       parkingInfo,
       keywords,
       images: finalImages,

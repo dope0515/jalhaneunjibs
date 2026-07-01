@@ -391,6 +391,18 @@
 
           <div class="side-card contact-card">
             <h3 class="side-title">영업 및 연락처</h3>
+
+            <div
+              v-if="seasonInfoParsed"
+              class="season-status-banner"
+              :class="`is-${seasonInfoParsed.status}`"
+            >
+              <span class="season-status-label">{{ seasonInfoParsed.label }}</span>
+              <p v-if="seasonInfoParsed.periodLabel" class="season-status-period">{{ seasonInfoParsed.periodLabel }}</p>
+              <p v-if="seasonInfoParsed.hint" class="season-status-hint">{{ seasonInfoParsed.hint }}</p>
+              <p v-if="seasonInfoParsed.memo" class="season-status-memo">{{ seasonInfoParsed.memo }}</p>
+            </div>
+
             <ul class="contact-list">
               <li>
                 <span class="label">연락처</span>
@@ -399,7 +411,29 @@
               </li>
               <li>
                 <span class="label">영업시간</span>
-                <span class="value pre-wrap">{{ restaurant.openingHours || '정보 없음' }}</span>
+                <div class="value-col">
+                  <span class="value pre-wrap">{{ restaurant.openingHours || '정보 없음' }}</span>
+                  <p v-if="seasonInfoParsed?.periodLabel" class="contact-sub-hint">※ 시즌 중 기준 시간입니다.</p>
+                </div>
+              </li>
+              <li v-if="externalLinksDisplay.length">
+                <span class="label">공식 채널</span>
+                <div class="value external-links-box">
+                  <div class="external-link-list">
+                    <a
+                      v-for="link in externalLinksDisplay"
+                      :key="link.key"
+                      :href="link.url"
+                      class="external-link-btn"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {{ link.label }}
+                      <img src="/assets/images/icon/ic_external.svg" width="12" height="12" alt="" aria-hidden="true" />
+                    </a>
+                  </div>
+                  <p class="external-links-note">방문 전 공식 채널에서 운영·휴무를 확인해 주세요.</p>
+                </div>
               </li>
               <li>
                 <span class="label">주차정보</span>
@@ -549,6 +583,8 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import { parseParkingInfoForDisplay } from '~/utils/parkingInfo'
+import { parseSeasonInfoForDisplay } from '~/utils/seasonInfo'
+import { parseExternalLinksForDisplay } from '~/utils/externalLinks'
 import { uploadImage, getUploadErrorMessage } from '~/utils/imageUpload'
 
 const { $api } = useApi()
@@ -922,6 +958,8 @@ const copyAddress = () => {
 
 // ── 주차 정보 가공 ──────────────────────────────────────────────────
 const parkingInfoParsed = computed(() => parseParkingInfoForDisplay(restaurant.value?.parkingInfo))
+const seasonInfoParsed = computed(() => parseSeasonInfoForDisplay(restaurant.value?.seasonInfo))
+const externalLinksDisplay = computed(() => parseExternalLinksForDisplay(restaurant.value?.externalLinks))
 </script>
 
 
