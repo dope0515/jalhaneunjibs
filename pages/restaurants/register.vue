@@ -75,7 +75,7 @@
                       @keydown="handleKeydown"
                     />
                     <p class="search-hint">
-                      현재 위치에서 가까운 순으로, 이름이 정확히 일치하는 식당만 표시합니다.
+                      입력한 이름과 비슷한 식당을 가까운 순으로 보여드립니다.
                       <button type="button" class="search-manual-link" @click="startManualRegistration">
                         카카오에서 못 찾겠어요
                       </button>
@@ -142,7 +142,7 @@
                         class="search-empty"
                         role="status"
                       >
-                        <p>이름이 정확히 일치하는 식당을 찾지 못했습니다.</p>
+                        <p>비슷한 이름의 식당을 찾지 못했습니다.</p>
                         <p class="search-empty-sub">식당 근처에서 검색하거나, 주소로 직접 등록해 보세요.</p>
                         <button type="button" class="search-manual-btn" @click="startManualRegistration">
                           주소로 직접 등록하기
@@ -923,6 +923,7 @@ import { WEEKDAYS, createDefaultOpData, formatOpeningHours } from '~/utils/openi
 import { createDefaultParkingData, formatParkingInfo } from '~/utils/parkingInfo'
 import { createDefaultSeasonData, formatSeasonInfo } from '~/utils/seasonInfo'
 import { createDefaultExternalLinksData, formatExternalLinks } from '~/utils/externalLinks'
+import { formatDistanceLabel, preparePlaceSearchResults } from '~/utils/placeSearch'
 
 const { $api } = useApi()
 const { loadSDK } = useKakaoMap()
@@ -986,51 +987,6 @@ const runFoodCategorySearch = (ps, keyword, options = {}) =>
     )
   ).then((results) => filterFoodPlaces(mergePlacesById(results)))
 
-const normalizePlaceName = (name) => (name ?? '').trim().replace(/\s+/g, '')
-
-const isExactPlaceNameMatch = (placeName, query) =>
-  normalizePlaceName(placeName) === normalizePlaceName(query)
-
-const getDistanceKm = (lat1, lng1, lat2, lng2) => {
-  const toRad = (deg) => (deg * Math.PI) / 180
-  const R = 6371
-  const dLat = toRad(lat2 - lat1)
-  const dLng = toRad(lng2 - lng1)
-  const a =
-    Math.sin(dLat / 2) ** 2
-    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-const formatDistanceLabel = (km) => {
-  if (km == null || Number.isNaN(km)) return ''
-  if (km < 1) return `${Math.round(km * 1000)}m`
-  return `${km.toFixed(km < 10 ? 1 : 0)}km`
-}
-
-const prepareSearchResults = (places, query, origin) => {
-  const originLat = origin?.getLat?.()
-  const originLng = origin?.getLng?.()
-
-  const filtered = places
-    .filter((place) => isExactPlaceNameMatch(place.place_name, query))
-    .map((place) => {
-      const lat = parseFloat(place.y)
-      const lng = parseFloat(place.x)
-      const distanceKm =
-        origin && Number.isFinite(lat) && Number.isFinite(lng)
-          ? getDistanceKm(originLat, originLng, lat, lng)
-          : null
-      return { ...place, _distanceKm: distanceKm }
-    })
-
-  if (origin) {
-    filtered.sort((a, b) => (a._distanceKm ?? Infinity) - (b._distanceKm ?? Infinity))
-  }
-
-  return filtered
-}
-
 const geocodeAddress = (address) =>
   new Promise((resolve, reject) => {
     const trimmed = address?.trim()
@@ -1067,7 +1023,7 @@ const performPlaceSearch = async (query) => {
     : []
   const nationwideRaw = await runFoodCategorySearch(ps, trimmed, {})
   const merged = mergePlacesById([nearbyRaw, nationwideRaw])
-  const places = prepareSearchResults(merged, trimmed, userLocation.value)
+  const places = preparePlaceSearchResults(merged, trimmed, userLocation.value)
 
   const sectionLabel = userLocation.value ? '가까운 순' : '검색 결과'
   const sections = places.length
