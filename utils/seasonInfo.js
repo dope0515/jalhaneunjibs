@@ -121,7 +121,7 @@ export function parseSeasonInfoForDisplay(str) {
 
   return {
     status: inSeason ? 'in_season' : 'off_season',
-    label: inSeason ? '지금 영업 시즌' : '시즌 off',
+    label: inSeason ? '영업 시즌' : '시즌 외',
     periodLabel,
     memo: data.memo || null,
     hint: inSeason ? null : offSeasonLabel,
