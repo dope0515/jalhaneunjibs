@@ -74,10 +74,15 @@
                       @input="handleNameInput"
                       @keydown="handleKeydown"
                     />
-                    <p class="search-hint">내 주변부터 검색합니다. 안 나오면 지역과 이름을 함께 입력해 보세요.</p>
+                    <p class="search-hint">
+                      현재 위치에서 가까운 순으로, 이름이 정확히 일치하는 식당만 표시합니다.
+                      <button type="button" class="search-manual-link" @click="startManualRegistration">
+                        카카오에서 못 찾겠어요
+                      </button>
+                    </p>
 
                     <div
-                      v-if="isSearchFocused && form.name.trim() && (isSearchingPlaces || flatSearchResults.length > 0 || searchHasNoResults)"
+                      v-if="!isManualRegistration && isSearchFocused && form.name.trim() && (isSearchingPlaces || flatSearchResults.length > 0 || searchHasNoResults)"
                       class="search-dropdown"
                     >
                       <p v-if="isSearchingPlaces" class="search-status" role="status">식당을 검색하는 중…</p>
@@ -118,7 +123,12 @@
                               @focus="!registeredPlaceIds.has(place.id) && (focusedIndex = place._searchIndex)"
                               @keydown.enter.stop="selectPlace(place)"
                             >
-                              <span class="place-name">{{ place.place_name }}</span>
+                              <span class="place-name-row">
+                                <span class="place-name">{{ place.place_name }}</span>
+                                <span v-if="place._distanceKm != null" class="place-distance">
+                                  {{ formatDistanceLabel(place._distanceKm) }}
+                                </span>
+                              </span>
                               <span class="place-address">{{ place.road_address_name || place.address_name }}</span>
                               <span class="place-category" v-if="place.category_name">{{ place.category_name.split(' > ').pop() }}</span>
                               <span v-if="registeredPlaceIds.has(place.id)" class="place-registered-badge">이미 등록된 식당입니다</span>
@@ -127,15 +137,26 @@
                         </template>
                       </ul>
 
-                      <p
+                      <div
                         v-else-if="searchHasNoResults"
                         class="search-empty"
                         role="status"
                       >
-                        검색 결과가 없습니다. '지역 + 식당 이름'으로 다시 검색해 보세요.
-                      </p>
+                        <p>이름이 정확히 일치하는 식당을 찾지 못했습니다.</p>
+                        <p class="search-empty-sub">식당 근처에서 검색하거나, 주소로 직접 등록해 보세요.</p>
+                        <button type="button" class="search-manual-btn" @click="startManualRegistration">
+                          주소로 직접 등록하기
+                        </button>
+                      </div>
                     </div>
                   </div>
+                </div>
+
+                <div v-if="isManualRegistration" class="manual-registration-notice" role="status">
+                  <p>주소로 직접 등록 중입니다. 주소 확인 후 지도에서 위치를 조정할 수 있어요.</p>
+                  <button type="button" class="manual-mode-cancel" @click="switchToSearchMode">
+                    카카오 검색으로 돌아가기
+                  </button>
                 </div>
 
                 <div class="form-item">
@@ -144,12 +165,26 @@
                     v-model="form.address"
                     id="address"
                     name="address"
-                    placeholder="식당 주소를 입력하면 자동으로 입력됩니다."
+                    :placeholder="isManualRegistration ? '주소를 입력해주세요.' : '식당 검색 시 자동으로 입력됩니다.'"
                     required
-                    readonly
+                    :readonly="!isManualRegistration"
                     autocomplete="street-address"
-                    tabindex="-1"
+                    :tabindex="isManualRegistration ? 0 : -1"
+                    @keydown.enter.prevent="isManualRegistration && applyAddressGeocode()"
                   />
+                  <div v-if="isManualRegistration" class="address-manual-actions">
+                    <AppButton
+                      type="button"
+                      size="sm"
+                      color="green"
+                      :disabled="!form.address.trim() || isGeocodingAddress"
+                      @click="applyAddressGeocode"
+                    >
+                      {{ isGeocodingAddress ? '확인 중…' : '주소 확인' }}
+                    </AppButton>
+                    <p v-if="addressGeocodeError" class="address-geocode-error">{{ addressGeocodeError }}</p>
+                    <p v-else-if="form.lat && form.lng" class="address-geocode-success">위치가 설정되었습니다. 지도에서 핀을 드래그해 조정할 수 있어요.</p>
+                  </div>
                 </div>
 
                 <div class="form-item">
@@ -167,7 +202,7 @@
                   <div class="category-label-row">
                     <span class="form-item-label" id="category-label">카테고리</span>
                     <button
-                      v-if="showCategoryReadonly"
+                      v-if="showCategoryReadonly || showManualCategorySelected"
                       type="button"
                       class="category-edit-link"
                       @click="openCategoryPicker"
@@ -176,16 +211,27 @@
                     </button>
                   </div>
 
-                  <div v-if="showCategoryReadonly" class="category-auto">
+                  <div v-if="showCategoryReadonly" class="category-auto category-auto--kakao">
                     <div class="category-auto-main">
                       <span class="category-auto-badge">{{ form.category }}</span>
                       <span v-if="kakaoCategoryDetail" class="category-auto-detail">{{ kakaoCategoryDetail }}</span>
                     </div>
-                    <p v-if="kakaoCategoryPath" class="category-auto-source">카카오맵 · {{ kakaoCategoryPath }}</p>
+                    <p v-if="kakaoCategoryPath" class="category-auto-source">
+                      <span class="category-auto-source-label">카카오맵</span>
+                      {{ kakaoCategoryPath }}
+                    </p>
                   </div>
 
-                  <template v-else-if="showCategoryPicker">
-                    <p v-if="!autoMappedCategory" class="category-hint">
+                  <div v-else-if="showManualCategorySelected" class="category-auto category-auto--manual">
+                    <div class="category-auto-main">
+                      <span class="category-auto-badge">{{ form.category }}</span>
+                      <span class="category-auto-detail">직접 선택</span>
+                    </div>
+                  </div>
+
+                  <template v-else-if="showCategoryPicker || (isManualRegistration && !form.category)">
+                    <p v-if="isManualRegistration" class="category-hint">카테고리를 선택해 주세요.</p>
+                    <p v-else-if="!autoMappedCategory" class="category-hint">
                       카카오 정보로 카테고리를 자동 분류하지 못했습니다. 아래에서 선택해 주세요.
                     </p>
                     <label for="category-select" class="sr-only">카테고리 선택</label>
@@ -209,7 +255,8 @@
                     </button>
                   </template>
 
-                  <p v-else class="category-hint">식당 이름을 검색해 선택하면 카테고리가 자동으로 적용됩니다.</p>
+                  <p v-else-if="!isManualRegistration" class="category-hint">식당 이름을 검색해 선택하면 카테고리가 자동으로 적용됩니다.</p>
+                  <p v-else class="category-hint">카테고리를 선택해 주세요.</p>
                 </div>
 
                 <div class="form-item">
@@ -430,6 +477,108 @@
                             {{ d }}
                           </AppButton>
                         </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="form-item">
+                  <span class="form-item-label">운영 방식</span>
+                  <p class="form-field-hint">시즌에만 여는 식당이면 기간을 입력해 주세요. 방문자가 헛걸음하지 않도록 도와줍니다.</p>
+                  <div class="opening-hours-form">
+                    <div class="hours-sub-item">
+                      <div class="flex-between">
+                        <span class="hours-sub-label" style="font-size: 16px;">운영 정보 제공</span>
+                        <label class="switch-toggle" aria-label="운영 정보 제공 켜기/끄기">
+                          <input type="checkbox" v-model="seasonData.hasOperationInfo" />
+                          <span class="switch-slider"></span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <template v-if="seasonData.hasOperationInfo">
+                      <div class="hours-sub-item has-divider">
+                        <span class="hours-sub-label">운영 유형</span>
+                        <div class="preset-group">
+                          <AppButton type="button" size="sm" :variant="seasonData.type === 'yearRound' ? 'fill' : 'outline'" :color="seasonData.type === 'yearRound' ? 'green' : 'black'" @click="seasonData.type = 'yearRound'">연중 영업</AppButton>
+                          <AppButton type="button" size="sm" :variant="seasonData.type === 'seasonal' ? 'fill' : 'outline'" :color="seasonData.type === 'seasonal' ? 'green' : 'black'" @click="seasonData.type = 'seasonal'">시즌 운영</AppButton>
+                          <AppButton type="button" size="sm" :variant="seasonData.type === 'irregular' ? 'fill' : 'outline'" :color="seasonData.type === 'irregular' ? 'green' : 'black'" @click="seasonData.type = 'irregular'">수시 운영</AppButton>
+                        </div>
+                      </div>
+
+                      <template v-if="seasonData.type === 'seasonal'">
+                        <div class="hours-sub-item">
+                          <span class="hours-sub-label">시즌 기간</span>
+                          <div class="season-period-row">
+                            <label class="season-period-field">
+                              <span>시작</span>
+                              <input v-model.number="seasonData.startMonth" type="number" min="1" max="12" class="season-number-input" aria-label="시작 월" />월
+                              <input v-model.number="seasonData.startDay" type="number" min="1" max="31" class="season-number-input" aria-label="시작 일" />일
+                            </label>
+                            <span class="time-separator">~</span>
+                            <label class="season-period-field">
+                              <span>종료</span>
+                              <input v-model.number="seasonData.endMonth" type="number" min="1" max="12" class="season-number-input" aria-label="종료 월" />월
+                              <input v-model.number="seasonData.endDay" type="number" min="1" max="31" class="season-number-input" aria-label="종료 일" />일
+                            </label>
+                          </div>
+                          <label class="season-repeat-check">
+                            <input v-model="seasonData.repeatYearly" type="checkbox" />
+                            매년 반복
+                          </label>
+                        </div>
+                        <div class="hours-sub-item">
+                          <span class="hours-sub-label">시즌 외</span>
+                          <div class="preset-group">
+                            <AppButton type="button" size="sm" :variant="seasonData.offSeasonAction === 'closed' ? 'fill' : 'outline'" :color="seasonData.offSeasonAction === 'closed' ? 'green' : 'black'" @click="seasonData.offSeasonAction = 'closed'">휴업</AppButton>
+                            <AppButton type="button" size="sm" :variant="seasonData.offSeasonAction === 'call' ? 'fill' : 'outline'" :color="seasonData.offSeasonAction === 'call' ? 'green' : 'black'" @click="seasonData.offSeasonAction = 'call'">전화 문의</AppButton>
+                          </div>
+                        </div>
+                      </template>
+
+                      <div class="hours-sub-item" :class="{ 'has-divider': seasonData.type === 'seasonal' }">
+                        <label for="season-memo" class="hours-sub-label">운영 안내</label>
+                        <textarea
+                          id="season-memo"
+                          v-model="seasonData.memo"
+                          class="edit-input"
+                          rows="2"
+                          style="margin-top:10px;"
+                          :placeholder="seasonData.type === 'irregular' ? '예: 대하철 시즌에만 운영, SNS 공지 확인' : '예: 9~11월 대하철 시즌에만 운영'"
+                        />
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="form-item">
+                  <span class="form-item-label">공식 링크</span>
+                  <p class="form-field-hint">영업·휴무 공지가 올라오는 SNS나 홈페이지를 연결해 주세요.</p>
+                  <div class="opening-hours-form">
+                    <div class="hours-sub-item">
+                      <div class="flex-between">
+                        <span class="hours-sub-label" style="font-size: 16px;">링크 제공</span>
+                        <label class="switch-toggle" aria-label="공식 링크 제공 켜기/끄기">
+                          <input type="checkbox" v-model="externalLinksData.hasLinks" />
+                          <span class="switch-slider"></span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <template v-if="externalLinksData.hasLinks">
+                      <div
+                        v-for="field in externalLinkFields"
+                        :key="field.key"
+                        class="hours-sub-item has-divider"
+                      >
+                        <label :for="`link-${field.key}`" class="hours-sub-label">{{ field.label }}</label>
+                        <AppInput
+                          :id="`link-${field.key}`"
+                          v-model="externalLinksData[field.key]"
+                          type="url"
+                          :placeholder="field.placeholder"
+                          style="margin-top: 8px;"
+                        />
                       </div>
                     </template>
                   </div>
@@ -725,7 +874,14 @@
               <!-- 지도 영역 -->
               <div class="form-map">
                 <p class="form-item-label">지도 미리보기</p>
-                <AppMap ref="mapRef" :lat="mapInitialLat" :lng="mapInitialLng" :draggable="true" />
+                <p v-if="isManualRegistration" class="map-hint">핀을 드래그해 식당 위치를 정확히 맞춰 주세요.</p>
+                <AppMap
+                  ref="mapRef"
+                  :lat="mapInitialLat"
+                  :lng="mapInitialLng"
+                  :draggable="true"
+                  @position-change="onMapPositionChange"
+                />
               </div>
             </div>
 
@@ -765,6 +921,8 @@ import {
 } from '~/utils/imageUpload'
 import { WEEKDAYS, createDefaultOpData, formatOpeningHours } from '~/utils/openingHours'
 import { createDefaultParkingData, formatParkingInfo } from '~/utils/parkingInfo'
+import { createDefaultSeasonData, formatSeasonInfo } from '~/utils/seasonInfo'
+import { createDefaultExternalLinksData, formatExternalLinks } from '~/utils/externalLinks'
 
 const { $api } = useApi()
 const { loadSDK } = useKakaoMap()
@@ -828,35 +986,73 @@ const runFoodCategorySearch = (ps, keyword, options = {}) =>
     )
   ).then((results) => filterFoodPlaces(mergePlacesById(results)))
 
-const geocodeRegion = (query) =>
-  new Promise((resolve) => {
-    const trimmed = query?.trim()
+const normalizePlaceName = (name) => (name ?? '').trim().replace(/\s+/g, '')
+
+const isExactPlaceNameMatch = (placeName, query) =>
+  normalizePlaceName(placeName) === normalizePlaceName(query)
+
+const getDistanceKm = (lat1, lng1, lat2, lng2) => {
+  const toRad = (deg) => (deg * Math.PI) / 180
+  const R = 6371
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) ** 2
+    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+const formatDistanceLabel = (km) => {
+  if (km == null || Number.isNaN(km)) return ''
+  if (km < 1) return `${Math.round(km * 1000)}m`
+  return `${km.toFixed(km < 10 ? 1 : 0)}km`
+}
+
+const prepareSearchResults = (places, query, origin) => {
+  const originLat = origin?.getLat?.()
+  const originLng = origin?.getLng?.()
+
+  const filtered = places
+    .filter((place) => isExactPlaceNameMatch(place.place_name, query))
+    .map((place) => {
+      const lat = parseFloat(place.y)
+      const lng = parseFloat(place.x)
+      const distanceKm =
+        origin && Number.isFinite(lat) && Number.isFinite(lng)
+          ? getDistanceKm(originLat, originLng, lat, lng)
+          : null
+      return { ...place, _distanceKm: distanceKm }
+    })
+
+  if (origin) {
+    filtered.sort((a, b) => (a._distanceKm ?? Infinity) - (b._distanceKm ?? Infinity))
+  }
+
+  return filtered
+}
+
+const geocodeAddress = (address) =>
+  new Promise((resolve, reject) => {
+    const trimmed = address?.trim()
     if (!trimmed || !window.kakao?.maps?.services) {
-      resolve(null)
+      reject(new Error('주소를 입력해 주세요.'))
       return
     }
 
     const geocoder = new window.kakao.maps.services.Geocoder()
     geocoder.addressSearch(trimmed, (result, status) => {
       if (status === window.kakao.maps.services.Status.OK && result?.[0]) {
-        resolve(new window.kakao.maps.LatLng(result[0].y, result[0].x))
+        const item = result[0]
+        resolve({
+          lat: parseFloat(item.y),
+          lng: parseFloat(item.x),
+          address: item.road_address_name || item.address_name || trimmed,
+        })
       } else {
-        resolve(null)
+        reject(new Error('주소를 찾을 수 없습니다. 도로명 또는 지번 주소를 확인해 주세요.'))
       }
     })
   })
-
-const parseSearchQuery = (query) => {
-  const trimmed = query.trim()
-  if (!trimmed) return { keyword: '', regionHint: '' }
-
-  const parts = trimmed.split(/\s+/).filter(Boolean)
-  if (parts.length <= 1) {
-    return { keyword: trimmed, regionHint: '' }
-  }
-
-  return { keyword: trimmed, regionHint: parts[0] }
-}
 
 const performPlaceSearch = async (query) => {
   const trimmed = query.trim()
@@ -864,33 +1060,19 @@ const performPlaceSearch = async (query) => {
     return { sections: [], flat: [] }
   }
 
-  const { regionHint } = parseSearchQuery(trimmed)
   const ps = new window.kakao.maps.services.Places()
-  const regionLocation = regionHint ? await geocodeRegion(regionHint) : null
 
-  const sections = []
-  const seenIds = new Set()
+  const nearbyRaw = userLocation.value
+    ? await runFoodCategorySearch(ps, trimmed, { location: userLocation.value })
+    : []
+  const nationwideRaw = await runFoodCategorySearch(ps, trimmed, {})
+  const merged = mergePlacesById([nearbyRaw, nationwideRaw])
+  const places = prepareSearchResults(merged, trimmed, userLocation.value)
 
-  const addSection = (key, label, places) => {
-    const unique = places.filter((place) => place.id && !seenIds.has(place.id))
-    if (!unique.length) return
-
-    unique.forEach((place) => seenIds.add(place.id))
-    sections.push({ key, label, places: unique })
-  }
-
-  if (userLocation.value) {
-    const nearby = await runFoodCategorySearch(ps, trimmed, { location: userLocation.value })
-    addSection('nearby', '내 주변', nearby)
-  }
-
-  if (regionLocation) {
-    const regionNearby = await runFoodCategorySearch(ps, trimmed, { location: regionLocation })
-    addSection('region', `${regionHint} 주변`, regionNearby)
-  }
-
-  const nationwide = await runFoodCategorySearch(ps, trimmed, {})
-  addSection('other', sections.length > 0 ? '다른 지역' : '검색 결과', nationwide)
+  const sectionLabel = userLocation.value ? '가까운 순' : '검색 결과'
+  const sections = places.length
+    ? [{ key: 'results', label: sectionLabel, places }]
+    : []
 
   let flatIndex = 0
   const flat = []
@@ -962,7 +1144,11 @@ const showCategoryPicker = ref(false)
 const autoMappedCategory = ref('')
 
 const showCategoryReadonly = computed(
-  () => isCategoryFromKakao.value && !!form.value.category && !!form.value.placeId && !showCategoryPicker.value
+  () => !isManualRegistration.value && isCategoryFromKakao.value && !!form.value.category && !!form.value.placeId && !showCategoryPicker.value
+)
+
+const showManualCategorySelected = computed(
+  () => isManualRegistration.value && !!form.value.category && !showCategoryPicker.value
 )
 
 const canCancelCategoryPicker = computed(
@@ -1012,12 +1198,39 @@ const form = ref({
   lng: null,
   placeId: '',
   openingHours: '',
+  seasonInfo: '',
+  externalLinks: '',
   parkingInfo: '',
   keywords: []
 })
 
+const externalLinkFields = [
+  { key: 'instagram', label: '인스타그램', placeholder: 'https://instagram.com/...' },
+  { key: 'naver', label: '네이버', placeholder: 'https://naver.me/... 또는 블로그 URL' },
+  { key: 'website', label: '홈페이지', placeholder: 'https://...' },
+  { key: 'kakaoChannel', label: '카카오채널', placeholder: 'https://pf.kakao.com/...' },
+]
+
 // ── 상세 영업시간 데이터 및 헬퍼 ──────────────────────────────────
 const opData = ref(createDefaultOpData())
+
+// ── 운영(시즌) 정보 ───────────────────────────────────────────────
+const seasonData = ref(createDefaultSeasonData())
+
+const computedSeasonInfo = computed(() => formatSeasonInfo(seasonData.value))
+
+watch(computedSeasonInfo, (newVal) => {
+  form.value.seasonInfo = newVal
+}, { immediate: true })
+
+// ── 공식 링크 ─────────────────────────────────────────────────────
+const externalLinksData = ref(createDefaultExternalLinksData())
+
+const computedExternalLinks = computed(() => formatExternalLinks(externalLinksData.value))
+
+watch(computedExternalLinks, (newVal) => {
+  form.value.externalLinks = newVal
+}, { immediate: true })
 
 // ── 주차 정보 데이터 및 헬퍼 ──────────────────────────────────────
 const parkingData = ref(createDefaultParkingData())
@@ -1089,6 +1302,9 @@ const searchHasNoResults = ref(false)
 const registeredPlaceIds = ref(new Set())
 const focusedIndex = ref(-1)
 const isSearchFocused = ref(false)
+const isManualRegistration = ref(false)
+const isGeocodingAddress = ref(false)
+const addressGeocodeError = ref('')
 const mapRef = ref(null)
 const keywordInput = ref('')
 
@@ -1161,6 +1377,14 @@ const loadDraft = () => {
         imageFile: null,
         imagePreview: null
       }))
+      if (!draft.form?.placeId && draft.form?.address?.trim()) {
+        isManualRegistration.value = true
+        showCategoryPicker.value = !draft.form?.category
+        if (draft.form?.lat && draft.form?.lng) {
+          mapInitialLat.value = draft.form.lat
+          mapInitialLng.value = draft.form.lng
+        }
+      }
       isDirty.value = true
     } else {
       localStorage.removeItem(STORAGE_KEY)
@@ -1257,6 +1481,7 @@ const clearSearchResults = () => {
 }
 
 const triggerPlaceSearch = () => {
+  if (isManualRegistration.value) return
   if (searchTimeout) clearTimeout(searchTimeout)
 
   const name = form.value.name.trim()
@@ -1311,12 +1536,71 @@ const triggerPlaceSearch = () => {
 const handleNameInput = (e) => {
   const value = e.target.value
 
+  if (isManualRegistration.value) {
+    form.value.name = value
+    return
+  }
+
   if (form.value.placeId) {
     clearSelectedPlaceFields()
   }
 
   form.value.name = value
   triggerPlaceSearch()
+}
+
+const startManualRegistration = () => {
+  isManualRegistration.value = true
+  form.value.placeId = ''
+  addressGeocodeError.value = ''
+  clearKakaoCategoryState()
+  showCategoryPicker.value = true
+  clearSearchResults()
+  isSearchFocused.value = false
+}
+
+const switchToSearchMode = () => {
+  isManualRegistration.value = false
+  addressGeocodeError.value = ''
+  form.value.address = ''
+  form.value.lat = null
+  form.value.lng = null
+  form.value.category = ''
+  clearKakaoCategoryState()
+  if (form.value.name.trim()) {
+    triggerPlaceSearch()
+  }
+}
+
+const applyAddressGeocode = async () => {
+  if (!form.value.address.trim()) return
+
+  loadSDK(async () => {
+    isGeocodingAddress.value = true
+    addressGeocodeError.value = ''
+
+    try {
+      const { lat, lng, address } = await geocodeAddress(form.value.address)
+      form.value.address = address
+      form.value.lat = lat
+      form.value.lng = lng
+      mapInitialLat.value = lat
+      mapInitialLng.value = lng
+      await nextTick()
+      mapRef.value?.setCenter(lat, lng)
+    } catch (error) {
+      form.value.lat = null
+      form.value.lng = null
+      addressGeocodeError.value = error?.message || '주소를 찾을 수 없습니다.'
+    } finally {
+      isGeocodingAddress.value = false
+    }
+  })
+}
+
+const onMapPositionChange = ({ lat, lng }) => {
+  form.value.lat = lat
+  form.value.lng = lng
 }
 
 const handleKeydown = (e) => {
@@ -1368,6 +1652,9 @@ const handleKeydown = (e) => {
 const selectPlace = (place) => {
   if (registeredPlaceIds.value.has(place.id)) return
   if (searchTimeout) clearTimeout(searchTimeout)
+
+  isManualRegistration.value = false
+  addressGeocodeError.value = ''
 
   const parts = parseKakaoCategoryParts(place.category_name)
 
@@ -1593,10 +1880,14 @@ const resetForm = () => {
     lng: null,
     placeId: '',
     openingHours: '',
+    seasonInfo: '',
+    externalLinks: '',
     parkingInfo: '',
     keywords: []
   }
   opData.value = createDefaultOpData()
+  seasonData.value = createDefaultSeasonData()
+  externalLinksData.value = createDefaultExternalLinksData()
   parkingData.value = createDefaultParkingData()
   analyzedMenuItems.value = []
   restaurantImages.value = []
@@ -1605,6 +1896,9 @@ const resetForm = () => {
   menuBoardPreviews.value = []
   keywordInput.value = ''
   clearSearchResults()
+  isManualRegistration.value = false
+  isGeocodingAddress.value = false
+  addressGeocodeError.value = ''
   isDirty.value = false
   clearKakaoCategoryState()
   if (fileInputRef.value) fileInputRef.value.value = ''
@@ -1613,7 +1907,19 @@ const resetForm = () => {
 
 const handleSubmit = async () => {
   if (!form.value.name.trim()) {
-    alert('식당 이름을 입력하고 검색 결과에서 선택해주세요.')
+    alert('식당 이름을 입력해 주세요.')
+    return
+  }
+
+  if (!form.value.address?.trim()) {
+    alert(isManualRegistration.value
+      ? '주소를 입력하고 주소 확인을 눌러 주세요.'
+      : '식당 검색 결과에서 식당을 선택해 주세요.')
+    return
+  }
+
+  if (isManualRegistration.value && (!form.value.lat || !form.value.lng)) {
+    alert('주소 확인 버튼으로 위치를 설정해 주세요.')
     return
   }
 

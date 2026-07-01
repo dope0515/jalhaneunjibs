@@ -31,6 +31,8 @@ export default defineEventHandler(async (event) => {
     const keywordsString = formData.get('keywords')?.toString()
     const menuItemsString = formData.get('menuItems')?.toString()
     const openingHours = formData.get('openingHours')?.toString() || null
+    const seasonInfo = formData.get('seasonInfo')?.toString() || null
+    const externalLinks = formData.get('externalLinks')?.toString() || null
     const parkingInfo = formData.get('parkingInfo')?.toString() || null
     const status = (formData.get('status')?.toString() as any) || 'ACTIVE'
 
@@ -113,6 +115,8 @@ export default defineEventHandler(async (event) => {
         lng,
         phoneNumber: phoneNumber || null,
         openingHours,
+        seasonInfo,
+        externalLinks,
         parkingInfo,
         keywords,
         registeredById,

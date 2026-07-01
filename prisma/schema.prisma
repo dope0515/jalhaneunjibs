@@ -95,6 +95,8 @@ model Restaurant {
   // 비즈니스 정보 (선택)
   phoneNumber      String?  
   openingHours     String?  // "11:00 - 22:00" 같은 문자열 형식
+  seasonInfo       String?  // 시즌/운영 정보 (JSON)
+  externalLinks    String?  // SNS·웹 링크 (JSON)
   parkingInfo      String?  // 주차 정보 (예: "주차 가능 · 20대 · 2시간 무료")
   
   // 키워드
