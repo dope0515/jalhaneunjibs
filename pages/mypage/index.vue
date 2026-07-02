@@ -22,9 +22,9 @@
           @click="activeTab = tab.id"
         >
           {{ tab.label }}
-          <span v-if="tab.id === 'reviews' && reviews.length" class="tab-count">{{ reviews.length }}</span>
+          <span v-if="tab.id === 'reviews' && reviewsTotal > 0" class="tab-count">{{ reviewsTotal }}</span>
           <span v-if="tab.id === 'collections' && collections.length" class="tab-count">{{ collections.length }}</span>
-          <span v-if="tab.id === 'myRestaurants' && myRestaurants.length" class="tab-count">{{ myRestaurants.length }}</span>
+          <span v-if="tab.id === 'myRestaurants' && myRestaurantsTotal > 0" class="tab-count">{{ myRestaurantsTotal }}</span>
           <span v-if="tab.id === 'myPosts' && myPosts.length" class="tab-count">{{ myPosts.length }}</span>
         </button>
       </div>
@@ -86,11 +86,11 @@
 
       <!-- 내 등록 맛집 탭 -->
       <div v-else-if="activeTab === 'myRestaurants'" class="tab-panel">
-        <div v-if="myRestaurantsLoading" class="loading-msg">불러오는 중…</div>
+        <div v-if="isMyRestaurantsFirstLoading" class="loading-msg">불러오는 중…</div>
         <div v-else-if="myRestaurantsError" class="empty-state">
           <p>{{ myRestaurantsError }}</p>
         </div>
-        <div v-else-if="myRestaurants.length === 0" class="empty-state">
+        <div v-else-if="myRestaurantsLoaded && myRestaurantsTotal === 0" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
             <polyline points="9 22 9 12 15 12 15 22"/>
@@ -98,23 +98,43 @@
           <p>아직 등록한 맛집이 없어요</p>
           <NuxtLink to="/restaurants/register" class="empty-link">잘하는 집 알려주기</NuxtLink>
         </div>
-        <AppCardList :restaurants="myRestaurants" />
+        <template v-else>
+          <AppCardList :restaurants="myRestaurants" />
+          <AppLoading :loading="isMyRestaurantsRefreshing" />
+          <div v-if="myRestaurantsTotalPages > 1" class="pagination-wrap">
+            <AppPagination
+              :current-page="myRestaurantsPage"
+              :total-pages="myRestaurantsTotalPages"
+              @change="goMyRestaurantsPage"
+            />
+          </div>
+        </template>
       </div>
 
       <!-- 내 리뷰 탭 -->
       <div v-else-if="activeTab === 'reviews'" class="tab-panel">
-        <div v-if="reviewsLoading" class="loading-msg">불러오는 중…</div>
+        <div v-if="isReviewsFirstLoading" class="loading-msg">불러오는 중…</div>
         <div v-else-if="reviewsError" class="empty-state">
           <p>{{ reviewsError }}</p>
         </div>
-        <div v-else-if="reviews.length === 0" class="empty-state">
+        <div v-else-if="reviewsLoaded && reviewsTotal === 0" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           <p>아직 작성한 리뷰가 없어요</p>
           <NuxtLink to="/restaurants" class="empty-link">잘하는 집 보러 가기</NuxtLink>
         </div>
-        <AppCardList :restaurants="reviewedRestaurants" />
+        <template v-else>
+          <AppCardList :restaurants="reviewedRestaurants" />
+          <AppLoading :loading="isReviewsRefreshing" />
+          <div v-if="reviewsTotalPages > 1" class="pagination-wrap">
+            <AppPagination
+              :current-page="reviewsPage"
+              :total-pages="reviewsTotalPages"
+              @change="goReviewsPage"
+            />
+          </div>
+        </template>
       </div>
 
       <!-- 내 찜 목록 탭 -->
@@ -462,16 +482,30 @@ const withdrawAccount = async () => {
 }
 
 // ── 내 등록 맛집 상태 ──────────────────────────────────────
+const MYPAGE_LIST_PAGE_SIZE = 6
 const myRestaurants = ref([])
+const myRestaurantsPage = ref(1)
+const myRestaurantsTotal = ref(0)
+const myRestaurantsTotalPages = ref(1)
 const myRestaurantsLoading = ref(false)
+const myRestaurantsLoaded = ref(false)
 const myRestaurantsError = ref('')
 
-const loadMyRestaurants = async () => {
-  if (myRestaurants.value.length) return
+const isMyRestaurantsFirstLoading = computed(() => myRestaurantsLoading.value && !myRestaurantsLoaded.value)
+const isMyRestaurantsRefreshing = computed(() => myRestaurantsLoading.value && myRestaurantsLoaded.value)
+
+const loadMyRestaurants = async (page = myRestaurantsPage.value) => {
   myRestaurantsLoading.value = true
   myRestaurantsError.value = ''
   try {
-    myRestaurants.value = await $api('/mypage/my-restaurants')
+    const res = await $api('/mypage/my-restaurants', {
+      query: { page, limit: MYPAGE_LIST_PAGE_SIZE },
+    })
+    myRestaurants.value = res.restaurants ?? []
+    myRestaurantsTotal.value = res.total ?? 0
+    myRestaurantsTotalPages.value = res.totalPages ?? 1
+    myRestaurantsPage.value = res.page ?? page
+    myRestaurantsLoaded.value = true
   } catch (e) {
     myRestaurantsError.value = '맛집 목록을 불러오지 못했습니다.'
     console.error('[mypage] loadMyRestaurants error:', e)
@@ -480,17 +514,35 @@ const loadMyRestaurants = async () => {
   }
 }
 
+const goMyRestaurantsPage = async (page) => {
+  myRestaurantsPage.value = page
+  await loadMyRestaurants(page)
+}
+
 // ── 리뷰 상태 ────────────────────────────────────────────
-const reviews = ref([])
+const reviewedRestaurants = ref([])
+const reviewsPage = ref(1)
+const reviewsTotal = ref(0)
+const reviewsTotalPages = ref(1)
 const reviewsLoading = ref(false)
+const reviewsLoaded = ref(false)
 const reviewsError = ref('')
 
-const loadReviews = async () => {
-  if (reviews.value.length) return
+const isReviewsFirstLoading = computed(() => reviewsLoading.value && !reviewsLoaded.value)
+const isReviewsRefreshing = computed(() => reviewsLoading.value && reviewsLoaded.value)
+
+const loadReviews = async (page = reviewsPage.value) => {
   reviewsLoading.value = true
   reviewsError.value = ''
   try {
-    reviews.value = await $api('/mypage/reviews')
+    const res = await $api('/mypage/reviews', {
+      query: { page, limit: MYPAGE_LIST_PAGE_SIZE },
+    })
+    reviewedRestaurants.value = res.restaurants ?? []
+    reviewsTotal.value = res.total ?? 0
+    reviewsTotalPages.value = res.totalPages ?? 1
+    reviewsPage.value = res.page ?? page
+    reviewsLoaded.value = true
   } catch (e) {
     reviewsError.value = '리뷰를 불러오지 못했습니다. 다시 로그인 후 시도해 주세요.'
     console.error('[mypage] loadReviews error:', e)
@@ -499,12 +551,10 @@ const loadReviews = async () => {
   }
 }
 
-const reviewedRestaurants = computed(() => {
-  const seen = new Set()
-  return reviews.value
-    .filter((r) => { if (seen.has(r.restaurant.id)) return false; seen.add(r.restaurant.id); return true })
-    .map((r) => r.restaurant)
-})
+const goReviewsPage = async (page) => {
+  reviewsPage.value = page
+  await loadReviews(page)
+}
 
 // ── 컬렉션 상태 ──────────────────────────────────────────
 const collections = ref([])
@@ -661,8 +711,12 @@ const loadMyPosts = async () => {
 
 // ── 감시자 및 실행 ───────────────────────────────────────
 watch(activeTab, (tab) => {
-  if (tab === 'myRestaurants' && !myRestaurants.value.length && !myRestaurantsLoading.value) loadMyRestaurants()
-  if (tab === 'reviews' && !reviews.value.length && !reviewsLoading.value) loadReviews()
+  if (tab === 'myRestaurants' && !myRestaurantsLoaded.value && !myRestaurantsLoading.value && !myRestaurantsError.value) {
+    loadMyRestaurants(1)
+  }
+  if (tab === 'reviews' && !reviewsLoaded.value && !reviewsLoading.value && !reviewsError.value) {
+    loadReviews(1)
+  }
   if (tab === 'collections' && !collections.value.length && !collectionsLoading.value) loadCollections()
   if (tab === 'myPosts' && !myPosts.value.length && !myPostsLoading.value) loadMyPosts()
 })
