@@ -99,7 +99,7 @@
           <NuxtLink to="/restaurants/register" class="empty-link">잘하는 집 알려주기</NuxtLink>
         </div>
         <template v-else>
-          <AppCardList :restaurants="myRestaurants" />
+          <AppCardList :restaurants="myRestaurants" @toggle-favorite="openFavoriteModal" />
           <AppLoading :loading="isMyRestaurantsRefreshing" />
           <div v-if="myRestaurantsTotalPages > 1" class="pagination-wrap">
             <AppPagination
@@ -125,7 +125,7 @@
           <NuxtLink to="/restaurants" class="empty-link">잘하는 집 보러 가기</NuxtLink>
         </div>
         <template v-else>
-          <AppCardList :restaurants="reviewedRestaurants" />
+          <AppCardList :restaurants="reviewedRestaurants" @toggle-favorite="openFavoriteModal" />
           <AppLoading :loading="isReviewsRefreshing" />
           <div v-if="reviewsTotalPages > 1" class="pagination-wrap">
             <AppPagination
@@ -229,6 +229,12 @@
       </div>
 
     </div>
+
+    <AppFavoriteModal
+      v-model="favoriteModalOpen"
+      :restaurant-id="targetRestaurantId"
+      @changed="handleFavoriteChanged"
+    />
 
     <!-- ─── 모달: 새 목록 만들기 ─────────────── -->
     <Teleport to="body">
@@ -554,6 +560,45 @@ const loadReviews = async (page = reviewsPage.value) => {
 const goReviewsPage = async (page) => {
   reviewsPage.value = page
   await loadReviews(page)
+}
+
+// ── 찜하기 ────────────────────────────────────────────────
+const favoriteModalOpen = ref(false)
+const targetRestaurantId = ref(0)
+
+const openFavoriteModal = (restaurant) => {
+  targetRestaurantId.value = restaurant.id
+  favoriteModalOpen.value = true
+}
+
+const findListRestaurant = (id) =>
+  myRestaurants.value.find((r) => r.id === id)
+  ?? reviewedRestaurants.value.find((r) => r.id === id)
+
+const handleFavoriteChanged = ({ action, restaurantId }) => {
+  const target = findListRestaurant(restaurantId)
+  if (!target) return
+  if (action === 'added') {
+    target.isSaved = true
+    target.likes++
+  } else {
+    checkListRestaurantSaved(restaurantId)
+  }
+}
+
+const checkListRestaurantSaved = async (id) => {
+  try {
+    const status = await $api(`/mypage/favorites/status?restaurantId=${id}`)
+    const target = findListRestaurant(id)
+    if (target) {
+      target.isSaved = status.isSaved
+      if (!status.isSaved) {
+        target.likes = Math.max(0, target.likes - 1)
+      }
+    }
+  } catch {
+    /* noop */
+  }
 }
 
 // ── 컬렉션 상태 ──────────────────────────────────────────

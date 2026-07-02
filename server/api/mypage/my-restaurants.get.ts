@@ -1,5 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
 import { getUserId } from '~/server/utils/auth'
+import { attachIsSavedToRestaurants } from '~/server/utils/attachIsSaved'
 
 const DEFAULT_PAGE_SIZE = 6
 
@@ -49,8 +50,10 @@ export default defineEventHandler(async (event) => {
     prisma.restaurant.count({ where }),
   ])
 
+  const results = await attachIsSavedToRestaurants(userId, restaurants)
+
   return {
-    restaurants,
+    restaurants: results,
     total,
     page: pageNum,
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
