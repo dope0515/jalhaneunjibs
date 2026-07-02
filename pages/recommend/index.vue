@@ -71,13 +71,13 @@
               <input 
                 type="range" 
                 v-model="priceMax" 
-                min="0" 
-                max="100000" 
-                step="5000" 
+                :min="PRICE_MIN"
+                :max="PRICE_MAX"
+                :step="PRICE_STEP"
                 class="price-slider"
               >
               <div class="price-labels">
-                <span>0원</span>
+                <span>5천원</span>
                 <span>5만원</span>
                 <span>10만원+</span>
               </div>
@@ -255,6 +255,9 @@
 const { $api } = useApi()
 
 const categories = ['한식', '중식', '일식', '양식', '카페', '주점', '분식', '아시아음식']
+const PRICE_MIN = 5000
+const PRICE_MAX = 100000
+const PRICE_STEP = 5000
 const step = ref(1)
 const selectedCategories = ref([])
 const useCurrentLocation = ref(false)
@@ -293,7 +296,7 @@ const detectedRegionLabel = computed(() => {
 
 watch(selectedRegion1, () => { selectedRegion2.value = null })
 
-const formatPrice = (p) => p >= 100000 ? '금액 제한 없음' : `${Number(p).toLocaleString()}원 이하`
+const formatPrice = (p) => p >= PRICE_MAX ? '금액 제한 없음' : `${Number(p).toLocaleString()}원 이하`
 
 const toggleCategory = (cat) => {
   if (selectedCategories.value.includes(cat)) {
