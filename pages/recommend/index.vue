@@ -11,7 +11,29 @@
         <!-- 단계 1: 필터 설정 -->
         <div v-if="step === 1" class="step-wrap filter-step">
           <div class="filter-section">
-            <h3 class="filter-title">1. 무엇을 드시겠어요?</h3>
+            <div class="category-section-header">
+              <h3 class="filter-title">1. 무엇을 드시겠어요?</h3>
+              <div class="category-actions">
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  shape="round"
+                  :disabled="isAllCategoriesSelected"
+                  @click="selectAllCategories"
+                >
+                  전체 선택
+                </AppButton>
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  shape="round"
+                  :disabled="selectedCategories.length === 0"
+                  @click="clearAllCategories"
+                >
+                  전체 해제
+                </AppButton>
+              </div>
+            </div>
             <div class="category-grid">
               <button
                 v-for="cat in categories"
@@ -306,6 +328,18 @@ const toggleCategory = (cat) => {
   }
 }
 
+const isAllCategoriesSelected = computed(() =>
+  categories.every((cat) => selectedCategories.value.includes(cat))
+)
+
+const selectAllCategories = () => {
+  selectedCategories.value = [...categories]
+}
+
+const clearAllCategories = () => {
+  selectedCategories.value = []
+}
+
 const toggleLocation = async () => {
   if (useCurrentLocation.value) {
     useCurrentLocation.value = false
@@ -343,7 +377,7 @@ const fetchCandidates = async () => {
     const { restaurants } = await $api('/restaurants', { query })
 
     if (restaurants.length < 2) {
-      alert('조건에 맞는 식당이 너무 적습니다(최소 2개 필요). 조건을 변경해보세요!')
+      alert('조건에 맞는 식당이 너무 적습니다. 조건을 변경해보세요!')
       return
     }
 
@@ -564,6 +598,49 @@ const reset = () => {
 
         @include tablet {
           height: rem(20);
+        }
+      }
+    }
+
+    .category-section-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: rem(12);
+      margin-bottom: rem(16);
+
+      @include tablet {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: rem(24);
+      }
+
+      .filter-title {
+        margin-bottom: 0;
+      }
+    }
+
+    .category-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: rem(8);
+      width: 100%;
+
+      :deep(.app-button) {
+        flex: 1 1 calc(50% - #{rem(4)});
+        min-width: calc(50% - #{rem(4)});
+        justify-content: center;
+      }
+
+      @include tablet {
+        width: auto;
+        flex-wrap: nowrap;
+
+        :deep(.app-button) {
+          flex: none;
+          min-width: 0;
+          width: auto;
         }
       }
     }
