@@ -75,28 +75,12 @@
             </div>
           </div>
 
-          <!-- 회원 탈퇴 -->
-          <div class="mypage-card mypage-card--danger">
-            <h2 class="card-title">회원 탈퇴</h2>
-            <p class="card-desc">
-              탈퇴 시 계정 정보가 삭제되며, 작성한 리뷰·댓글은 익명 처리됩니다. 이 작업은 되돌릴 수 없습니다.
-            </p>
-            <div class="field-group">
-              <label class="field-label">비밀번호 확인</label>
-              <input
-                v-model="withdrawPassword"
-                type="password"
-                class="field-input"
-                placeholder="탈퇴를 위해 비밀번호를 입력하세요"
-              />
-            </div>
-            <div class="card-actions">
-              <button class="btn-ghost btn-danger" :disabled="withdrawing" @click="withdrawAccount">
-                {{ withdrawing ? '처리 중…' : '회원 탈퇴' }}
-              </button>
-            </div>
-          </div>
+        </div>
 
+        <div class="profile-withdraw">
+          <button type="button" class="withdraw-link" @click="openWithdrawModal">
+            회원 탈퇴
+          </button>
         </div>
       </div>
 
@@ -272,6 +256,42 @@
       </div>
     </Teleport>
 
+    <!-- ─── 모달: 회원 탈퇴 ─────────────────── -->
+    <Teleport to="body">
+      <div
+        v-if="showWithdrawModal"
+        class="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="withdraw-modal-title"
+        @click.self="closeWithdrawModal"
+      >
+        <div class="modal-box modal-box--danger">
+          <h3 id="withdraw-modal-title" class="modal-title">회원 탈퇴</h3>
+          <p class="withdraw-modal-notice">
+            탈퇴 시 계정 정보가 삭제되며, 작성한 리뷰·댓글은 익명 처리됩니다. 이 작업은 되돌릴 수 없습니다.
+          </p>
+          <label class="modal-field-label" for="withdraw-modal-password">비밀번호 확인</label>
+          <input
+            id="withdraw-modal-password"
+            ref="withdrawPasswordInputRef"
+            v-model="withdrawPassword"
+            type="password"
+            class="modal-input"
+            placeholder="비밀번호 입력"
+            autocomplete="current-password"
+            @keydown.enter="(e) => { if (!e.isComposing) withdrawAccount() }"
+          />
+          <div class="modal-actions">
+            <button type="button" class="btn-ghost" :disabled="withdrawing" @click="closeWithdrawModal">취소</button>
+            <button type="button" class="btn-danger" :disabled="withdrawing" @click="withdrawAccount">
+              {{ withdrawing ? '처리 중…' : '탈퇴하기' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- ─── 드로어: 컬렉션 상세 ──────────────── -->
     <Teleport to="body">
       <Transition name="drawer" @after-leave="handleDrawerAfterLeave">
@@ -404,12 +424,25 @@ const savePassword = async () => {
 
 const withdrawPassword = ref('')
 const withdrawing = ref(false)
+const showWithdrawModal = ref(false)
+const withdrawPasswordInputRef = ref(null)
+
+const openWithdrawModal = () => {
+  withdrawPassword.value = ''
+  showWithdrawModal.value = true
+  nextTick(() => withdrawPasswordInputRef.value?.focus())
+}
+
+const closeWithdrawModal = () => {
+  if (withdrawing.value) return
+  showWithdrawModal.value = false
+  withdrawPassword.value = ''
+}
 
 const withdrawAccount = async () => {
   if (!withdrawPassword.value.trim()) {
     return alert('비밀번호를 입력해 주세요.')
   }
-  if (!confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
 
   withdrawing.value = true
   try {
@@ -417,6 +450,8 @@ const withdrawAccount = async () => {
       method: 'POST',
       body: { password: withdrawPassword.value },
     })
+    showWithdrawModal.value = false
+    withdrawPassword.value = ''
     alert('회원 탈퇴가 완료되었습니다.')
     await logout()
   } catch (e) {

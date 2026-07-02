@@ -54,6 +54,30 @@
   }
 }
 
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: rem(6);
+  padding: rem(10) rem(24);
+  background: #dc2626;
+  color: $white;
+  border: none;
+  border-radius: rem(10);
+  @include font(14, 20, 600);
+  cursor: pointer;
+  transition: background 0.18s;
+
+  &:hover:not(:disabled) {
+    background: #b91c1c;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 // ─── 공용 모달 ─────────────────────────────────────────────────────
 .modal-overlay {
   position: fixed;
@@ -316,16 +340,12 @@
 
 // ─── 계정 정보 탭 ───────────────────────────────────────────────────
 .mypage-cards {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: rem(24);
 
   @include tablet {
-    flex-direction: row;
-
-    .mypage-card {
-      flex: 1;
-    }
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -334,9 +354,32 @@
   border-radius: rem(20);
   padding: rem(28) rem(24);
   box-shadow: 0 rem(4) rem(24) rgba(0, 0, 0, 0.05);
+}
 
-  &--danger {
-    border: 1px solid #fecaca;
+.profile-withdraw {
+  display: flex;
+  justify-content: center;
+  margin-top: rem(32);
+  padding-top: rem(24);
+  border-top: 1px solid $gray-f0;
+
+  @include tablet {
+    justify-content: flex-end;
+  }
+}
+
+.withdraw-link {
+  padding: rem(4) rem(8);
+  background: none;
+  border: none;
+  cursor: pointer;
+  @include font(14, 1.4, 500, $gray-78);
+  text-decoration: underline;
+  text-underline-offset: rem(3);
+  transition: color 0.15s;
+
+  &:hover {
+    color: #dc2626;
   }
 }
 
@@ -350,6 +393,39 @@
 .card-desc {
   @include font(14, 1.6, 400, $gray-66);
   margin-bottom: rem(16);
+}
+
+.modal-box--danger {
+  .modal-title {
+    color: #991b1b;
+  }
+}
+
+.withdraw-modal-notice {
+  margin: 0 0 rem(20);
+  padding: rem(14) rem(16);
+  border-radius: rem(12);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  @include font(14, 1.65, 400, $gray-66);
+}
+
+.modal-field-label {
+  display: block;
+  margin-bottom: rem(8);
+  @include font(13, 18, 500, $gray-78);
+}
+
+.modal-box--danger .modal-input {
+  margin-bottom: rem(24);
+
+  &:focus {
+    border-color: #f87171;
+  }
+}
+
+.modal-box--danger .modal-actions {
+  justify-content: flex-end;
 }
 
 .field-group {
@@ -370,6 +446,8 @@
 }
 
 .field-input {
+  width: 100%;
+  box-sizing: border-box;
   padding: rem(10) rem(14);
   border: 1px solid $gray-e4;
   border-radius: rem(10);
