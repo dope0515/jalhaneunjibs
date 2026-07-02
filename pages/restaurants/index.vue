@@ -256,12 +256,12 @@ const sortOptions = [
   { label: '리뷰순', value: 'reviews' },
 ]
 
-const PRICE_MIN = 0
+const PRICE_MIN = 5000
 const PRICE_MAX = 50000
 const PRICE_STEP = 5000
 
 const priceTicks = [
-  { value: 0,     label: '0' },
+  { value: 5000,  label: '5천' },
   { value: 10000, label: '1만' },
   { value: 20000, label: '2만' },
   { value: 30000, label: '3만' },
@@ -300,6 +300,10 @@ const subRegions = computed(() =>
   selectedRegion1.value ? (regionsMap.value[selectedRegion1.value] ?? []) : []
 )
 
+const isPriceFiltered = computed(
+  () => priceMin.value > PRICE_MIN || priceMax.value < PRICE_MAX,
+)
+
 const { data, status } = await useAsyncData(
   'restaurants',
   () => $api('/restaurants', {
@@ -307,7 +311,7 @@ const { data, status } = await useAsyncData(
       ...(selectedCategory.value ? { category: selectedCategory.value } : {}),
       ...(selectedRegion1.value ? { region1: selectedRegion1.value } : {}),
       ...(selectedRegion2.value ? { region2: selectedRegion2.value } : {}),
-      ...(priceMin.value > PRICE_MIN ? { priceMin: priceMin.value } : {}),
+      ...(isPriceFiltered.value ? { priceMin: priceMin.value } : {}),
       ...(priceMax.value < PRICE_MAX ? { priceMax: priceMax.value } : {}),
       ...(searchKeyword.value ? { keyword: searchKeyword.value } : {}),
       ...(parkingOnly.value ? { parkingOnly: 'true' } : {}),
@@ -507,7 +511,8 @@ const setRegion2 = (r2) => {
 }
 
 // 가격 레이블 포맷
-const formatPrice = (v) => v >= PRICE_MAX ? '5만원+' : v === 0 ? '0원' : `${(v / 10000).toFixed(v % 10000 === 0 ? 0 : 1)}만원`
+const formatPrice = (v) =>
+  v >= PRICE_MAX ? '5만원+' : `${(v / 10000).toFixed(v % 10000 === 0 ? 0 : 1)}만원`
 const priceMinLabel = computed(() => formatPrice(priceMin.value))
 const priceMaxLabel = computed(() => formatPrice(priceMax.value))
 
