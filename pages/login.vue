@@ -21,16 +21,16 @@
               </NuxtLink>
             </div>
 
-            <form @submit.prevent="handleLogin">
+            <form action="#" @submit.prevent="handleLogin">
               <div class="form-item">
                 <label for="email" class="form-item-label">이메일</label>
                 <AppInput
                   v-model="email"
                   id="email"
-                  name="email"
+                  name="username"
                   type="email"
                   placeholder="이메일 주소를 입력해주세요"
-                  autocomplete="email"
+                  autocomplete="username"
                   required
                 />
               </div>

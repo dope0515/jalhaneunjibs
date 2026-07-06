@@ -4,6 +4,7 @@
       ref="inputRef"
       v-bind="$attrs"
       :id="id"
+      :name="name"
       v-model="model" 
       :type="actualType" 
       :placeholder="placeholder"
@@ -45,6 +46,7 @@ const model = defineModel()
 // 외부에서 받아올 속성(Props)들 정의
 const props = defineProps({
   id: String,
+  name: String,
   type: { type: String, default: 'text' },
   placeholder: String,
   required: Boolean,
