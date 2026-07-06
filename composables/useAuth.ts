@@ -18,7 +18,8 @@ export const useAuth = () => {
       // Pinia 스토어에 상태 저장
       authStore.setAuth(data.user, data.accessToken, credentials.rememberMe)
 
-      navigateTo('/')
+      // 브라우저가 로그인 성공 및 페이지 이동을 감지하여 비밀번호 저장 팝업을 띄우도록 하드 리다이렉트 수행
+      window.location.href = '/'
     } catch (error: any) {
       if (error?.status === 403) {
         throw error
