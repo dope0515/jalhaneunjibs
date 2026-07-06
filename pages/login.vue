@@ -207,7 +207,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted, onMounted, nextTick } from 'vue'
 
 const { $api } = useApi()
 const { login } = useAuth()
@@ -373,6 +373,17 @@ const handleVerifyAndReset = async () => {
 
 const handleLogin = async () => {
   showSuspendedNotice.value = false
+
+  // 브라우저가 자동완성했지만 Vue의 반응형 state(ref)에 반영되지 않은 경우를 위해 DOM 값을 직접 읽어옵니다.
+  const emailInput = document.getElementById('email')
+  const passwordInput = document.getElementById('password')
+  if (emailInput && emailInput.value) {
+    email.value = emailInput.value
+  }
+  if (passwordInput && passwordInput.value) {
+    password.value = passwordInput.value
+  }
+
   try {
     await withLoading(async () => {
       await login({
@@ -388,6 +399,26 @@ const handleLogin = async () => {
     }
   }
 }
+
+onMounted(() => {
+  // 브라우저가 폼을 자동완성할 충분한 시간을 주기 위해 여러 차례에 걸쳐 동기화를 수행합니다.
+  nextTick(() => {
+    const syncAutofill = () => {
+      const emailInput = document.getElementById('email')
+      const passwordInput = document.getElementById('password')
+      if (emailInput && emailInput.value && !email.value) {
+        email.value = emailInput.value
+      }
+      if (passwordInput && passwordInput.value && !password.value) {
+        password.value = passwordInput.value
+      }
+    }
+
+    setTimeout(syncAutofill, 100)
+    setTimeout(syncAutofill, 500)
+    setTimeout(syncAutofill, 1000)
+  })
+})
 
 onUnmounted(() => {
   stopResetTimer()
