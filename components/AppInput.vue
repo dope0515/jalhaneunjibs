@@ -11,6 +11,7 @@
       :required="required"
       :autocomplete="autocomplete"
       :disabled="disabled"
+      @change="e => model = e.target.value"
     />
     <button 
       v-if="showPasswordToggle && type === 'password'" 
