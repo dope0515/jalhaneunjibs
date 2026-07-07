@@ -385,6 +385,10 @@ const handleLogin = async () => {
     if (error?.status === 403) {
       showSuspendedNotice.value = true
       alert(error.data?.statusMessage || '정지된 계정입니다. 운영팀에 문의해 주세요.')
+    } else if (error?.status === 401) {
+      alert(error.data?.statusMessage || '이메일 또는 비밀번호가 올바르지 않습니다.')
+    } else {
+      alert(error?.data?.statusMessage || '로그인에 실패했습니다.')
     }
   }
 }
