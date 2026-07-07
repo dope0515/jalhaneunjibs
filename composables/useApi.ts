@@ -32,7 +32,7 @@ export const useApi = () => {
         return
       }
 
-      if (response.status === 401 && !request.toString().includes('/auth/refresh')) {
+      if (response.status === 401 && !request.toString().includes('/auth/refresh') && !request.toString().includes('/auth/login')) {
         try {
           const { accessToken: newToken } = await $fetch<{ accessToken: string }>('/api/auth/refresh', {
             method: 'POST',
