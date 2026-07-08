@@ -940,6 +940,7 @@ const {
   onEditorAutoBlur: onPrivacyEditorAutoBlur,
   onEditorAutoBlurRemaining: onPrivacyEditorAutoBlurRemaining,
   onEditorCancelAll: onPrivacyEditorCancelAll,
+  reset: resetPrivacyEditor,
 } = useImagePrivacyEditor()
 
 const categories = [
@@ -1859,9 +1860,12 @@ const resetForm = () => {
   clearKakaoCategoryState()
   if (fileInputRef.value) fileInputRef.value.value = ''
   if (menuBoardInputRef.value) menuBoardInputRef.value.value = ''
+  resetPrivacyEditor()
 }
 
 const handleSubmit = async () => {
+  if (isSubmitting.value) return
+
   if (!form.value.name.trim()) {
     alert('식당 이름을 입력해 주세요.')
     return

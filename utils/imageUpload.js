@@ -29,8 +29,16 @@ export async function compressImageFile(file, options = IMAGE_COMPRESSION_OPTION
  */
 export async function uploadImage(file, folder, $api) {
   const compressed = await compressImageFile(file)
+
+  // 압축 후 파일이 비어있으면 원본 파일로 폴백
+  const fileToUpload = (compressed && compressed.size > 0) ? compressed : file
+
+  if (!fileToUpload || fileToUpload.size === 0) {
+    throw new Error('업로드할 이미지 파일이 유효하지 않습니다.')
+  }
+
   const fd = new FormData()
-  fd.append('file', compressed)
+  fd.append('file', fileToUpload)
   fd.append('folder', folder)
   const { url } = await $api('/upload/image', { method: 'POST', body: fd })
   return url

@@ -152,6 +152,14 @@ export function useImagePrivacyEditor() {
     resetBatch()
   }
 
+  /** 폼 초기화 등에서 에디터 상태를 완전히 리셋할 때 사용 */
+  const reset = () => {
+    activeResolver = null
+    queue.value = []
+    closeEditor()
+    resetBatch()
+  }
+
   return {
     editorOpen,
     pendingFile,
@@ -166,5 +174,6 @@ export function useImagePrivacyEditor() {
     onEditorAutoBlur,
     onEditorAutoBlurRemaining,
     onEditorCancelAll,
+    reset,
   }
 }
