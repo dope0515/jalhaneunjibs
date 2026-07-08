@@ -43,6 +43,70 @@
       </div>
 
       <div class="admin-panel">
+        <div class="admin-panel__title">스토리지 사용량</div>
+        <div class="admin-panel__body">
+          <div v-if="storagePending" class="admin-empty">불러오는 중…</div>
+          <div v-else class="admin-storage">
+            <!-- DB -->
+            <div class="admin-storage__item">
+              <div class="admin-storage__head">
+                <span class="admin-storage__name">데이터베이스 (PostgreSQL)</span>
+                <span class="admin-storage__figure">
+                  {{ formatBytes(dbStorage.usedBytes) }}
+                  <template v-if="dbStorage.limitBytes"> / {{ formatBytes(dbStorage.limitBytes) }}</template>
+                </span>
+              </div>
+              <div v-if="dbPercent !== null" class="admin-storage__bar">
+                <div
+                  class="admin-storage__bar-fill"
+                  :class="barClass(dbPercent)"
+                  :style="{ width: `${Math.min(dbPercent, 100)}%` }"
+                />
+              </div>
+              <div class="admin-storage__sub">
+                <template v-if="dbPercent !== null">{{ dbPercent.toFixed(1) }}% 사용</template>
+                <template v-else>한도 미설정 · 사용량만 표시 (DB_STORAGE_LIMIT_MB로 한도 지정 가능)</template>
+              </div>
+              <ul v-if="dbStorage.tables?.length" class="admin-storage__tables">
+                <li v-for="t in dbStorage.tables" :key="t.name">
+                  <span>{{ t.name }}</span>
+                  <span>{{ formatBytes(t.bytes) }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Cloudinary -->
+            <div class="admin-storage__item">
+              <div class="admin-storage__head">
+                <span class="admin-storage__name">이미지 (Cloudinary)</span>
+                <span class="admin-storage__figure">
+                  <template v-if="cloudStorage">
+                    {{ formatBytes(cloudStorage.storageBytes) }}
+                    <template v-if="cloudStorage.storageLimitBytes"> / {{ formatBytes(cloudStorage.storageLimitBytes) }}</template>
+                  </template>
+                  <template v-else>조회 실패</template>
+                </span>
+              </div>
+              <div v-if="cloudPercent !== null" class="admin-storage__bar">
+                <div
+                  class="admin-storage__bar-fill"
+                  :class="barClass(cloudPercent)"
+                  :style="{ width: `${Math.min(cloudPercent, 100)}%` }"
+                />
+              </div>
+              <div v-if="cloudStorage" class="admin-storage__sub">
+                <template v-if="cloudPercent !== null">{{ cloudPercent.toFixed(1) }}% 사용</template>
+                <template v-else-if="cloudStorage.creditsUsedPercent !== null">
+                  크레딧 {{ cloudStorage.creditsUsedPercent.toFixed(1) }}% 사용
+                </template>
+                <span v-if="cloudStorage.resourceCount !== null"> · 이미지 {{ cloudStorage.resourceCount.toLocaleString() }}개</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-panel">
         <div class="admin-panel__title">최근 등록 매장</div>
         <div class="admin-panel__body">
           <ul v-if="recent.restaurants.length" class="admin-recent-list">
@@ -118,6 +182,40 @@ const { data, pending, error } = await useAsyncData('admin-stats', () => $api('/
 
 const stats = computed(() => data.value?.stats || {})
 const recent = computed(() => data.value?.recent || { restaurants: [], reviews: [], posts: [] })
+
+// 스토리지 사용량 (Cloudinary API가 느릴 수 있어 lazy 로드)
+const { data: storageData, pending: storagePending } = useLazyAsyncData(
+  'admin-storage',
+  () => $api('/admin/storage'),
+)
+
+const dbStorage = computed(() => storageData.value?.db || { usedBytes: null, limitBytes: null, tables: [] })
+const cloudStorage = computed(() => storageData.value?.cloudinary || null)
+
+const percentOf = (used, limit) => {
+  if (used == null || !limit) return null
+  return (used / limit) * 100
+}
+
+const dbPercent = computed(() => percentOf(dbStorage.value.usedBytes, dbStorage.value.limitBytes))
+const cloudPercent = computed(() =>
+  cloudStorage.value ? percentOf(cloudStorage.value.storageBytes, cloudStorage.value.storageLimitBytes) : null
+)
+
+const formatBytes = (bytes) => {
+  if (bytes == null) return '-'
+  if (bytes === 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  const value = bytes / Math.pow(1024, i)
+  return `${value.toFixed(i === 0 ? 0 : 1)} ${units[i]}`
+}
+
+const barClass = (percent) => {
+  if (percent >= 90) return 'admin-storage__bar-fill--danger'
+  if (percent >= 70) return 'admin-storage__bar-fill--warn'
+  return ''
+}
 
 const statusLabel = (status) => {
   const map = { ACTIVE: '운영중', CLOSED: '폐업', HIDDEN: '숨김', TASTER: '숨김' }
