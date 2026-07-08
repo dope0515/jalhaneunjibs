@@ -250,6 +250,81 @@
   }
 }
 
+.admin-storage {
+  display: flex;
+  flex-direction: column;
+  gap: rem(24);
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: rem(8);
+  }
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: rem(12);
+  }
+
+  &__name {
+    @include font(14, 1, 600, $gray-33);
+  }
+
+  &__figure {
+    @include font(14, 1, 700, $black);
+  }
+
+  &__bar {
+    height: rem(10);
+    border-radius: rem(999);
+    background: $gray-f0;
+    overflow: hidden;
+  }
+
+  &__bar-fill {
+    height: 100%;
+    border-radius: rem(999);
+    background: $primary-color;
+    transition: width 0.4s ease;
+
+    &--warn {
+      background: #f59e0b;
+    }
+
+    &--danger {
+      background: #dc2626;
+    }
+  }
+
+  &__sub {
+    @include font(12, 1.4, 400, $gray-99);
+  }
+
+  &__tables {
+    margin-top: rem(4);
+    padding: rem(12) rem(14);
+    background: $gray-f9;
+    border-radius: rem(8);
+    display: flex;
+    flex-direction: column;
+    gap: rem(6);
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      gap: rem(12);
+      @include font(12, 1.2, 400, $gray-66);
+
+      span:last-child {
+        font-weight: 600;
+        color: $gray-33;
+      }
+    }
+  }
+}
+
 .admin-table-wrap {
   background: $white;
   border: 1px solid $gray-e4;
