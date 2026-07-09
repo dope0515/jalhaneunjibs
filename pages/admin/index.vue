@@ -78,29 +78,60 @@
             <!-- Cloudinary -->
             <div class="admin-storage__item">
               <div class="admin-storage__head">
-                <span class="admin-storage__name">이미지 (Cloudinary)</span>
+                <span class="admin-storage__name">이미지 (Cloudinary{{ cloudStorage?.plan ? ` · ${cloudStorage.plan}` : '' }})</span>
                 <span class="admin-storage__figure">
-                  <template v-if="cloudStorage">
-                    {{ formatBytes(cloudStorage.storageBytes) }}
-                    <template v-if="cloudStorage.storageLimitBytes"> / {{ formatBytes(cloudStorage.storageLimitBytes) }}</template>
+                  <template v-if="cloudStorage?.storageBytes != null">
+                    {{ formatCloudinaryMb(cloudStorage.storageBytes) }}
                   </template>
+                  <template v-else-if="cloudStorage">-</template>
                   <template v-else>조회 실패</template>
                 </span>
               </div>
-              <div v-if="cloudPercent !== null" class="admin-storage__bar">
+
+              <!-- 무료 플랜: 크레딧 기준 진행 바 -->
+              <div v-if="cloudCreditsPercent !== null" class="admin-storage__bar">
                 <div
                   class="admin-storage__bar-fill"
-                  :class="barClass(cloudPercent)"
-                  :style="{ width: `${Math.min(cloudPercent, 100)}%` }"
+                  :class="barClass(cloudCreditsPercent)"
+                  :style="{ width: `${Math.min(cloudCreditsPercent, 100)}%` }"
                 />
               </div>
-              <div v-if="cloudStorage" class="admin-storage__sub">
-                <template v-if="cloudPercent !== null">{{ cloudPercent.toFixed(1) }}% 사용</template>
-                <template v-else-if="cloudStorage.creditsUsedPercent !== null">
-                  크레딧 {{ cloudStorage.creditsUsedPercent.toFixed(1) }}% 사용
-                </template>
-                <span v-if="cloudStorage.resourceCount !== null"> · 이미지 {{ cloudStorage.resourceCount.toLocaleString() }}개</span>
+              <!-- 유료 등 storage.limit 있는 경우 -->
+              <div v-else-if="cloudStoragePercent !== null" class="admin-storage__bar">
+                <div
+                  class="admin-storage__bar-fill"
+                  :class="barClass(cloudStoragePercent)"
+                  :style="{ width: `${Math.min(cloudStoragePercent, 100)}%` }"
+                />
               </div>
+
+              <ul v-if="cloudStorage" class="admin-storage__detail">
+                <li v-if="cloudStorage.creditsUsed != null && cloudStorage.creditsLimit != null">
+                  <span>월 크레딧</span>
+                  <span>{{ cloudStorage.creditsUsed.toFixed(2) }} / {{ cloudStorage.creditsLimit }}</span>
+                </li>
+                <li v-if="cloudStorage.storageCreditsUsage != null">
+                  <span>스토리지 크레딧</span>
+                  <span>{{ cloudStorage.storageCreditsUsage.toFixed(2) }}</span>
+                </li>
+                <li v-if="cloudStorage.bandwidthBytes != null">
+                  <span>대역폭 (30일)</span>
+                  <span>{{ formatCloudinaryMb(cloudStorage.bandwidthBytes) }}</span>
+                </li>
+                <li v-if="cloudStorage.resourceCount != null">
+                  <span>원본 이미지</span>
+                  <span>{{ cloudStorage.resourceCount.toLocaleString() }}개</span>
+                </li>
+                <li v-if="cloudStorage.derivedResourceCount != null">
+                  <span>변환(derived)</span>
+                  <span>{{ cloudStorage.derivedResourceCount.toLocaleString() }}개</span>
+                </li>
+              </ul>
+
+              <p class="admin-storage__note">
+                Cloudinary 콘솔과 동일한 MB(1000 기준) 표시 · API 갱신 주기로 콘솔과 수치가 약간 다를 수 있습니다.
+                <template v-if="cloudStorage?.lastUpdated"> (API 기준 {{ cloudStorage.lastUpdated }})</template>
+              </p>
             </div>
           </div>
         </div>
@@ -198,9 +229,25 @@ const percentOf = (used, limit) => {
 }
 
 const dbPercent = computed(() => percentOf(dbStorage.value.usedBytes, dbStorage.value.limitBytes))
-const cloudPercent = computed(() =>
-  cloudStorage.value ? percentOf(cloudStorage.value.storageBytes, cloudStorage.value.storageLimitBytes) : null
+
+const cloudStoragePercent = computed(() =>
+  cloudStorage.value
+    ? percentOf(cloudStorage.value.storageBytes, cloudStorage.value.storageLimitBytes)
+    : null,
 )
+
+const cloudCreditsPercent = computed(() => {
+  const c = cloudStorage.value
+  if (!c) return null
+  if (c.creditsUsedPercent != null) return c.creditsUsedPercent
+  return percentOf(c.creditsUsed, c.creditsLimit)
+})
+
+/** Cloudinary 콘솔과 동일한 1000 기준 MB */
+const formatCloudinaryMb = (bytes) => {
+  if (bytes == null) return '-'
+  return `${(bytes / 1_000_000).toFixed(2)} MB`
+}
 
 const formatBytes = (bytes) => {
   if (bytes == null) return '-'
