@@ -302,6 +302,33 @@
     @include font(12, 1.4, 400, $gray-99);
   }
 
+  &__detail {
+    margin-top: rem(4);
+    padding: rem(12) rem(14);
+    background: $gray-f9;
+    border-radius: rem(8);
+    display: flex;
+    flex-direction: column;
+    gap: rem(6);
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      gap: rem(12);
+      @include font(12, 1.2, 400, $gray-66);
+
+      span:last-child {
+        font-weight: 600;
+        color: $gray-33;
+      }
+    }
+  }
+
+  &__note {
+    margin: 0;
+    @include font(11, 1.5, 400, $gray-99);
+  }
+
   &__tables {
     margin-top: rem(4);
     padding: rem(12) rem(14);
