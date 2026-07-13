@@ -3,8 +3,12 @@ import { useAuthStore } from '~/stores/auth'
 
 export const useAuth = () => {
   const authStore = useAuthStore()
-  const { user, accessToken, isLoggedIn } = storeToRefs(authStore)
-  const isAdmin = computed(() => user.value?.role === 'ADMIN')
+  const { user, accessToken, persistentUser, persistentToken, isLoggedIn } = storeToRefs(authStore)
+
+  // 세션 쿠키 또는 지속성 쿠키 중 실제로 값이 있는 것을 사용
+  const currentUser = computed(() => user.value ?? persistentUser.value)
+  const currentToken = computed(() => accessToken.value ?? persistentToken.value)
+  const isAdmin = computed(() => currentUser.value?.role === 'ADMIN')
 
   // 로그인 시도 함수
   const login = async (credentials: { login: string; password: string; rememberMe?: boolean }) => {
@@ -40,8 +44,8 @@ export const useAuth = () => {
   }
 
   return {
-    user,
-    accessToken,
+    user: currentUser,
+    accessToken: currentToken,
     isLoggedIn,
     isAdmin,
     login,
