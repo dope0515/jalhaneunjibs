@@ -10,7 +10,11 @@
       <div class="recommend-container">
         <!-- 단계 1: 필터 설정 -->
         <div v-if="step === 1" class="step-wrap filter-step">
-          <div class="filter-section">
+          <div
+            ref="categorySectionEl"
+            class="filter-section"
+            :class="{ 'is-invalid': !hasCategory }"
+          >
             <div class="category-section-header">
               <h3 class="filter-title">1. 무엇을 드시겠어요?</h3>
               <div class="category-actions">
@@ -45,10 +49,23 @@
                 {{ cat }}
               </button>
             </div>
-            <p v-if="selectedCategories.length === 0" class="validation-msg">카테고리를 하나 이상 선택해주세요.</p>
+            <div v-if="!hasCategory" class="filter-alert" role="alert">
+              <span class="filter-alert__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 8v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="12" cy="16.5" r="1.2" fill="currentColor"/>
+                </svg>
+              </span>
+              <p>카테고리를 하나 이상 선택해주세요.</p>
+            </div>
           </div>
 
-          <div class="filter-section">
+          <div
+            ref="locationSectionEl"
+            class="filter-section"
+            :class="{ 'is-invalid': !hasLocation || hasLocationFail }"
+          >
             <h3 class="filter-title">2. 어디서 드시겠어요?</h3>
             <div class="location-box">
               <AppButton 
@@ -80,8 +97,17 @@
                 </select>
               </div>
             </div>
-            <p v-if="!useCurrentLocation && !selectedRegion1" class="validation-msg">위치 정보를 활성화하거나 지역을 선택해주세요.</p>
-            <p v-else-if="useCurrentLocation && !selectedRegion1 && !isLocating" class="validation-msg">위치를 확인할 수 없습니다. 다시 시도해 주세요.</p>
+            <div v-if="!hasLocation && !isLocating" class="filter-alert" role="alert">
+              <span class="filter-alert__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 8v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="12" cy="16.5" r="1.2" fill="currentColor"/>
+                </svg>
+              </span>
+              <p v-if="hasLocationFail">위치를 확인할 수 없습니다. 다시 시도하거나 지역을 직접 선택해 주세요.</p>
+              <p v-else>위치 정보를 활성화하거나 지역을 선택해주세요.</p>
+            </div>
           </div>
 
           <div class="filter-section">
@@ -106,15 +132,48 @@
             </div>
           </div>
 
-          <div class="action-bx">
+          <div
+            v-if="searchFeedback"
+            class="search-empty"
+            role="status"
+          >
+            <div class="search-empty__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+                <path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h4 class="search-empty__title">{{ searchFeedback === 'empty' ? '조건에 맞는 식당이 부족해요' : '식당을 찾지 못했어요' }}</h4>
+            <p class="search-empty__desc">
+              <template v-if="searchFeedback === 'empty'">
+                룰렛을 돌리려면 최소 2곳이 필요해요.<br>
+                카테고리를 늘리거나 지역·예산을 넓혀보세요.
+              </template>
+              <template v-else>
+                잠시 후 다시 시도하거나 조건을 바꿔보세요.
+              </template>
+            </p>
+            <AppButton variant="outline" size="sm" shape="round" @click="searchFeedback = null">
+              조건 다시 고르기
+            </AppButton>
+          </div>
+
+          <div
+            class="action-bx"
+            :class="{ 'is-shaking': isActionShaking }"
+          >
+            <p v-if="!canSearch" class="cta-hint">
+              {{ ctaHintText }}
+            </p>
             <AppButton 
               size="md" 
               shape="round" 
-              color="green" 
-              :disabled="selectedCategories.length === 0 || isLocating || (!useCurrentLocation && !selectedRegion1) || (useCurrentLocation && !selectedRegion1)"
-              @click="fetchCandidates"
+              color="green"
+              :disabled="isFetching || isLocating"
+              :class="{ 'is-muted': !canSearch }"
+              @click="handleFindRestaurants"
             >
-              식당 찾아보기
+              {{ isFetching ? '찾는 중…' : '식당 찾아보기' }}
             </AppButton>
           </div>
         </div>
@@ -320,6 +379,59 @@ watch(selectedRegion1, () => { selectedRegion2.value = null })
 
 const formatPrice = (p) => p >= PRICE_MAX ? '금액 제한 없음' : `${Number(p).toLocaleString()}원 이하`
 
+const categorySectionEl = ref(null)
+const locationSectionEl = ref(null)
+const isFetching = ref(false)
+const isActionShaking = ref(false)
+const searchFeedback = ref(null) // 'empty' | 'error' | null
+
+const hasCategory = computed(() => selectedCategories.value.length > 0)
+const hasLocation = computed(() => !!selectedRegion1.value)
+const hasLocationFail = computed(() =>
+  useCurrentLocation.value && !selectedRegion1.value && !isLocating.value
+)
+const canSearch = computed(() =>
+  hasCategory.value && hasLocation.value && !isLocating.value
+)
+
+const ctaHintText = computed(() => {
+  if (isLocating.value) return '위치를 확인하는 중이에요…'
+  if (!hasCategory.value && !hasLocation.value) return '카테고리와 지역을 선택해야 검색할 수 있어요'
+  if (!hasCategory.value) return '카테고리를 하나 이상 선택해주세요'
+  if (hasLocationFail.value) return '위치를 다시 확인하거나 지역을 직접 선택해주세요'
+  if (!hasLocation.value) return '위치 정보를 켜거나 지역을 선택해주세요'
+  return ''
+})
+
+watch([selectedCategories, selectedRegion1, selectedRegion2, priceMax], () => {
+  searchFeedback.value = null
+})
+
+const scrollToSection = (el) => {
+  if (!el || !import.meta.client) return
+  const headerHeight = document.getElementById('header')?.offsetHeight ?? 0
+  const top = el.getBoundingClientRect().top + window.scrollY - headerHeight - 12
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+}
+
+const shakeAction = () => {
+  isActionShaking.value = false
+  requestAnimationFrame(() => {
+    isActionShaking.value = true
+    setTimeout(() => { isActionShaking.value = false }, 500)
+  })
+}
+
+const handleFindRestaurants = async () => {
+  if (!canSearch.value) {
+    shakeAction()
+    if (!hasCategory.value) scrollToSection(categorySectionEl.value)
+    else if (!hasLocation.value) scrollToSection(locationSectionEl.value)
+    return
+  }
+  await fetchCandidates()
+}
+
 const toggleCategory = (cat) => {
   if (selectedCategories.value.includes(cat)) {
     selectedCategories.value = selectedCategories.value.filter(c => c !== cat)
@@ -365,6 +477,10 @@ const toggleLocation = async () => {
 }
 
 const fetchCandidates = async () => {
+  if (isFetching.value) return
+  isFetching.value = true
+  searchFeedback.value = null
+
   try {
     const query = {
       category: selectedCategories.value.join(','),
@@ -377,7 +493,8 @@ const fetchCandidates = async () => {
     const { restaurants } = await $api('/restaurants', { query })
 
     if (restaurants.length < 2) {
-      alert('조건에 맞는 식당이 너무 적습니다. 조건을 변경해보세요!')
+      searchFeedback.value = 'empty'
+      shakeAction()
       return
     }
 
@@ -385,7 +502,10 @@ const fetchCandidates = async () => {
     selectedCandidates.value = [] // 초기화
     step.value = 2
   } catch (e) {
-    alert('데이터를 가져오는데 실패했습니다.')
+    searchFeedback.value = 'error'
+    shakeAction()
+  } finally {
+    isFetching.value = false
   }
 }
 
@@ -563,14 +683,93 @@ const reset = () => {
     vertical-align: middle;
   }
 
-  .validation-msg {
-    @include font(13, 1, 400, #ff4d4f);
-    margin-top: rem(12);
+  .filter-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: rem(10);
+    margin-top: rem(14);
+    padding: rem(12) rem(14);
+    border-radius: rem(12);
+    background: rgba(#e85d4c, 0.08);
+    border: 1px solid rgba(#e85d4c, 0.28);
+    color: #c23b2e;
+
+    &__icon {
+      flex-shrink: 0;
+      display: flex;
+      margin-top: rem(1);
+    }
+
+    p {
+      margin: 0;
+      @include font(13, 1.45, 600, #c23b2e);
+
+      @include tablet {
+        @include font(14, 1.45, 600, #c23b2e);
+      }
+    }
+  }
+
+  .search-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: rem(10);
+    margin-bottom: rem(20);
+    padding: rem(28) rem(20);
+    border-radius: rem(16);
+    background: rgba(#e85d4c, 0.06);
+    border: 1px dashed rgba(#e85d4c, 0.35);
+
+    &__icon {
+      color: #c23b2e;
+      opacity: 0.9;
+    }
+
+    &__title {
+      margin: 0;
+      @include font(16, 1.3, 700, #1a1a1a);
+
+      @include tablet {
+        @include font(18, 1.3, 700, #1a1a1a);
+      }
+    }
+
+    &__desc {
+      margin: 0 0 rem(4);
+      @include font(13, 1.55, 400, $gray-66);
+
+      @include tablet {
+        @include font(14, 1.55, 400, $gray-66);
+      }
+    }
+  }
+
+  .cta-hint {
+    width: 100%;
+    margin: 0 0 rem(10);
+    padding: rem(10) rem(14);
+    border-radius: rem(10);
+    background: rgba($primary-color, 0.08);
+    border: 1px solid rgba($primary-color, 0.22);
+    text-align: center;
+    @include font(13, 1.4, 600, $primary-color);
   }
 
   // Filter Step
   .filter-section {
     margin-bottom: rem(32);
+    padding: rem(16);
+    border-radius: rem(16);
+    border: 1px solid transparent;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+
+    &.is-invalid {
+      background: rgba(#e85d4c, 0.03);
+      border-color: rgba(#e85d4c, 0.35);
+      box-shadow: 0 0 0 rem(3) rgba(#e85d4c, 0.08);
+    }
 
     @include tablet {
       margin-bottom: rem(48);
@@ -986,13 +1185,26 @@ const reset = () => {
     :deep(.app-button) {
       width: 100%;
       justify-content: center;
+
+      &.is-muted {
+        opacity: 0.55;
+      }
+    }
+
+    &.is-shaking {
+      animation: recommend-shake 0.45s ease;
     }
 
     @include tablet {
       flex-direction: row;
       align-items: center;
       justify-content: center;
+      flex-wrap: wrap;
       gap: rem(12);
+
+      .cta-hint {
+        width: 100%;
+      }
 
       :deep(.app-button) {
         width: auto;
@@ -1322,6 +1534,14 @@ const reset = () => {
   @keyframes result-pop {
     0% { opacity: 0; transform: scale(0.85) translateY(rem(16)); }
     100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  @keyframes recommend-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(rem(-6)); }
+    40% { transform: translateX(rem(6)); }
+    60% { transform: translateX(rem(-4)); }
+    80% { transform: translateX(rem(4)); }
   }
 }
 </style>
