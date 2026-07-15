@@ -668,12 +668,13 @@
                       @dragleave.prevent="isDragOver = false"
                       @drop.prevent="handleDrop"
                       @click="triggerFileInput"
+                      @paste.prevent="handleRestaurantPaste"
                       v-if="restaurantPreviews.length < 5"
                     >
                       <span class="drop-zone-content">
                         <img src="/assets/images/icon/ic_upload.svg" width="36" height="36" alt="" class="drop-zone-icon" aria-hidden="true" />
                         <span class="drop-zone-text">이미지 추가 ({{ restaurantPreviews.length }}/5)</span>
-                        <span class="drop-zone-sub">여러 장 선택 가능</span>
+                        <span class="drop-zone-sub">여러 장 선택 · 드래그 · Ctrl+V 붙여넣기</span>
                       </span>
                     </button>
                     
@@ -720,11 +721,12 @@
                       @dragleave.prevent="isDragOverMenu = false"
                       @drop.prevent="handleMenuBoardDrop"
                       @click="triggerMenuBoardInput"
+                      @paste.prevent="handleMenuBoardPaste"
                     >
                       <span class="drop-zone-content">
                         <img src="/assets/images/icon/ic_menu_board.svg" width="36" height="36" alt="" class="drop-zone-icon" aria-hidden="true" />
                         <span class="drop-zone-text">메뉴판 이미지를 올려주세요</span>
-                        <span class="drop-zone-sub">최대 {{ MAX_MENU_BOARD_IMAGES }}장까지 분석할 수 있습니다</span>
+                        <span class="drop-zone-sub">최대 {{ MAX_MENU_BOARD_IMAGES }}장 · 드래그 · Ctrl+V 붙여넣기</span>
                       </span>
                     </button>
                     
@@ -774,6 +776,8 @@
                         class="menu-item-card"
                         :class="{ 'is-recommended': item.isRecommended }"
                         role="listitem"
+                        tabindex="0"
+                        @paste.prevent="(e) => handleMenuItemPaste(e, index)"
                       >
                         <button 
                           type="button"
@@ -1814,6 +1818,46 @@ const handleMenuItemImageUpload = (e) => {
 const removeMenuItemImage = (index) => {
   analyzedMenuItems.value[index].imageFile = null
   analyzedMenuItems.value[index].imagePreview = null
+}
+
+// ── 클립보드 붙여넣기 핸들러 ──────────────────────────────────────
+const getImageFilesFromClipboard = (e) => {
+  const items = e.clipboardData?.items
+  if (!items) return []
+  const imageFiles = []
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile()
+      if (file) imageFiles.push(file)
+    }
+  }
+  return imageFiles
+}
+
+const handleRestaurantPaste = async (e) => {
+  const imageFiles = getImageFilesFromClipboard(e)
+  if (imageFiles.length > 0) {
+    await processImageFiles(imageFiles)
+  }
+}
+
+const handleMenuBoardPaste = (e) => {
+  const imageFiles = getImageFilesFromClipboard(e)
+  if (imageFiles.length > 0) {
+    processMenuBoardFiles(imageFiles)
+  }
+}
+
+const handleMenuItemPaste = (e, index) => {
+  const imageFiles = getImageFilesFromClipboard(e)
+  if (imageFiles.length === 0) return
+  const file = imageFiles[0]
+  analyzedMenuItems.value[index].imageFile = file
+  const reader = new FileReader()
+  reader.onload = (ev) => {
+    analyzedMenuItems.value[index].imagePreview = ev.target.result
+  }
+  reader.readAsDataURL(file)
 }
 
 const handlePriceInput = (e, item) => {
