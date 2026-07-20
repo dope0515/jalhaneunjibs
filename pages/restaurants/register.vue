@@ -777,7 +777,7 @@
                         :class="{ 'is-recommended': item.isRecommended }"
                         role="listitem"
                         tabindex="0"
-                        @paste.prevent="(e) => handleMenuItemPaste(e, index)"
+                        @paste="(e) => handleMenuItemPaste(e, index)"
                       >
                         <button 
                           type="button"
@@ -1023,8 +1023,14 @@ const performPlaceSearch = async (query) => {
 
   const ps = new window.kakao.maps.services.Places()
 
-  const nearbyRaw = userLocation.value
-    ? await runFoodCategorySearch(ps, trimmed, { location: userLocation.value })
+  const location =
+    userLocation.value &&
+    typeof window.kakao.maps.LatLng === 'function'
+      ? new window.kakao.maps.LatLng(userLocation.value.lat, userLocation.value.lng)
+      : null
+
+  const nearbyRaw = location
+    ? await runFoodCategorySearch(ps, trimmed, { location })
     : []
   const nationwideRaw = await runFoodCategorySearch(ps, trimmed, {})
   const merged = mergePlacesById([nearbyRaw, nationwideRaw])
@@ -1399,13 +1405,11 @@ onMounted(() => {
         
         mapInitialLat.value = lat
         mapInitialLng.value = lng
+        // LatLng는 SDK load 완료 전에는 생성자가 아님 → 좌표만 저장
+        userLocation.value = { lat, lng }
         
         if (mapRef.value) {
           mapRef.value.setCenter(lat, lng)
-        }
-        
-        if (window.kakao && window.kakao.maps) {
-          userLocation.value = new window.kakao.maps.LatLng(lat, lng)
         }
       },
       (error) => {
@@ -1453,44 +1457,46 @@ const triggerPlaceSearch = () => {
   }
 
   isSearchFocused.value = true
-  searchTimeout = setTimeout(async () => {
-    if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) return
+  searchTimeout = setTimeout(() => {
+    loadSDK(async () => {
+      if (!window.kakao?.maps?.services) return
 
-    const requestId = ++searchRequestId
-    isSearchingPlaces.value = true
-    searchHasNoResults.value = false
+      const requestId = ++searchRequestId
+      isSearchingPlaces.value = true
+      searchHasNoResults.value = false
 
-    try {
-      const { sections, flat } = await performPlaceSearch(form.value.name)
+      try {
+        const { sections, flat } = await performPlaceSearch(form.value.name)
 
-      if (requestId !== searchRequestId) return
+        if (requestId !== searchRequestId) return
 
-      searchResultSections.value = sections
-      flatSearchResults.value = flat
-      searchHasNoResults.value = flat.length === 0
-      focusedIndex.value = -1
+        searchResultSections.value = sections
+        flatSearchResults.value = flat
+        searchHasNoResults.value = flat.length === 0
+        focusedIndex.value = -1
 
-      const ids = flat.map((p) => p.id).filter(Boolean)
-      if (ids.length > 0) {
-        try {
-          const { registeredIds } = await $fetch(
-            '/api/restaurants/check-places',
-            { method: 'POST', body: { placeIds: ids } }
-          )
-          if (requestId !== searchRequestId) return
-          registeredPlaceIds.value = new Set(registeredIds)
-        } catch {
-          if (requestId !== searchRequestId) return
+        const ids = flat.map((p) => p.id).filter(Boolean)
+        if (ids.length > 0) {
+          try {
+            const { registeredIds } = await $fetch(
+              '/api/restaurants/check-places',
+              { method: 'POST', body: { placeIds: ids } }
+            )
+            if (requestId !== searchRequestId) return
+            registeredPlaceIds.value = new Set(registeredIds)
+          } catch {
+            if (requestId !== searchRequestId) return
+            registeredPlaceIds.value = new Set()
+          }
+        } else {
           registeredPlaceIds.value = new Set()
         }
-      } else {
-        registeredPlaceIds.value = new Set()
+      } finally {
+        if (requestId === searchRequestId) {
+          isSearchingPlaces.value = false
+        }
       }
-    } finally {
-      if (requestId === searchRequestId) {
-        isSearchingPlaces.value = false
-      }
-    }
+    })
   }, 400)
 }
 
@@ -1850,7 +1856,10 @@ const handleMenuBoardPaste = (e) => {
 
 const handleMenuItemPaste = (e, index) => {
   const imageFiles = getImageFilesFromClipboard(e)
+  // 텍스트 붙여넣기는 기본 동작 유지 (입력창으로 전달)
   if (imageFiles.length === 0) return
+
+  e.preventDefault()
   const file = imageFiles[0]
   analyzedMenuItems.value[index].imageFile = file
   const reader = new FileReader()
