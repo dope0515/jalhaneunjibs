@@ -25,7 +25,7 @@ router.post('/analyze', authMiddleware, upload.array('menuBoard', 5), async (req
       const dataUrl = `data:${file.mimetype || 'image/jpeg'};base64,${base64}`
 
       const response = await groq.chat.completions.create({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: 'qwen/qwen3.6-27b',
         messages: [
           {
             role: 'user',
