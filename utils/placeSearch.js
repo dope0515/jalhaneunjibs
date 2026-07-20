@@ -42,8 +42,9 @@ export function formatDistanceLabel(km) {
 }
 
 export function preparePlaceSearchResults(places, query, origin) {
-  const originLat = origin?.getLat?.()
-  const originLng = origin?.getLng?.()
+  const originLat = origin?.getLat?.() ?? origin?.lat
+  const originLng = origin?.getLng?.() ?? origin?.lng
+  const hasOrigin = Number.isFinite(originLat) && Number.isFinite(originLng)
 
   const scored = places
     .map((place) => {
@@ -53,7 +54,7 @@ export function preparePlaceSearchResults(places, query, origin) {
       const lat = parseFloat(place.y)
       const lng = parseFloat(place.x)
       const distanceKm =
-        origin && Number.isFinite(lat) && Number.isFinite(lng)
+        hasOrigin && Number.isFinite(lat) && Number.isFinite(lng)
           ? getDistanceKm(originLat, originLng, lat, lng)
           : null
 

@@ -18,7 +18,12 @@ let map = null
 let marker = null
 
 const initMap = () => {
-  if (!mapContainer.value || map || !window.kakao || !window.kakao.maps) return
+  if (
+    !mapContainer.value ||
+    map ||
+    !window.kakao?.maps ||
+    typeof window.kakao.maps.LatLng !== 'function'
+  ) return
 
   const options = {
     center: new window.kakao.maps.LatLng(Number(props.lat), Number(props.lng)),
@@ -54,7 +59,7 @@ onMounted(() => {
 })
 
 watch(() => [props.lat, props.lng], ([newLat, newLng]) => {
-  if (map && window.kakao && window.kakao.maps) {
+  if (map && typeof window.kakao?.maps?.LatLng === 'function') {
     const coords = new window.kakao.maps.LatLng(Number(newLat), Number(newLng))
     map.setCenter(coords)
     if (marker) marker.setPosition(coords)
@@ -64,7 +69,7 @@ watch(() => [props.lat, props.lng], ([newLat, newLng]) => {
 // 외부에서 마커 위치를 업데이트해야 할 때 사용
 defineExpose({
   setCenter: (lat, lng) => {
-    if (!map) return
+    if (!map || typeof window.kakao?.maps?.LatLng !== 'function') return
     const coords = new window.kakao.maps.LatLng(lat, lng)
     map.setCenter(coords)
     marker.setPosition(coords)
