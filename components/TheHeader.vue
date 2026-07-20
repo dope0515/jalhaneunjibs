@@ -58,15 +58,15 @@
               관리자 페이지
             </NuxtLink>
           </li>
-          <li v-if="authStore.isLoggedIn" class="nav-item">
+          <li v-if="isLoggedIn" class="nav-item">
             <NuxtLink to="/mypage" class="user-profile" title="마이페이지로 이동">
               <div class="user-avatar">{{ userInitial }}</div>
-              <span class="user-nickname">{{ authStore.user?.nickname }}</span>
+              <span class="user-nickname">{{ user?.nickname }}</span>
             </NuxtLink>
           </li>
           <li class="nav-item">
             <AppButton 
-              v-if="!authStore.isLoggedIn" 
+              v-if="!isLoggedIn" 
               to="/login" 
               color="green"
               size="sm" 
@@ -116,12 +116,12 @@
         </div>
 
         <!-- 모바일 유저 정보 -->
-        <div v-if="authStore.isLoggedIn" class="nav-drawer__user">
+        <div v-if="isLoggedIn" class="nav-drawer__user">
           <NuxtLink to="/mypage" class="user-profile" @click="menuOpen = false">
             <div class="user-avatar">{{ userInitial }}</div>
             <div class="user-info">
-              <span class="user-nickname">{{ authStore.user?.nickname }}</span>
-              <span class="user-email">{{ authStore.user?.email }}</span>
+              <span class="user-nickname">{{ user?.nickname }}</span>
+              <span class="user-email">{{ user?.email }}</span>
             </div>
           </NuxtLink>
         </div>
@@ -155,7 +155,7 @@
         </ul>
         <div class="nav-drawer__footer">
           <AppButton
-            v-if="!authStore.isLoggedIn"
+            v-if="!isLoggedIn"
             to="/login"
             color="green"
             class="nav-drawer__auth-btn"
@@ -178,10 +178,7 @@
 </template>
 
 <script setup>
-import { useAuthStore } from '~/stores/auth'
-
-const authStore = useAuthStore()
-const { logout, isAdmin } = useAuth()
+const { user, isLoggedIn, logout, isAdmin } = useAuth()
 const menuOpen = ref(false)
 const route = useRoute()
 
@@ -210,7 +207,7 @@ useHead({
 })
 
 const userInitial = computed(() => {
-  const name = authStore.user?.nickname || '?'
+  const name = user.value?.nickname || '?'
   return name.charAt(0).toUpperCase()
 })
 
@@ -218,7 +215,7 @@ const userInitial = computed(() => {
 watch(() => route.path, () => { menuOpen.value = false })
 
 const goToRegister = () => {
-  if (!authStore.isLoggedIn) {
+  if (!isLoggedIn.value) {
     alert('로그인 후 이용 가능합니다.')
     navigateTo('/login')
     return

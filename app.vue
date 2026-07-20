@@ -43,6 +43,7 @@ nuxtApp.hook('page:loading:end', () => {
 if (isLoggedIn.value && !user.value?.role && accessToken.value) {
   try {
     const profile = await $api('/mypage/profile')
+    const rememberMe = Boolean(authStore.rememberMeCookie)
     authStore.setAuth(
       {
         id: profile.id,
@@ -51,6 +52,7 @@ if (isLoggedIn.value && !user.value?.role && accessToken.value) {
         role: profile.role,
       },
       accessToken.value,
+      rememberMe,
     )
   } catch {
     // 토큰 만료 등 — 무시하고 계속 진행

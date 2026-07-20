@@ -3,7 +3,12 @@
  */
 export const useApi = () => {
   const authStore = useAuthStore()
-  const { accessToken } = storeToRefs(authStore)
+  const { accessToken, persistentToken } = storeToRefs(authStore)
+
+  // rememberMe 여부와 관계없이 실제 보유 중인 액세스 토큰 사용
+  const currentAccessToken = computed(
+    () => accessToken.value ?? persistentToken.value,
+  )
 
   const handleAuthFailure = (statusMessage?: string) => {
     authStore.clearAuth()
@@ -34,9 +39,9 @@ export const useApi = () => {
   const baseFetch = $fetch.create({
     baseURL: '/api',
     onRequest({ options }) {
-      if (accessToken.value) {
+      if (currentAccessToken.value) {
         const headers = new Headers(options.headers || {})
-        headers.set('Authorization', `Bearer ${accessToken.value}`)
+        headers.set('Authorization', `Bearer ${currentAccessToken.value}`)
         options.headers = headers
       }
     },

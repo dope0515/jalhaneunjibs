@@ -76,18 +76,6 @@
         color: $primary-color;
         position: relative;
         display: inline-block;
-
-        &::after {
-          content: "";
-          position: absolute;
-          bottom: rem(2);
-          left: 0;
-          width: 100%;
-          height: rem(10);
-          background-color: rgba($primary-color, 0.12);
-          z-index: -1;
-          border-radius: rem(4);
-        }
       }
 
       // 태블릿: 카드가 좁아진 만큼 폰트도 자연스럽게 키움

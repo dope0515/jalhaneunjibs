@@ -27,6 +27,7 @@ export const tryGetUserId = (event: any): number | null => {
   const token =
     getRequestHeader(event, 'authorization')?.replace('Bearer ', '') ??
     getCookie(event, 'accessToken') ??
+    getCookie(event, 'accessToken_p') ??
     ''
 
   if (!token) return null
