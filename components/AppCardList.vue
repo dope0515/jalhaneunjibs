@@ -67,7 +67,7 @@
               <span class="app-card-list-stat-item">
                 <!-- 조회수: 눈 아이콘 -->
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                {{ (restaurant.viewCount ?? 0).toLocaleString() }}
+                {{ (restaurant.viewCount ?? 0).toLocaleString('ko-KR') }}
               </span>
               <span class="app-card-list-stat-item" title="리뷰">
                 <!-- 리뷰: 클립보드 아이콘 -->

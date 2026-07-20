@@ -60,6 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken,
     persistentUser,
     persistentToken,
+    rememberMeCookie,
     isLoggedIn,
     setAuth,
     updateToken,

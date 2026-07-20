@@ -67,7 +67,11 @@ export default defineEventHandler(async (event) => {
     return {
       accessToken,
     }
-  } catch (error) {
+  } catch (error: any) {
+    // createError로 던진 비즈니스 에러는 원인 메시지를 유지
+    if (error?.statusCode) {
+      throw error
+    }
     throw createError({
       statusCode: 401,
       statusMessage: '인증 갱신에 실패했습니다. 다시 로그인해주세요.',

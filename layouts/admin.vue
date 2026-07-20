@@ -28,7 +28,7 @@
 
     <div class="admin-main">
       <header class="admin-topbar">
-        <span class="admin-topbar__user">{{ authStore.user?.nickname }} (관리자)</span>
+        <span class="admin-topbar__user">{{ user?.nickname }} (관리자)</span>
         <button type="button" class="admin-topbar__logout" @click="logout">로그아웃</button>
       </header>
 
@@ -40,10 +40,7 @@
 </template>
 
 <script setup>
-import { useAuthStore } from '~/stores/auth'
-
-const authStore = useAuthStore()
-const { logout } = useAuth()
+const { user, logout } = useAuth()
 
 const navItems = [
   { to: '/admin/users', label: '회원 관리' },

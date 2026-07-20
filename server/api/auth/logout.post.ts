@@ -17,10 +17,12 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // 2. 인증 관련 쿠키 모두 삭제
+  // 2. 인증 관련 쿠키 모두 삭제 (세션 + rememberMe persistent)
   deleteCookie(event, 'refresh_token')
   deleteCookie(event, 'accessToken')
   deleteCookie(event, 'user')
+  deleteCookie(event, 'accessToken_p')
+  deleteCookie(event, 'user_p')
   deleteCookie(event, 'rememberMe')
 
   return {
