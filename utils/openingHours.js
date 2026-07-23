@@ -239,3 +239,160 @@ export function parseOpeningHours(str) {
 
   return data
 }
+
+const DAY_ALIASES = {
+  월: '월',
+  월요일: '월',
+  화: '화',
+  화요일: '화',
+  수: '수',
+  수요일: '수',
+  목: '목',
+  목요일: '목',
+  금: '금',
+  금요일: '금',
+  토: '토',
+  토요일: '토',
+  일: '일',
+  일요일: '일',
+}
+
+function normalizeTimeToken(raw) {
+  if (!raw) return null
+  const cleaned = String(raw).replace(/\s/g, '')
+  const match = cleaned.match(/^(\d{1,2}):(\d{2})$/)
+  if (!match) return null
+  const hour = Number(match[1])
+  const minute = Number(match[2])
+  if (hour > 23 || minute > 59) return null
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+}
+
+function extractTimeRange(text) {
+  if (!text) return null
+  const match = String(text).match(/(\d{1,2}:\d{2})\s*[~\-–—]\s*(\d{1,2}:\d{2})/)
+  if (!match) return null
+  const openTime = normalizeTimeToken(match[1])
+  const closeTime = normalizeTimeToken(match[2])
+  if (!openTime || !closeTime) return null
+  return { openTime, closeTime, index: match.index ?? 0, length: match[0].length }
+}
+
+function extractWeeklyClosedDays(restText) {
+  if (!restText) return []
+  // 매월/격주 등 위젯에 없는 규칙은 제외
+  if (/매월|격주|임시|가변|공지|별도/.test(restText)) return []
+
+  const weekly = restText.match(/매주\s*([월화수목금토일,\s요일및과와~·\/\-]+)/)
+  const source = weekly?.[1] || (/매주/.test(restText) ? restText : '')
+  if (!source && !/휴무|휴일|Closed/i.test(restText)) {
+    // "화요일 휴무" 형태
+    const single = restText.match(/([월화수목금토일](?:요일)?)\s*(?:휴무|휴일)/)
+    if (!single) return []
+    const day = DAY_ALIASES[single[1]] || DAY_ALIASES[`${single[1]}요일`]
+    return day ? [day] : []
+  }
+
+  const days = []
+  const tokens = (source || restText).match(/[월화수목금토일](?:요일)?/g) || []
+  for (const token of tokens) {
+    const day = DAY_ALIASES[token] || DAY_ALIASES[`${token}요일`]
+    if (day && !days.includes(day)) days.push(day)
+  }
+  return days
+}
+
+/**
+ * TourAPI 음식점 영업/휴무 원문 → 등록 폼 opData
+ * @returns {{ opData: ReturnType<typeof createDefaultOpData>, unparsedNotes: string, parsed: boolean }}
+ */
+export function parseTourOpeningHours(openTimeFood, restDateFood) {
+  const data = createDefaultOpData()
+  const notes = []
+  const openRaw = (openTimeFood || '').trim()
+  const restRaw = (restDateFood || '').trim()
+
+  if (!openRaw && !restRaw) {
+    return { opData: data, unparsedNotes: '', parsed: false }
+  }
+
+  let parsedSomething = false
+
+  // 브레이크/준비시간 먼저 분리
+  const breakMatch = openRaw.match(
+    /\((?:준비시간|브레이크(?:\s*타임)?|break(?:\s*time)?)\s*([^)]+)\)/i,
+  )
+  let openForHours = openRaw
+  if (breakMatch) {
+    const breakRange = extractTimeRange(breakMatch[1])
+    if (breakRange) {
+      data.hasBreakTime = true
+      data.breakStartTime = breakRange.openTime
+      data.breakEndTime = breakRange.closeTime
+      parsedSomething = true
+    } else {
+      notes.push(breakMatch[0])
+    }
+    openForHours = openRaw.replace(breakMatch[0], ' ').trim()
+  } else {
+    const inlineBreak = openRaw.match(
+      /(?:준비시간|브레이크(?:\s*타임)?)\s*[:\s]*(\d{1,2}:\d{2}\s*[~\-–—]\s*\d{1,2}:\d{2})/i,
+    )
+    if (inlineBreak) {
+      const breakRange = extractTimeRange(inlineBreak[1])
+      if (breakRange) {
+        data.hasBreakTime = true
+        data.breakStartTime = breakRange.openTime
+        data.breakEndTime = breakRange.closeTime
+        parsedSomething = true
+        openForHours = openRaw.replace(inlineBreak[0], ' ').trim()
+      }
+    }
+  }
+
+  const mainRange = extractTimeRange(openForHours)
+  if (mainRange) {
+    data.hasOpeningHours = true
+    data.scheduleMode = 'uniform'
+    data.dayType = 'everyday'
+    data.customDays = [...WEEKDAYS]
+    data.openTime = mainRange.openTime
+    data.closeTime = mainRange.closeTime
+    data.daySchedules = createDaySchedules(mainRange.openTime, mainRange.closeTime)
+    parsedSomething = true
+
+    const leftover = openForHours
+      .replace(openForHours.slice(mainRange.index, mainRange.index + mainRange.length), ' ')
+      .replace(/[()]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (leftover && leftover.length > 1) notes.push(leftover)
+  } else if (openRaw) {
+    notes.push(openRaw)
+  }
+
+  const closedDays = extractWeeklyClosedDays(restRaw)
+  if (closedDays.length) {
+    data.hasOpeningHours = true
+    data.hasClosedDays = true
+    data.closedDays = closedDays
+    parsedSomething = true
+  } else if (restRaw) {
+    notes.push(restRaw)
+  }
+
+  if (!parsedSomething && (openRaw || restRaw)) {
+    // 파싱 실패해도 원문이 있으면 토글만 켜고 노트 보존 — 위젯 기본 시간은 쓰지 않음
+    return {
+      opData: data,
+      unparsedNotes: [openRaw, restRaw].filter(Boolean).join(' / '),
+      parsed: false,
+    }
+  }
+
+  return {
+    opData: data,
+    unparsedNotes: notes.filter(Boolean).join(' / '),
+    parsed: parsedSomething,
+  }
+}

@@ -261,6 +261,41 @@
 
                 <div class="form-item">
                   <label for="description" class="form-item-label">식당 소개</label>
+                  <div class="tour-enrich-actions">
+                    <AppButton
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      :disabled="!form.name.trim() || isLoadingTour"
+                      @click="applyTourEnrichment({ auto: false })"
+                    >
+                      {{ isLoadingTour ? '불러오는 중...' : '관광정보에서 불러오기' }}
+                    </AppButton>
+                    <span class="tour-enrich-hint">한국관광공사 DB에 있으면 소개·메뉴·사진을 채워 줍니다.</span>
+                  </div>
+                  <p v-if="tourEnrichHint" class="form-field-hint tour-enrich-status" role="status">{{ tourEnrichHint }}</p>
+                  <div v-if="tourCandidates.length" class="tour-candidate-list" role="listbox" aria-label="관광정보 후보">
+                    <p class="tour-candidate-title">관광정보 후보를 선택해 주세요</p>
+                    <button
+                      v-for="candidate in tourCandidates"
+                      :key="candidate.contentId"
+                      type="button"
+                      class="tour-candidate-item"
+                      role="option"
+                      @click="selectTourCandidate(candidate)"
+                    >
+                      <img
+                        v-if="candidate.thumbnail"
+                        :src="candidate.thumbnail"
+                        alt=""
+                        class="tour-candidate-thumb"
+                      />
+                      <span class="tour-candidate-body">
+                        <span class="tour-candidate-name">{{ candidate.title }}</span>
+                        <span class="tour-candidate-addr">{{ candidate.address || '주소 정보 없음' }}</span>
+                      </span>
+                    </button>
+                  </div>
                   <textarea 
                     v-model="form.description"
                     id="description"
@@ -923,8 +958,8 @@ import {
   uploadImagesSequentially,
   getUploadErrorMessage,
 } from '~/utils/imageUpload'
-import { WEEKDAYS, createDefaultOpData, formatOpeningHours } from '~/utils/openingHours'
-import { createDefaultParkingData, formatParkingInfo } from '~/utils/parkingInfo'
+import { WEEKDAYS, createDefaultOpData, formatOpeningHours, parseTourOpeningHours } from '~/utils/openingHours'
+import { createDefaultParkingData, formatParkingInfo, parseTourParking } from '~/utils/parkingInfo'
 import { createDefaultSeasonData, formatSeasonInfo } from '~/utils/seasonInfo'
 import { createDefaultExternalLinksData, formatExternalLinks } from '~/utils/externalLinks'
 import { formatDistanceLabel, preparePlaceSearchResults } from '~/utils/placeSearch'
@@ -1290,6 +1325,9 @@ const isAnalyzing = ref(false)
 
 const menuItemImageInputRef = ref(null)
 const currentEditingMenuIndex = ref(-1)
+const isLoadingTour = ref(false)
+const tourEnrichHint = ref('')
+const tourCandidates = ref([])
 const isSubmitting = ref(false)
 const submissionMessage = ref('맛집을 등록하고 있습니다...')
 const showSuccessModal = ref(false)
@@ -1647,6 +1685,8 @@ const selectPlace = (place) => {
   
   clearSearchResults()
   isSearchFocused.value = false
+  tourCandidates.value = []
+  tourEnrichHint.value = ''
 }
 
 const toggleKeyword = (keyword) => {
@@ -1686,6 +1726,206 @@ const addRestaurantImageFile = (file) => {
     restaurantPreviews.value.push(e.target.result)
   }
   reader.readAsDataURL(file)
+}
+
+const mapTourMenuItems = (items) =>
+  (items || []).map((item) => ({
+    name: item.name || '',
+    price: item.price ? String(item.price).replace(/,/g, '') : '',
+    description: item.description || '',
+    isRecommended: false,
+    imageFile: null,
+    imagePreview: null,
+  }))
+
+const fetchTourImageFiles = async (imageUrls) => {
+  const remaining = MAX_RESTAURANT_IMAGES - restaurantImages.value.length
+  if (remaining <= 0 || !imageUrls?.length) return []
+
+  const files = []
+  for (let i = 0; i < imageUrls.length && files.length < remaining; i++) {
+    const imageUrl = imageUrls[i]
+    try {
+      const blob = await $fetch(`/api/tour/proxy-image`, {
+        query: { url: imageUrl },
+        responseType: 'blob',
+      })
+      const file = new File([blob], `tour-${Date.now()}-${i}.jpg`, {
+        type: blob.type || 'image/jpeg',
+      })
+      files.push(await compressImageFile(file))
+    } catch (error) {
+      console.warn('[Tour image]', imageUrl, error)
+    }
+  }
+  return files
+}
+
+/** @param {{ auto?: boolean, contentId?: string, contentTypeId?: string }} options */
+const applyTourEnrichment = async ({ auto = false, contentId, contentTypeId } = {}) => {
+  const name = form.value.name?.trim()
+  if (!name && !contentId) {
+    if (!auto) alert('식당 이름을 먼저 입력하거나 검색에서 선택해 주세요.')
+    return
+  }
+
+  isLoadingTour.value = true
+  if (!auto && !contentId) {
+    tourEnrichHint.value = ''
+    tourCandidates.value = []
+  }
+
+  try {
+    const data = await $fetch('/api/tour/enrich', {
+      query: {
+        keyword: name || '',
+        address: form.value.address || '',
+        ...(contentId ? { contentId } : {}),
+        ...(contentTypeId ? { contentTypeId } : {}),
+      },
+    })
+
+    if (data.candidates?.length) {
+      tourCandidates.value = data.candidates
+    }
+
+    // 자동 매칭이 애매하면 후보만 보여주고 끝
+    if (!data.found && data.needsSelection) {
+      tourEnrichHint.value = '이름이 비슷한 관광정보가 여러 개입니다. 아래에서 맞는 항목을 선택해 주세요.'
+      return
+    }
+
+    if (!data.found) {
+      if (data.candidates?.length) {
+        tourEnrichHint.value = '자동 매칭은 실패했지만 후보가 있습니다. 아래에서 선택해 주세요.'
+      } else if (!auto) {
+        tourEnrichHint.value =
+          '관광정보에서 비슷한 식당을 찾지 못했습니다. 메뉴판 분석이나 직접 입력을 이용해 주세요.'
+        tourCandidates.value = []
+      }
+      return
+    }
+
+    // 상세를 골랐으면 후보 목록 닫기
+    if (contentId || data.autoSelected) {
+      tourCandidates.value = []
+    }
+
+    let didApply = false
+
+    if (data.description) {
+      if (!form.value.description?.trim()) {
+        form.value.description = data.description
+        didApply = true
+      } else if (!auto && confirm('기존 소개글을 관광정보 내용으로 바꿀까요?')) {
+        form.value.description = data.description
+        didApply = true
+      }
+    }
+
+    if (data.menuItems?.length) {
+      if (analyzedMenuItems.value.length === 0) {
+        analyzedMenuItems.value = mapTourMenuItems(data.menuItems)
+        didApply = true
+      } else if (!auto && confirm('기존 메뉴 목록을 관광정보 메뉴로 교체할까요?')) {
+        analyzedMenuItems.value = mapTourMenuItems(data.menuItems)
+        didApply = true
+      }
+    }
+
+    if (data.homepage) {
+      if (!externalLinksData.value.website?.trim()) {
+        externalLinksData.value.hasLinks = true
+        externalLinksData.value.website = data.homepage
+        didApply = true
+      }
+    }
+
+    if (data.tel && !form.value.phoneNumber?.trim()) {
+      form.value.phoneNumber = data.tel
+      didApply = true
+    }
+
+    const openRaw = data.openingHoursRaw || {}
+    const hasTourHours = Boolean(openRaw.openTimeFood || openRaw.restDateFood || data.openingHoursHint)
+    let hoursNotes = ''
+    if (hasTourHours) {
+      const shouldApplyHours =
+        !opData.value.hasOpeningHours ||
+        (!auto && confirm('기존 영업시간을 관광정보 내용으로 바꿀까요?'))
+      if (shouldApplyHours) {
+        const parsed = parseTourOpeningHours(
+          openRaw.openTimeFood || '',
+          openRaw.restDateFood || '',
+        )
+        if (parsed.parsed) {
+          opData.value = parsed.opData
+          didApply = true
+        }
+        hoursNotes = parsed.unparsedNotes || ''
+        // 파싱 실패 시에도 원문이 있으면 힌트로만 안내
+        if (!parsed.parsed && (data.openingHoursHint || hoursNotes)) {
+          hoursNotes = hoursNotes || data.openingHoursHint
+        }
+      }
+    }
+
+    const parkingSource = data.parkingRaw || data.parkingHint || ''
+    if (parkingSource) {
+      const shouldApplyParking =
+        !parkingData.value.hasParking ||
+        (!auto && confirm('기존 주차 정보를 관광정보 내용으로 바꿀까요?'))
+      if (shouldApplyParking) {
+        const parsedParking = parseTourParking(parkingSource)
+        if (parsedParking) {
+          parkingData.value = parsedParking
+          didApply = true
+        }
+      }
+    }
+
+    const imageUrls = data.imageUrls || []
+    if (imageUrls.length) {
+      const shouldAddImages =
+        restaurantImages.value.length === 0 ||
+        (!auto && confirm('관광정보 사진을 매장 이미지에 추가할까요?'))
+      if (shouldAddImages) {
+        // 이미지를 모두 받은 뒤 한 번의 프라이버시 편집 배치로 처리
+        // (URL마다 enqueue하면 「전체 취소」가 다음 URL에 다시 열림)
+        const files = await fetchTourImageFiles(imageUrls)
+        if (files.length) {
+          const processed = await enqueuePrivacyFiles(files)
+          processed.forEach((f) => addRestaurantImageFile(f))
+          if (processed.length) didApply = true
+        }
+      }
+    }
+
+    if (didApply) {
+      const base = '관광정보를 불러왔습니다. 내용을 확인한 뒤 수정해 주세요.'
+      tourEnrichHint.value = hoursNotes
+        ? `${base} (영업·휴무 참고: ${hoursNotes})`
+        : base
+    } else if (!auto) {
+      tourEnrichHint.value = hoursNotes
+        ? `관광정보 영업·휴무 문구를 위젯에 자동 반영하지 못했습니다. 참고: ${hoursNotes}`
+        : '관광정보는 조회되었으나, 이미 입력된 항목이 있어 변경하지 않았습니다.'
+    }
+  } catch (error) {
+    const msg = error?.data?.statusMessage || error?.message
+    tourEnrichHint.value = msg || '관광정보를 불러오지 못했습니다.'
+  } finally {
+    isLoadingTour.value = false
+  }
+}
+
+const selectTourCandidate = async (candidate) => {
+  if (!candidate?.contentId || isLoadingTour.value) return
+  await applyTourEnrichment({
+    auto: false,
+    contentId: candidate.contentId,
+    contentTypeId: candidate.contentTypeId,
+  })
 }
 
 const processImageFiles = async (files) => {
