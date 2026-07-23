@@ -84,3 +84,35 @@ export function parseParkingInfoForDisplay(str) {
     memo: parsed.memo || null,
   }
 }
+
+/**
+ * TourAPI parkingfood 원문 → 등록 폼 parkingData
+ * @returns {ReturnType<typeof createDefaultParkingData> | null}
+ */
+export function parseTourParking(raw) {
+  const text = (raw || '').trim()
+  if (!text) return null
+
+  const data = createDefaultParkingData()
+  data.hasParking = true
+  data.memo = text
+
+  if (/불가|없음|금지|어려움|좁아|곤란/.test(text) && !/가능/.test(text)) {
+    data.available = false
+    return data
+  }
+
+  if (/가능|있음|완비|제공/.test(text) || text === 'Y' || text === 'y') {
+    data.available = true
+  }
+
+  if (/발렛/.test(text)) data.type = '발렛파킹'
+  else if (/공영/.test(text)) data.type = '공영주차장'
+  else if (/건물|지하|주차타워|타워/.test(text)) data.type = '건물주차장'
+  else if (/자체|전용|매장|가게|식당\s*앞|앞마당/.test(text)) data.type = '자체주차장'
+
+  if (/무료/.test(text) && !/유료/.test(text)) data.isFree = true
+  else if (/유료|요금|원\b|시간당/.test(text)) data.isFree = false
+
+  return data
+}

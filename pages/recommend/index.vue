@@ -1370,12 +1370,9 @@ const reset = () => {
     }
 
     .spin-btn {
-      width: 100%;
-      max-width: rem(280);
       font-size: rem(16);
 
       @include tablet {
-        width: rem(200);
         max-width: none;
         font-size: rem(17);
       }

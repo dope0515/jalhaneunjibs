@@ -42,6 +42,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     openaiApiKey: process.env.OPENAI_API_KEY,
     geminiApiKey: process.env.GEMINI_API_KEY,
+    tourApiServiceKey: process.env.TOUR_API_SERVICE_KEY,
     public: {
       kakaoMapKey: process.env.KAKAO_MAP_KEY,
     }
