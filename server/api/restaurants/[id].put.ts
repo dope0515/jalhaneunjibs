@@ -71,6 +71,31 @@ export default defineEventHandler(async (event) => {
   const finalImages = [...existingImages, ...newImageUrls].slice(0, 5)
   const finalThumbnail = finalImages[0] ?? null
 
+  // 2-1. 메뉴판 이미지
+  let existingMenuBoardImages: string[] = []
+  const existingMenuBoardString = formData.get('existingMenuBoardImages')?.toString()
+  if (existingMenuBoardString) {
+    try {
+      const parsed = JSON.parse(existingMenuBoardString)
+      if (Array.isArray(parsed)) existingMenuBoardImages = parsed.filter(Boolean)
+    } catch (e) {
+      console.error('[Parser] Existing menu board images parsing failed:', e)
+    }
+  }
+
+  let newMenuBoardUrls: string[] = []
+  const newMenuBoardUrlsString = formData.get('newMenuBoardImageUrls')?.toString()
+  if (newMenuBoardUrlsString) {
+    try {
+      const parsed = JSON.parse(newMenuBoardUrlsString)
+      if (Array.isArray(parsed)) newMenuBoardUrls = parsed.filter(Boolean)
+    } catch (e) {
+      console.error('[Parser] newMenuBoardImageUrls parsing failed:', e)
+    }
+  }
+
+  const finalMenuBoardImages = [...existingMenuBoardImages, ...newMenuBoardUrls].slice(0, 5)
+
   // 3. 식당 기본 정보 업데이트
   await prisma.restaurant.update({
     where: { id },
@@ -84,6 +109,7 @@ export default defineEventHandler(async (event) => {
       keywords,
       images: finalImages,
       thumbnail: finalThumbnail,
+      menuBoardImages: finalMenuBoardImages,
     },
   })
 
@@ -120,10 +146,6 @@ export default defineEventHandler(async (event) => {
         ? parseInt(String(menu.price).replace(/[^0-9]/g, ''), 10) || null
         : null
 
-    // 메뉴 이미지: pre-upload URL 또는 기존 URL
-    const menuImageUrl = formData.get(`menuImageUrl_${menu.imageIndex}`)?.toString() || null
-    const imagePath = menuImageUrl || (menu.removeImage ? null : (menu.existingImage ?? null))
-
     if (menu.id && existingIds.has(Number(menu.id))) {
       await prisma.menu.update({
         where: { id: Number(menu.id) },
@@ -132,7 +154,6 @@ export default defineEventHandler(async (event) => {
           price,
           description: menu.description?.trim() || null,
           isRecommended: !!menu.isRecommended,
-          image: imagePath,
         },
       })
     } else if (!menu.id && menu.name?.trim()) {
@@ -143,7 +164,6 @@ export default defineEventHandler(async (event) => {
           price,
           description: menu.description?.trim() || null,
           isRecommended: !!menu.isRecommended,
-          image: imagePath,
         },
       })
     }

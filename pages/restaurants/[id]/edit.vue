@@ -4,7 +4,7 @@
 
     <!-- hidden file inputs -->
     <input ref="restaurantImgInputRef" type="file" accept="image/*" multiple style="display:none" @change="handleRestaurantImages" />
-    <input ref="menuImgInputRef" type="file" accept="image/*" style="display:none" @change="handleMenuImageUpload" />
+    <input ref="menuBoardImgInputRef" type="file" accept="image/*" multiple style="display:none" @change="handleMenuBoardImages" />
 
     <div class="inner" v-if="restaurant">
       <!-- 상단 헤더 -->
@@ -459,7 +459,42 @@
           <p v-else class="edit-empty-hint">등록된 키워드가 없습니다.</p>
         </div>
 
-        <!-- ⑤ 메뉴 목록 -->
+        <!-- ⑤ 메뉴판 -->
+        <div class="edit-card">
+          <h2 class="edit-section-title">메뉴판 <span class="edit-hint">(최대 {{ MAX_MENU_BOARD_IMAGES }}장 · 상세에서 「메뉴판 확인」으로 표시)</span></h2>
+          <div class="restaurant-img-grid">
+            <div
+              v-for="(img, i) in form.existingMenuBoardImages"
+              :key="`menu-board-existing-${i}`"
+              class="r-img-item"
+            >
+              <img :src="img" :alt="`메뉴판 ${i + 1}`" class="r-img-thumb" />
+              <button type="button" class="r-img-remove" @click="removeExistingMenuBoard(i)" aria-label="메뉴판 삭제">×</button>
+            </div>
+            <div
+              v-for="(prev, i) in form.newMenuBoardPreviews"
+              :key="`menu-board-new-${i}`"
+              class="r-img-item is-new"
+            >
+              <img :src="prev" alt="새 메뉴판 미리보기" class="r-img-thumb" />
+              <button type="button" class="r-img-remove" @click="removeNewMenuBoard(i)" aria-label="메뉴판 삭제">×</button>
+            </div>
+            <button
+              v-if="totalMenuBoardCount < MAX_MENU_BOARD_IMAGES"
+              type="button"
+              class="r-img-add"
+              @click="menuBoardImgInputRef?.click()"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M12 8v8M8 12h8"/>
+              </svg>
+              <span>메뉴판 추가<br/>({{ totalMenuBoardCount }}/{{ MAX_MENU_BOARD_IMAGES }})</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ⑥ 메뉴 목록 -->
         <div class="edit-card">
           <div class="edit-section-header">
             <h2 class="edit-section-title">메뉴 목록</h2>
@@ -473,7 +508,7 @@
 
           <div class="menu-edit-list">
             <div v-for="(menu, i) in form.menus" :key="menu._key" class="menu-edit-item">
-              <div class="menu-edit-row">
+              <div class="menu-edit-row menu-edit-row--text-only">
 
                 <!-- 추천 토글 -->
                 <button
@@ -488,32 +523,6 @@
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
                 </button>
-
-                <!-- 메뉴 이미지 -->
-                <div class="menu-img-edit" @click="triggerMenuImgInput(i)">
-                  <img
-                    v-if="menu.imagePreview || menu.image"
-                    :src="menu.imagePreview || menu.image"
-                    alt="메뉴 이미지"
-                    class="menu-img-thumb"
-                  />
-                  <div v-else class="menu-img-placeholder">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <rect x="3" y="3" width="18" height="18" rx="2"/>
-                      <circle cx="8.5" cy="8.5" r="1.5"/>
-                      <path d="m21 15-5-5L5 21"/>
-                    </svg>
-                    <span>이미지 추가</span>
-                  </div>
-                  <div v-if="menu.imagePreview || menu.image" class="menu-img-overlay"><span>변경</span></div>
-                  <button
-                    v-if="menu.imagePreview || menu.image"
-                    type="button"
-                    class="menu-img-remove"
-                    @click.stop="removeMenuImage(i)"
-                    aria-label="이미지 삭제"
-                  >×</button>
-                </div>
 
                 <!-- 텍스트 입력 -->
                 <div class="menu-edit-fields">
@@ -583,6 +592,7 @@ import { parseExternalLinks, formatExternalLinks } from '~/utils/externalLinks'
 import {
   uploadImage,
   getUploadErrorMessage,
+  MAX_MENU_BOARD_IMAGES,
 } from '~/utils/imageUpload'
 
 const { $api } = useApi()
@@ -641,6 +651,9 @@ const form = ref({
   })(),
   newImageFiles: [],                                      // 새로 선택한 File 객체들
   newImagePreviews: [],                                   // 로컬 미리보기 URL들
+  existingMenuBoardImages: [...(restaurant.value.menuBoardImages ?? [])],
+  newMenuBoardFiles: [],
+  newMenuBoardPreviews: [],
   // 메뉴
   menus: (restaurant.value.menus ?? []).map((m) => ({
     _key: m.id,
@@ -649,10 +662,6 @@ const form = ref({
     priceDisplay: m.price ? m.price.toLocaleString('ko-KR') : '',
     description: m.description ?? '',
     isRecommended: m.isRecommended,
-    image: m.image ?? null,
-    imageFile: null,
-    imagePreview: null,
-    removeImage: false,
   })),
 })
 
@@ -748,13 +757,16 @@ const totalImageCount = computed(
   () => form.value.existingImages.length + form.value.newImagePreviews.length
 )
 
+const totalMenuBoardCount = computed(
+  () => form.value.existingMenuBoardImages.length + form.value.newMenuBoardPreviews.length
+)
+
 const keywordInput = ref('')
 const keywordComposing = ref(false)
 const isSubmitting = ref(false)
 const restaurantImgInputRef = ref(null)
-const menuImgInputRef = ref(null)
+const menuBoardImgInputRef = ref(null)
 let _menuKey = Date.now()
-let _currentMenuImgIndex = -1
 
 // ── 매장 이미지 ───────────────────────────────────────────────────
 const handleRestaurantImages = async (e) => {
@@ -790,6 +802,32 @@ const setAsMainImage = (type, index) => {
   }
 }
 
+// ── 메뉴판 이미지 ─────────────────────────────────────────────────
+const handleMenuBoardImages = async (e) => {
+  const files = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith('image/'))
+  const remaining = MAX_MENU_BOARD_IMAGES - totalMenuBoardCount.value
+  const filesToAdd = files.slice(0, remaining)
+
+  if (files.length > remaining) {
+    alert(`메뉴판 이미지는 최대 ${MAX_MENU_BOARD_IMAGES}장까지 등록할 수 있습니다.`)
+  }
+
+  const processedFiles = await enqueuePrivacyFiles(filesToAdd)
+  for (const processed of processedFiles) {
+    form.value.newMenuBoardFiles.push(processed)
+    const reader = new FileReader()
+    reader.onload = (ev) => form.value.newMenuBoardPreviews.push(ev.target.result)
+    reader.readAsDataURL(processed)
+  }
+  e.target.value = ''
+}
+
+const removeExistingMenuBoard = (i) => form.value.existingMenuBoardImages.splice(i, 1)
+const removeNewMenuBoard = (i) => {
+  form.value.newMenuBoardFiles.splice(i, 1)
+  form.value.newMenuBoardPreviews.splice(i, 1)
+}
+
 // ── 키워드 ────────────────────────────────────────────────────────
 const addKeyword = () => {
   const tag = keywordInput.value.trim().replace(/^#/, '')
@@ -809,8 +847,11 @@ const removeKeyword = (i) => form.value.keywords.splice(i, 1)
 const addMenu = () => {
   form.value.menus.push({
     _key: ++_menuKey,
-    id: null, name: '', priceDisplay: '', description: '',
-    isRecommended: false, image: null, imageFile: null, imagePreview: null, removeImage: false,
+    id: null,
+    name: '',
+    priceDisplay: '',
+    description: '',
+    isRecommended: false,
   })
 }
 const removeMenu = (i) => form.value.menus.splice(i, 1)
@@ -818,33 +859,6 @@ const removeMenu = (i) => form.value.menus.splice(i, 1)
 const formatMenuPrice = (e, menu) => {
   const raw = e.target.value.replace(/[^0-9]/g, '')
   menu.priceDisplay = raw ? Number(raw).toLocaleString('ko-KR') : ''
-}
-
-// ── 메뉴 이미지 ───────────────────────────────────────────────────
-const triggerMenuImgInput = (index) => {
-  _currentMenuImgIndex = index
-  menuImgInputRef.value.value = ''
-  menuImgInputRef.value.click()
-}
-
-const handleMenuImageUpload = (e) => {
-  const file = e.target.files?.[0]
-  if (!file || _currentMenuImgIndex === -1) return
-  const menu = form.value.menus[_currentMenuImgIndex]
-  menu.imageFile = file
-  menu.removeImage = false
-  const reader = new FileReader()
-  reader.onload = (ev) => { menu.imagePreview = ev.target.result }
-  reader.readAsDataURL(file)
-  _currentMenuImgIndex = -1
-}
-
-const removeMenuImage = (i) => {
-  const menu = form.value.menus[i]
-  menu.imageFile = null
-  menu.imagePreview = null
-  menu.removeImage = true
-  menu.image = null
 }
 
 // ── 저장 ──────────────────────────────────────────────────────────
@@ -857,7 +871,6 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
-    // ── 1. 신규 매장 이미지 순차 업로드 ─────────────────────────────
     const newRestaurantImageUrls = []
     const totalNew = form.value.newImageFiles.length
     for (let i = 0; i < totalNew; i++) {
@@ -865,16 +878,13 @@ const handleSubmit = async () => {
       newRestaurantImageUrls.push(url)
     }
 
-    // ── 2. 신규 메뉴 이미지 순차 업로드 ─────────────────────────────
-    const menuImageUrls = {}
-    for (let i = 0; i < form.value.menus.length; i++) {
-      const menu = form.value.menus[i]
-      if (!menu.imageFile) continue
-      const url = await uploadImage(menu.imageFile, 'menus', $api)
-      menuImageUrls[i] = url
+    const newMenuBoardImageUrls = []
+    const totalBoard = form.value.newMenuBoardFiles.length
+    for (let i = 0; i < totalBoard; i++) {
+      const url = await uploadImage(form.value.newMenuBoardFiles[i], 'menu-boards', $api)
+      newMenuBoardImageUrls.push(url)
     }
 
-    // ── 3. 최종 수정 요청 (URL만 전송) ──────────────────────────────
     const fd = new FormData()
     fd.append('description', form.value.description)
     fd.append('phoneNumber', form.value.phoneNumber)
@@ -886,21 +896,17 @@ const handleSubmit = async () => {
 
     fd.append('existingImages', JSON.stringify(form.value.existingImages))
     fd.append('newRestaurantImageUrls', JSON.stringify(newRestaurantImageUrls))
+    fd.append('existingMenuBoardImages', JSON.stringify(form.value.existingMenuBoardImages))
+    fd.append('newMenuBoardImageUrls', JSON.stringify(newMenuBoardImageUrls))
 
-    const menusPayload = form.value.menus.map((m, idx) => ({
+    const menusPayload = form.value.menus.map((m) => ({
       id: m.id ?? undefined,
       name: m.name,
       price: m.priceDisplay ? m.priceDisplay.replace(/,/g, '') : null,
       description: m.description,
       isRecommended: m.isRecommended,
-      existingImage: m.removeImage ? null : (m.image ?? null),
-      imageIndex: idx,
     }))
     fd.append('menus', JSON.stringify(menusPayload))
-
-    Object.entries(menuImageUrls).forEach(([index, url]) => {
-      fd.append(`menuImageUrl_${index}`, url)
-    })
 
     await $api(`/restaurants/${route.params.id}`, { method: 'PUT', body: fd })
     navigateTo(`/restaurants/${route.params.id}`)

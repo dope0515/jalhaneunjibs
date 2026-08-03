@@ -927,6 +927,13 @@
       }
     }
 
+    &.menu-item-card--text-only {
+      .menu-item-info {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
     .menu-item-image-box {
       flex-shrink: 0;
       align-self: flex-start;
@@ -1633,6 +1640,17 @@
       flex-wrap: wrap;
       flex-direction: row;
       gap: rem(12);
+    }
+
+    &.menu-edit-row--text-only {
+      @include tablet {
+        align-items: center;
+      }
+
+      .menu-edit-fields {
+        flex: 1;
+        min-width: 0;
+      }
     }
   }
 

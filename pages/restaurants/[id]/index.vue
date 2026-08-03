@@ -81,37 +81,36 @@
 
           <!-- 메뉴 섹션 -->
           <div class="menu-section card-box">
-            <h2 class="section-title">메뉴 안내</h2>
-            <div class="menu-list">
+            <div class="menu-section-header">
+              <h2 class="section-title">메뉴 안내</h2>
               <button
-                v-for="menu in sortedMenus"
-                :key="menu.id"
+                v-if="menuBoardImages.length > 0"
                 type="button"
-                class="menu-card"
-                :class="{ 'has-image': !!menu.image }"
-                @click="menu.image ? openLightbox(menu) : undefined"
+                class="menu-board-btn"
+                @click="openGenericLightbox(menuBoardImages, 0)"
               >
-                <div class="menu-img-wrap">
-                  <img
-                    :src="menu.image || '/assets/images/common/default.jpg'"
-                    :alt="menu.name"
-                    class="menu-img"
-                  />
-                  <!-- 이미지 위에 힌트 오버레이 -->
-                  <span v-if="menu.image" class="menu-img-hint">
-                    <img src="/assets/images/icon/ic_photo.svg" width="13" height="13" alt="" aria-hidden="true" />
-                    사진 보기
-                  </span>
-                </div>
-                <div class="menu-info">
-                  <!-- 추천 뱃지를 텍스트 영역 안, 이름 위로 이동 -->
-                  <div v-if="menu.isRecommended" class="recommend-badge">추천</div>
-                  <span class="menu-name">{{ menu.name }}</span>
-                  <span class="menu-price">{{ menu.price ? menu.price.toLocaleString() + '원' : '변동' }}</span>
-                  <p class="menu-desc">{{ menu.description }}</p>
-                </div>
+                메뉴판 확인
               </button>
             </div>
+            <ul v-if="sortedMenus.length" class="menu-price-list">
+              <li
+                v-for="menu in sortedMenus"
+                :key="menu.id"
+                class="menu-price-row"
+                :class="{ 'is-recommended': menu.isRecommended }"
+              >
+                <div class="menu-price-main">
+                  <span class="menu-name">
+                    <span v-if="menu.isRecommended" class="recommend-dot" aria-label="추천">★</span>
+                    {{ menu.name }}
+                  </span>
+                  <span class="menu-dots" aria-hidden="true"></span>
+                  <span class="menu-price">{{ menu.price ? menu.price.toLocaleString() + '원' : '변동' }}</span>
+                </div>
+                <p v-if="menu.description" class="menu-desc">{{ menu.description }}</p>
+              </li>
+            </ul>
+            <p v-else class="menu-empty">등록된 메뉴가 없습니다.</p>
           </div>
 
           <!-- 리뷰 섹션 -->
@@ -471,55 +470,6 @@
     :restaurant-id="restaurant.id"
     @changed="onFavoriteChanged"
   />
-  <!-- 메뉴 이미지 라이트박스 -->
-  <Teleport to="body">
-    <Transition name="lightbox-fade">
-      <div v-if="lightboxOpen" class="menu-lightbox" @click.self="closeLightbox" role="dialog" aria-modal="true">
-
-        <!-- 닫기 버튼 -->
-        <button class="lightbox-close" @click="closeLightbox" aria-label="닫기">
-          <img src="/assets/images/icon/ic_close.svg" width="20" height="20" alt="닫기" />
-        </button>
-
-        <!-- Swiper 슬라이더 -->
-        <Swiper
-          :modules="swiperModules"
-          :initial-slide="lightboxIndex"
-          :loop="imageMenus.length > 1"
-          :keyboard="{ enabled: true }"
-          :navigation="{ prevEl: '.lightbox-prev', nextEl: '.lightbox-next' }"
-          class="lightbox-swiper"
-          @slide-change="onSlideChange"
-        >
-          <SwiperSlide v-for="menu in imageMenus" :key="menu.id">
-            <div class="slide-inner">
-              <img :src="menu.image" :alt="menu.name" class="lightbox-img" />
-              <div class="lightbox-info">
-                <span class="lightbox-name">{{ menu.name }}</span>
-                <span v-if="menu.price" class="lightbox-price">{{ menu.price.toLocaleString() }}원</span>
-                <span v-if="menu.isRecommended" class="lightbox-badge">추천</span>
-              </div>
-            </div>
-          </SwiperSlide>
-        </Swiper>
-
-        <!-- 카운터 -->
-        <p v-if="imageMenus.length > 1" class="lightbox-counter">
-          {{ currentSlideIndex + 1 }} / {{ imageMenus.length }}
-        </p>
-
-        <!-- 이전/다음 버튼 -->
-        <button v-if="imageMenus.length > 1" class="lightbox-nav lightbox-prev" aria-label="이전">
-          <img src="/assets/images/icon/ic_nav_prev.svg" width="22" height="22" alt="이전" />
-        </button>
-        <button v-if="imageMenus.length > 1" class="lightbox-nav lightbox-next" aria-label="다음">
-          <img src="/assets/images/icon/ic_nav_next.svg" width="22" height="22" alt="다음" />
-        </button>
-
-      </div>
-    </Transition>
-  </Teleport>
-
   <!-- 일반 이미지 라이트박스 -->
   <Teleport to="body">
     <Transition name="lightbox-fade">
@@ -622,51 +572,21 @@ if (!restaurant.value) {
   throw createError({ statusCode: 404, message: '식당 정보를 찾을 수 없습니다.' })
 }
 
-// 라이트박스 및 메인 갤러리
+// 라이트박스 및 메뉴
 const swiperModules = [Navigation, Pagination, Keyboard]
-const imageMenus = computed(() => restaurant.value?.menus.filter((m) => !!m.image) ?? [])
+
+const menuBoardImages = computed(() => restaurant.value?.menuBoardImages ?? [])
 
 const sortedMenus = computed(() => {
   const menus = restaurant.value?.menus ?? []
-  return [...menus].sort((a, b) => {
-    const rank = (m) => {
-      if (m.isRecommended) return 0
-      if (m.image) return 1
-      return 2
-    }
-    return rank(a) - rank(b)
-  })
+  return [...menus].sort((a, b) => Number(b.isRecommended) - Number(a.isRecommended))
 })
-const lightboxOpen = ref(false)
-const lightboxIndex = ref(0)
-const currentSlideIndex = ref(0)
-
-const openLightbox = (menu) => {
-  const idx = imageMenus.value.findIndex((m) => m.id === menu.id)
-  if (idx === -1) return
-  lightboxIndex.value = idx
-  currentSlideIndex.value = idx
-  lightboxOpen.value = true
-  document.body.style.overflow = 'hidden'
-}
-
-const closeLightbox = () => {
-  lightboxOpen.value = false
-  document.body.style.overflow = ''
-}
-
-const onSlideChange = (swiper) => {
-  currentSlideIndex.value = swiper.realIndex
-}
 
 const handleKeydown = (e) => {
-  if (e.key === 'Escape') {
-    if (lightboxOpen.value) closeLightbox()
-    if (genericLightboxOpen.value) closeGenericLightbox()
-  }
+  if (e.key === 'Escape' && genericLightboxOpen.value) closeGenericLightbox()
 }
 
-// ── 일반 이미지 라이트박스 ───────────────────────────────────────────────
+// ── 이미지 라이트박스 (매장 / 리뷰 / 메뉴판) ───────────────────────────────
 const genericLightboxOpen = ref(false)
 const genericLightboxImages = ref([])
 const genericLightboxIndex = ref(0)
@@ -682,9 +602,7 @@ const openGenericLightbox = (images, index = 0) => {
 
 const closeGenericLightbox = () => {
   genericLightboxOpen.value = false
-  if (!lightboxOpen.value) {
-    document.body.style.overflow = ''
-  }
+  document.body.style.overflow = ''
 }
 
 const onGenericSlideChange = (swiper) => {

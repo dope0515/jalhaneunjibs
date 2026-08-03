@@ -821,120 +821,91 @@
 
   // 메뉴 섹션
   .menu-section {
-    .menu-list {
+    .menu-section-header {
       display: flex;
-      flex-wrap: wrap;
-      gap: rem(20);
+      align-items: center;
+      justify-content: space-between;
+      gap: rem(12);
+      margin-bottom: rem(16);
+
+      .section-title {
+        margin-bottom: 0;
+      }
     }
 
-    .menu-card {
-      position: relative;
-      display: flex;
-      align-items: flex-start;
-      gap: rem(16);
-      padding: rem(16);
-      border: 1px solid $gray-e4;
-      border-radius: rem(16);
+    .menu-board-btn {
+      flex-shrink: 0;
+      padding: rem(8) rem(14);
+      border: 1px solid $primary-color;
+      border-radius: rem(999);
       background: $white;
-      text-align: left;
-      cursor: default;
-      transition: all 0.2s;
-      width: 100%;
+      color: $primary-color;
+      @include font(13, 1.2, 600);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
 
       &:hover {
-        border-color: $primary-color;
-        transform: translateY(rem(-2));
+        background: $primary-color;
+        color: $white;
+      }
+    }
+
+    .menu-price-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: rem(14);
+    }
+
+    .menu-price-row {
+      .menu-price-main {
+        display: flex;
+        align-items: baseline;
+        gap: rem(8);
+        width: 100%;
       }
 
-      &.has-image {
-        cursor: pointer;
-
-        .menu-img {
-          transition: transform 0.3s;
-        }
-
-        &:hover .menu-img {
-          transform: scale(1.06);
-        }
-      }
-
-      .menu-img-wrap {
-        position: relative;
+      .menu-name {
         flex-shrink: 0;
-        width: rem(80);
-        height: rem(80);
-        border-radius: rem(12);
-        overflow: hidden;
-        background: $bg-color;
+        max-width: 55%;
+        @include font(15, 1.4, 600, $black);
+
+        .recommend-dot {
+          color: #d97706;
+          margin-right: rem(4);
+          @include font(12, 1, 700);
+        }
       }
 
-      .menu-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      .menu-img-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: $gray-e4;
-      }
-
-      .menu-info {
+      .menu-dots {
         flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-
-        .recommend-badge {
-          align-self: flex-start;
-          margin-bottom: rem(6);
-          background: #fef3c7;
-          color: #92400e;
-          padding: rem(2) rem(8);
-          border-radius: rem(4);
-          @include font(11, 1, 700);
-        }
-
-        .menu-name {
-          @include font(16, 1.4, 700, $black);
-        }
-
-        .menu-price {
-          @include font(15, 1.4, 600, $primary-color);
-          margin-top: rem(4);
-        }
-
-        .menu-desc {
-          @include font(13, 1.4, 400, $gray-78);
-          margin-top: rem(4);
-        }
+        min-width: rem(24);
+        border-bottom: 1px dotted $gray-e4;
+        transform: translateY(rem(-4));
       }
 
-      .menu-img-hint {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: rem(4);
-        padding: rem(6) 0;
-        background: rgba(0, 0, 0, 0.45);
-        border-radius: 0 0 rem(12) rem(12);
-        @include font(11, 1, 600, $white);
-        opacity: 0;
-        transition: opacity 0.2s;
+      .menu-price {
+        flex-shrink: 0;
+        @include font(15, 1.4, 600, $primary-color);
+        font-variant-numeric: tabular-nums;
       }
 
-      &.has-image:hover .menu-img-hint {
-        opacity: 1;
+      .menu-desc {
+        margin: rem(4) 0 0;
+        padding-left: rem(2);
+        @include font(13, 1.4, 400, $gray-78);
       }
+
+      &.is-recommended .menu-name {
+        color: $black;
+      }
+    }
+
+    .menu-empty {
+      margin: 0;
+      @include font(14, 1.4, 400, $gray-78);
     }
   }
 
