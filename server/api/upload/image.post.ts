@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: '이미지 파일이 필요합니다.' })
   }
 
-  const allowedFolders = ['restaurants', 'menus', 'reviews']
+  const allowedFolders = ['restaurants', 'menus', 'menu-boards', 'reviews']
   if (!allowedFolders.includes(folder)) {
     throw createError({ statusCode: 400, statusMessage: '허용되지 않은 폴더입니다.' })
   }

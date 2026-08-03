@@ -733,9 +733,10 @@
 
                 <div class="form-item">
                   <label for="menu-board-upload" class="form-item-label">
-                    메뉴판 분석
+                    메뉴판
                     <span class="badge-ai">AI</span>
                   </label>
+                  <p class="form-field-hint">메뉴판 사진을 올리면 저장되고, AI로 메뉴 목록을 채울 수 있습니다.</p>
                   <input
                     ref="menuBoardInputRef"
                     type="file"
@@ -808,34 +809,10 @@
                       <div
                         v-for="(item, index) in analyzedMenuItems"
                         :key="index"
-                        class="menu-item-card"
+                        class="menu-item-card menu-item-card--text-only"
                         :class="{ 'is-recommended': item.isRecommended }"
                         role="listitem"
-                        tabindex="0"
-                        @paste="(e) => handleMenuItemPaste(e, index)"
                       >
-                        <button 
-                          type="button"
-                          class="menu-item-image-box"
-                          :aria-label="`${index + 1}번째 메뉴 이미지 업로드`"
-                          :class="{ 'has-image': item.imagePreview }"
-                          @click="triggerMenuItemImageInput(index)"
-                        >
-                          <img 
-                            :src="item.imagePreview || '/assets/images/common/default.jpg'" 
-                            :alt="`${item.name || (index + 1) + '번째 메뉴'} 이미지`"
-                            @error="(e) => e.target.src = '/assets/images/common/default.jpg'"
-                          />
-                          <span 
-                            v-if="item.imagePreview" 
-                            role="button"
-                            class="menu-item-image-remove"
-                            aria-label="메뉴 이미지 삭제"
-                            @click.stop="removeMenuItemImage(index)"
-                          >
-                            <img src="/assets/images/icon/ic_close.svg" width="12" height="12" alt="삭제" />
-                          </span>
-                        </button>
                         <div class="menu-item-info">
                           <input 
                             v-model="item.name" 
@@ -886,23 +863,13 @@
                         </div>
                       </div>
                     </div>
-                    
-                    <input
-                      ref="menuItemImageInputRef"
-                      type="file"
-                      id="menu-item-image-upload"
-                      name="menu-item-image-upload"
-                      accept="image/*"
-                      class="sr-only"
-                      @change="handleMenuItemImageUpload"
-                    />
 
                     <AppButton
                       type="button"
                       variant="outline"
                       size="md"
                       style="width: 100%; margin-top: 10px;"
-                      @click="analyzedMenuItems.push({ name: '', price: '', description: '', isRecommended: false, imageFile: null, imagePreview: null })"
+                      @click="analyzedMenuItems.push({ name: '', price: '', description: '', isRecommended: false })"
                     >
                       + 메뉴 직접 추가
                     </AppButton>
@@ -1323,8 +1290,6 @@ const menuBoardInputRef = ref(null)
 const isDragOverMenu = ref(false)
 const isAnalyzing = ref(false)
 
-const menuItemImageInputRef = ref(null)
-const currentEditingMenuIndex = ref(-1)
 const isLoadingTour = ref(false)
 const tourEnrichHint = ref('')
 const tourCandidates = ref([])
@@ -1378,9 +1343,10 @@ const loadDraft = () => {
     if (confirm('작성 중이던 내용이 있습니다. 불러올까요?')) {
       form.value = { ...form.value, ...draft.form }
       analyzedMenuItems.value = (draft.menuItems || []).map(item => ({
-        ...item,
-        imageFile: null,
-        imagePreview: null
+        name: item.name || '',
+        price: item.price || '',
+        description: item.description || '',
+        isRecommended: !!item.isRecommended,
       }))
       if (!draft.form?.placeId && draft.form?.address?.trim()) {
         isManualRegistration.value = true
@@ -1734,8 +1700,6 @@ const mapTourMenuItems = (items) =>
     price: item.price ? String(item.price).replace(/,/g, '') : '',
     description: item.description || '',
     isRecommended: false,
-    imageFile: null,
-    imagePreview: null,
   }))
 
 const fetchTourImageFiles = async (imageUrls) => {
@@ -2029,41 +1993,12 @@ const analyzeMenuBoard = async () => {
       ...item,
       price: item.price ? Number(item.price.replace(/[^0-9]/g, '')).toLocaleString() : '',
       isRecommended: false,
-      imageFile: null,
-      imagePreview: null
     }))
   } catch (e) {
     alert(e.data?.statusMessage || '메뉴 분석 중 오류가 발생했습니다.')
   } finally {
     isAnalyzing.value = false
   }
-}
-
-const triggerMenuItemImageInput = (index) => {
-  currentEditingMenuIndex.value = index
-  menuItemImageInputRef.value?.click()
-}
-
-const handleMenuItemImageUpload = (e) => {
-  const file = e.target.files[0]
-  if (!file || !file.type.startsWith('image/') || currentEditingMenuIndex.value === -1) return
-  
-  const index = currentEditingMenuIndex.value
-  analyzedMenuItems.value[index].imageFile = file
-  
-  const reader = new FileReader()
-  reader.onload = (ev) => {
-    analyzedMenuItems.value[index].imagePreview = ev.target.result
-  }
-  reader.readAsDataURL(file)
-  
-  e.target.value = ''
-  currentEditingMenuIndex.value = -1
-}
-
-const removeMenuItemImage = (index) => {
-  analyzedMenuItems.value[index].imageFile = null
-  analyzedMenuItems.value[index].imagePreview = null
 }
 
 // ── 클립보드 붙여넣기 핸들러 ──────────────────────────────────────
@@ -2092,21 +2027,6 @@ const handleMenuBoardPaste = (e) => {
   if (imageFiles.length > 0) {
     processMenuBoardFiles(imageFiles)
   }
-}
-
-const handleMenuItemPaste = (e, index) => {
-  const imageFiles = getImageFilesFromClipboard(e)
-  // 텍스트 붙여넣기는 기본 동작 유지 (입력창으로 전달)
-  if (imageFiles.length === 0) return
-
-  e.preventDefault()
-  const file = imageFiles[0]
-  analyzedMenuItems.value[index].imageFile = file
-  const reader = new FileReader()
-  reader.onload = (ev) => {
-    analyzedMenuItems.value[index].imagePreview = ev.target.result
-  }
-  reader.readAsDataURL(file)
 }
 
 const handlePriceInput = (e, item) => {
@@ -2198,17 +2118,13 @@ const handleSubmit = async () => {
       restaurantImageUrls.push(url)
     }
 
-    // ── 2. 메뉴 이미지 순차 업로드 ──────────────────────────────────
-    const menuImageUrls = {}
-    const itemsWithImage = analyzedMenuItems.value.filter(item => item.imageFile)
-    let menuUploadCount = 0
-    for (let i = 0; i < analyzedMenuItems.value.length; i++) {
-      const item = analyzedMenuItems.value[i]
-      if (!item.imageFile) continue
-      menuUploadCount++
-      submissionMessage.value = `메뉴 이미지 업로드 중... (${menuUploadCount}/${itemsWithImage.length})`
-      const url = await uploadImage(item.imageFile, 'menus', $api)
-      menuImageUrls[i] = url
+    // ── 2. 메뉴판 이미지 순차 업로드 ────────────────────────────────
+    const menuBoardImageUrls = []
+    const totalMenuBoard = menuBoardFiles.value.length
+    for (let i = 0; i < totalMenuBoard; i++) {
+      submissionMessage.value = `메뉴판 이미지 업로드 중... (${i + 1}/${totalMenuBoard})`
+      const url = await uploadImage(menuBoardFiles.value[i], 'menu-boards', $api)
+      menuBoardImageUrls.push(url)
     }
 
     // ── 3. 최종 등록 요청 (URL만 전송, 바이너리 없음) ───────────────
@@ -2225,18 +2141,15 @@ const handleSubmit = async () => {
     })
 
     formData.append('restaurantImageUrls', JSON.stringify(restaurantImageUrls))
+    formData.append('menuBoardImageUrls', JSON.stringify(menuBoardImageUrls))
 
-    const itemsToSubmit = analyzedMenuItems.value.map((item, index) => ({
+    const itemsToSubmit = analyzedMenuItems.value.map((item) => ({
       name: item.name,
       price: item.price ? item.price.replace(/,/g, '') : '',
       description: item.description,
       isRecommended: item.isRecommended,
     }))
     formData.append('menuItems', JSON.stringify(itemsToSubmit))
-
-    Object.entries(menuImageUrls).forEach(([index, url]) => {
-      formData.append(`menuImageUrl_${index}`, url)
-    })
 
     const data = await $api('/restaurants/register', {
       method: 'POST',

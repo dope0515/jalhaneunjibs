@@ -48,6 +48,17 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    const menuBoardImageUrlsString = formData.get('menuBoardImageUrls')?.toString()
+    let menuBoardImages: string[] = []
+    if (menuBoardImageUrlsString) {
+      try {
+        const parsed = JSON.parse(menuBoardImageUrlsString)
+        if (Array.isArray(parsed)) menuBoardImages = parsed.filter(Boolean)
+      } catch (e) {
+        console.error('[Parser] menuBoardImageUrls parsing failed:', e)
+      }
+    }
+
     const thumbnailPath = uploadedImages[0] ?? null
 
     if (!name || !address) {
@@ -68,19 +79,17 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // 메뉴 아이템 파싱 — 이미지도 pre-upload URL로 수신
+    // 메뉴 아이템 파싱 (텍스트만 — 항목별 이미지는 사용하지 않음)
     let menuItems: any[] = []
     if (menuItemsString) {
       try {
         const parsed = JSON.parse(menuItemsString)
         if (Array.isArray(parsed)) {
-          menuItems = parsed.map((item: any, index: number) => ({
+          menuItems = parsed.map((item: any) => ({
             name: item.name?.trim() || '',
             price: item.price ? parseInt(item.price.toString().replace(/[^0-9]/g, ''), 10) : null,
             description: item.description?.trim() || null,
             isRecommended: item.isRecommended ?? false,
-            // pre-upload된 URL 사용
-            image: formData.get(`menuImageUrl_${index}`)?.toString() || null,
           }))
         }
       } catch (e) {
@@ -105,6 +114,7 @@ export default defineEventHandler(async (event) => {
         description,
         thumbnail: thumbnailPath,
         images: uploadedImages,
+        menuBoardImages,
         foodCategory: category,
         status,
         address: address || '주소 미상',

@@ -79,6 +79,7 @@ model Restaurant {
   description      String?  // 식당 한줄 소개 또는 상세 설명
   thumbnail        String?  
   images           String[] @default([])
+  menuBoardImages  String[] @default([]) // 메뉴판 사진 (항목별 메뉴 이미지와 별도)
   foodCategory     String? 
   status           RestaurantStatus @default(ACTIVE)
   
