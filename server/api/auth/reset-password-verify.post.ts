@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { email, code, newPassword } = body
 
-    if (!email || !code || !newPassword) {
+    if (!email || typeof code !== 'string' || !/^\d{6}$/.test(code.trim()) || !newPassword) {
       throw createError({
         statusCode: 400,
         statusMessage: '이메일, 인증 코드, 새로운 비밀번호를 모두 입력해주세요.',

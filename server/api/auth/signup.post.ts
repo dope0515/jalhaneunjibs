@@ -1,15 +1,23 @@
+import { createHash } from 'node:crypto'
 import bcrypt from 'bcrypt'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { email, password: rawPassword, nickname } = body
-  const password = rawPassword?.trim()
+  const { email, password: rawPassword, nickname, signupToken } = body
+  const password = typeof rawPassword === 'string' ? rawPassword.trim() : ''
 
-  if (!email || !password) {
+  if (typeof email !== 'string' || !email || !password || (nickname != null && typeof nickname !== 'string')) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Email and password are required',
     })
+  }
+
+  if (typeof password !== 'string' || !/^(?=.*[A-Za-z])(?=.*\d).{6,}$/.test(password)) {
+    throw createError({ statusCode: 400, statusMessage: '비밀번호는 영문과 숫자를 포함하여 6자리 이상이어야 합니다.' })
+  }
+  if (typeof signupToken !== 'string' || !/^[a-f0-9]{64}$/.test(signupToken)) {
+    throw createError({ statusCode: 400, statusMessage: '이메일 인증을 완료해주세요.' })
   }
 
   // 1. 닉네임 중복 체크
@@ -28,13 +36,20 @@ export default defineEventHandler(async (event) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        nickname: nickname?.trim(),
-        emailVerified: true,
-      },
+    const user = await prisma.$transaction(async (tx) => {
+      const consumed = await tx.verificationToken.deleteMany({
+        where: {
+          email,
+          code: `proof:${createHash('sha256').update(signupToken).digest('hex')}`,
+          expiresAt: { gt: new Date() },
+        },
+      })
+      if (consumed.count !== 1) {
+        throw createError({ statusCode: 400, statusMessage: '이메일 인증이 만료되었거나 유효하지 않습니다.' })
+      }
+      return tx.user.create({
+        data: { email, password: hashedPassword, nickname: nickname?.trim(), emailVerified: true },
+      })
     })
 
     return {
@@ -46,6 +61,7 @@ export default defineEventHandler(async (event) => {
       }
     }
   } catch (error: any) {
+    if (error.statusCode) throw error
     console.error('[Signup Error Details]:', {
       code: error.code,
       message: error.message,

@@ -41,7 +41,7 @@ const createMenuAnalysisCompletion = (groq: Groq, dataUrl: string) =>
       },
     ],
     temperature: 0.1,
-    max_completion_tokens: 4096,
+    max_completion_tokens: 768,
     reasoning_effort: 'none',
     reasoning_format: 'hidden',
     response_format: { type: 'json_object' },
@@ -59,8 +59,10 @@ const parseMenuItems = (content: string) => {
 }
 
 export default defineEventHandler(async (event) => {
-  // Groq API 키 직접 사용 (보안을 위해 실제 운영 환경에서는 .env 권장)
-  const groqApiKey = 'REMOVED_GROQ_KEY'
+  const groqApiKey = process.env.GROQ_API_KEY?.trim()
+  if (!groqApiKey) {
+    throw createError({ statusCode: 503, statusMessage: '메뉴 분석 서비스가 설정되지 않았습니다.' })
+  }
 
   const formData = await readFormData(event)
   const imageFiles = formData.getAll('menuBoard') as File[]

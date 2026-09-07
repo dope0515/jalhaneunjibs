@@ -1,3 +1,4 @@
+import { randomInt, randomBytes, createHash } from 'node:crypto'
 import { Router, Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -36,7 +37,7 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     const accessToken = jwt.sign({ userId: user.id }, process.env.ACCESS_TOKEN_SECRET!, {
-      expiresIn: '7d',
+      expiresIn: '1h',
     })
 
     const refreshToken = jwt.sign({ userId: user.id }, process.env.REFRESH_TOKEN_SECRET!, {
@@ -75,11 +76,16 @@ router.post('/login', async (req: Request, res: Response) => {
 // ─── POST /api/auth/signup ─────────────────────────────────────────────────────
 router.post('/signup', async (req: Request, res: Response) => {
   try {
-    const { email, password: rawPassword, nickname } = req.body
-    const password = rawPassword?.trim()
+    const { email, password: rawPassword, nickname, signupToken } = req.body
+    const password = typeof rawPassword === 'string' ? rawPassword.trim() : ''
 
-    if (!email || !password) {
+    if (typeof email !== 'string' || !email || !password || (nickname != null && typeof nickname !== 'string')) {
       res.status(400).json({ message: '이메일, 비밀번호는 필수입니다.' })
+      return
+    }
+
+    if (!/^(?=.*[A-Za-z])(?=.*\d).{6,}$/.test(password) || typeof signupToken !== 'string' || !/^[a-f0-9]{64}$/.test(signupToken)) {
+      res.status(400).json({ message: '비밀번호 조건을 확인하고 이메일 인증을 완료해주세요.' })
       return
     }
 
@@ -96,8 +102,12 @@ router.post('/signup', async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const user = await prisma.user.create({
-      data: { email, password: hashedPassword, nickname: nickname?.trim(), emailVerified: true },
+    const user = await prisma.$transaction(async (tx) => {
+      const consumed = await tx.verificationToken.deleteMany({
+        where: { email, code: `proof:${createHash('sha256').update(signupToken).digest('hex')}`, expiresAt: { gt: new Date() } },
+      })
+      if (consumed.count !== 1) throw Object.assign(new Error('이메일 인증이 만료되었거나 유효하지 않습니다.'), { status: 400 })
+      return tx.user.create({ data: { email, password: hashedPassword, nickname: nickname?.trim(), emailVerified: true } })
     })
 
     res.status(201).json({
@@ -105,6 +115,7 @@ router.post('/signup', async (req: Request, res: Response) => {
       user: { id: user.id, email: user.email, nickname: user.nickname },
     })
   } catch (err: any) {
+    if (err.status === 400) { res.status(400).json({ message: err.message }); return }
     if (err.code === 'P2002') {
       const isNickname = err.meta?.target?.includes('nickname')
       res.status(400).json({ message: isNickname ? '이미 사용 중인 닉네임입니다.' : '이미 사용 중인 이메일입니다.' })
@@ -138,10 +149,10 @@ router.post('/verify-send', async (req: Request, res: Response) => {
       return
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const code = randomInt(100000, 1000000).toString()
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
 
-    await prisma.verificationToken.create({ data: { email, code, expiresAt } })
+    await prisma.verificationToken.create({ data: { email, code: `signup:${code}`, expiresAt } })
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -181,7 +192,7 @@ router.post('/verify-code', async (req: Request, res: Response) => {
   }
 
   const token = await prisma.verificationToken.findFirst({
-    where: { email, code, expiresAt: { gt: new Date() } },
+    where: { email, code: `signup:${code}`, expiresAt: { gt: new Date() } },
   })
 
   if (!token) {
@@ -189,9 +200,13 @@ router.post('/verify-code', async (req: Request, res: Response) => {
     return
   }
 
-  await prisma.verificationToken.delete({ where: { id: token.id } })
-
-  res.json({ success: true, message: '이메일 인증이 완료되었습니다.' })
+  const signupToken = randomBytes(32).toString('hex')
+  const consumed = await prisma.verificationToken.updateMany({
+    where: { id: token.id, code: `signup:${code}`, expiresAt: { gt: new Date() } },
+    data: { code: `proof:${createHash('sha256').update(signupToken).digest('hex')}`, expiresAt: new Date(Date.now() + 5 * 60 * 1000) },
+  })
+  if (consumed.count !== 1) { res.status(400).json({ message: '이미 사용된 인증 코드입니다.' }); return }
+  res.json({ success: true, signupToken, message: '이메일 인증이 완료되었습니다.' })
 })
 
 // ─── POST /api/auth/reset-password-send ─────────────────────────────────────────
@@ -213,7 +228,7 @@ router.post('/reset-password-send', async (req: Request, res: Response) => {
       return
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const code = randomInt(100000, 1000000).toString()
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
 
     await prisma.verificationToken.create({
@@ -265,7 +280,7 @@ router.post('/reset-password-verify', async (req: Request, res: Response) => {
   try {
     const { email, code, newPassword } = req.body
 
-    if (!email || !code || !newPassword) {
+    if (!email || typeof code !== 'string' || !/^\d{6}$/.test(code.trim()) || !newPassword) {
       res.status(400).json({ message: '이메일, 인증 코드, 새로운 비밀번호를 모두 입력해주세요.' })
       return
     }

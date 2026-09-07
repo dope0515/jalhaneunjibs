@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto'
 import nodemailer from 'nodemailer'
 
 export default defineEventHandler(async (event) => {
@@ -13,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const code = randomInt(100000, 1000000).toString()
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes from now
 
     console.log(`[Verification] Saving token and sending email to ${email}...`)
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
     await prisma.verificationToken.create({
       data: {
         email,
-        code,
+        code: `signup:${code}`,
         expiresAt,
       },
     })

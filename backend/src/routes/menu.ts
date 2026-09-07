@@ -45,7 +45,7 @@ const createMenuAnalysisCompletion = (groq: Groq, dataUrl: string) =>
       },
     ],
     temperature: 0.1,
-    max_completion_tokens: 4096,
+    max_completion_tokens: 768,
     reasoning_effort: 'none',
     reasoning_format: 'hidden',
     response_format: { type: 'json_object' },
@@ -70,7 +70,11 @@ router.post('/analyze', authMiddleware, upload.array('menuBoard', 5), async (req
     return
   }
 
-  const groqApiKey = process.env.GROQ_API_KEY || 'REMOVED_GROQ_KEY'
+  const groqApiKey = process.env.GROQ_API_KEY?.trim()
+  if (!groqApiKey) {
+    res.status(503).json({ message: '메뉴 분석 서비스가 설정되지 않았습니다.' })
+    return
+  }
   const groq = new Groq({ apiKey: groqApiKey })
 
   try {

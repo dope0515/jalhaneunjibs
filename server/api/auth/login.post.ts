@@ -84,6 +84,8 @@ export default defineEventHandler(async (event) => {
 
   // 5. 리프레시 토큰을 보안 쿠키(HttpOnly)에 저장
   setCookie(event, 'refresh_token', refreshToken, {
+    sameSite: 'lax',
+    path: '/',
     httpOnly: true, // 클라이언트 JS에서 접근 불가 (보안 강화)
     secure: process.env.NODE_ENV === 'production',
     // rememberMe가 true일 때만 7일 유지, 아니면 브라우저 종료 시 삭제

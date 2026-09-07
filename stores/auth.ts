@@ -5,11 +5,11 @@ export const useAuthStore = defineStore('auth', () => {
   // 기본 세션 쿠키 (브라우저 종료 시 만료) — rememberMe=false 일 때 사용
   const user = useCookie<any | null>('user')
   const accessToken = useCookie<string | null>('accessToken')
-  const rememberMeCookie = useCookie<boolean>('rememberMe')
+  const rememberMeCookie = useCookie<boolean>('rememberMe', { maxAge: 60 * 60 * 24 * 7, sameSite: 'lax' })
 
-  // 지속성 쿠키 (1일 동안 유지) — rememberMe=true 일 때 사용 (이름을 분리하여 충돌 방지)
-  const persistentUser = useCookie<any | null>('user_p', { maxAge: 60 * 60 * 24 })
-  const persistentToken = useCookie<string | null>('accessToken_p', { maxAge: 60 * 60 * 24 })
+  // 지속성 쿠키 (7일 동안 유지) — rememberMe=true 일 때 사용 (이름을 분리하여 충돌 방지)
+  const persistentUser = useCookie<any | null>('user_p', { maxAge: 60 * 60 * 24 * 7, sameSite: 'lax' })
+  const persistentToken = useCookie<string | null>('accessToken_p', { maxAge: 60 * 60 * 24 * 7, sameSite: 'lax' })
 
   // 2. 게터 (Getters)
   // 세션 쿠키 또는 지속성 쿠키 중 하나라도 있으면 로그인 상태로 간주
@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
     rememberMeCookie.value = rememberMe
 
     if (rememberMe) {
-      // rememberMe=true: 지속성 쿠키에 저장 (1일 유지)
+      // rememberMe=true: 지속성 쿠키에 저장 (7일 유지)
       persistentUser.value = userData
       persistentToken.value = token
       // 혹시 남아있을 수 있는 세션 쿠키 초기화
@@ -37,7 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const updateToken = (token: string) => {
-    const isPersistent = !!rememberMeCookie.value
+    const isPersistent = !!rememberMeCookie.value || !!persistentUser.value
     if (isPersistent) {
       persistentToken.value = token
     } else {

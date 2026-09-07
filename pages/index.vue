@@ -11,8 +11,8 @@
               <span class="highlight">안 가봐서</span> 그래
             </h1>
             <p class="main-desc">
-              그 음식이 별로라고? 그건 자네가 진짜 잘하는 집을 안 가봐서 그래.<br>
-              전국의 숨은 고수들을 지금 바로 만나보세요.
+              그 음식이 별로라고? <br>
+              그건 자네가 진짜 잘하는 집을 안 가봐서 그래.
             </p>
             <div class="main-header-btns">
               <AppButton to="/restaurants" color="green" size="lg" shape="round" arrow>

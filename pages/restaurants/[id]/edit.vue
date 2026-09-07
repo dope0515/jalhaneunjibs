@@ -585,6 +585,7 @@
 </template>
 
 <script setup>
+definePageMeta({ middleware: 'auth' })
 import { WEEKDAYS, parseOpeningHours, formatOpeningHours } from '~/utils/openingHours'
 import { parseParkingInfo, formatParkingInfo } from '~/utils/parkingInfo'
 import { parseSeasonInfo, formatSeasonInfo } from '~/utils/seasonInfo'

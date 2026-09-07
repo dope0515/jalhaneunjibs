@@ -917,6 +917,7 @@
 </template>
 
 <script setup>
+definePageMeta({ middleware: 'auth' })
 import {
   MAX_MENU_BOARD_IMAGES,
   MAX_RESTAURANT_IMAGES,
