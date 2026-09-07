@@ -15,10 +15,7 @@ export async function assertUserCanAccess(userId: number) {
   if (user.status === 'SUSPENDED') {
     throw createError({
       statusCode: 403,
-<<<<<<< HEAD
       data: { code: 'ACCOUNT_SUSPENDED' },
-=======
->>>>>>> fe68c4d19848374d3b1d311c9a22684453dee1c1
       statusMessage: '정지된 계정입니다. 운영팀에 문의해 주세요.',
     })
   }
