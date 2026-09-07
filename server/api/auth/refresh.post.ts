@@ -37,7 +37,11 @@ export default defineEventHandler(async (event) => {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
+<<<<<<< HEAD
       select: { id: true, email: true, nickname: true, role: true, status: true },
+=======
+      select: { status: true },
+>>>>>>> fe68c4d19848374d3b1d311c9a22684453dee1c1
     })
 
     if (!user || user.status === 'WITHDRAWN') {
@@ -50,7 +54,10 @@ export default defineEventHandler(async (event) => {
     if (user.status === 'SUSPENDED') {
       throw createError({
         statusCode: 403,
+<<<<<<< HEAD
         data: { code: 'ACCOUNT_SUSPENDED' },
+=======
+>>>>>>> fe68c4d19848374d3b1d311c9a22684453dee1c1
         statusMessage: '정지된 계정입니다.',
       })
     }
@@ -67,8 +74,11 @@ export default defineEventHandler(async (event) => {
 
     return {
       accessToken,
+<<<<<<< HEAD
       user,
       rememberMe: getCookie(event, 'rememberMe') === 'true' || !!getCookie(event, 'user_p'),
+=======
+>>>>>>> fe68c4d19848374d3b1d311c9a22684453dee1c1
     }
   } catch (error: any) {
     // createError로 던진 비즈니스 에러는 원인 메시지를 유지

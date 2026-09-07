@@ -15,11 +15,15 @@ export async function requireAdmin(event: any) {
   }
 
   if (user.status === 'SUSPENDED') {
+<<<<<<< HEAD
     throw createError({
       statusCode: 403,
       data: { code: 'ACCOUNT_SUSPENDED' },
       statusMessage: '정지된 계정입니다.',
     })
+=======
+    throw createError({ statusCode: 403, statusMessage: '정지된 계정입니다.' })
+>>>>>>> fe68c4d19848374d3b1d311c9a22684453dee1c1
   }
 
   if (user.role !== 'ADMIN') {

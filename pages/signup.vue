@@ -239,7 +239,11 @@ const handleVerifyAndSignup = async () => {
   isVerifyingCode.value = true
   try {
     // 1. 코드 검증
+<<<<<<< HEAD
     const { signupToken } = await $api('/auth/verify-code', {
+=======
+    await $api('/auth/verify-code', {
+>>>>>>> fe68c4d19848374d3b1d311c9a22684453dee1c1
       method: 'POST',
       body: { 
         email: email.value,

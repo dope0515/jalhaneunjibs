@@ -10,6 +10,10 @@ export default defineNuxtConfig({
     appManifest: false
   },
 
+  experimental: {
+    appManifest: false
+  },
+
   app: {
     head: {
       title: '잘하는 집을 안 가봐서 그래',

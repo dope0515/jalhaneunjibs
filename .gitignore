@@ -27,6 +27,10 @@ logs
 /public/uploads
 
 #rule
+<<<<<<< HEAD
 CONVENTIONS.md
 
 validation_docs
+=======
+CONVENTIONS.md
+>>>>>>> fe68c4d19848374d3b1d311c9a22684453dee1c1

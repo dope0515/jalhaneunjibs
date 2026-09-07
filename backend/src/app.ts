@@ -13,7 +13,11 @@ const app = express()
 
 // ─── 미들웨어 ──────────────────────────────────────────────────────────────────
 const allowedOrigins = [
+<<<<<<< HEAD
   'http://localhost:3001',
+=======
+  'http://localhost:3000',
+>>>>>>> fe68c4d19848374d3b1d311c9a22684453dee1c1
   'https://jalhaneunjibs.vercel.app',
   'https://jalhaneunjibs-o2ms.vercel.app'
 ]
